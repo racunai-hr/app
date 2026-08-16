@@ -17,5 +17,6 @@ yarn-error.log*
 
 .env*
 !.env.example
+scripts/.env.turnstile
 
 *.tsbuildinfo
