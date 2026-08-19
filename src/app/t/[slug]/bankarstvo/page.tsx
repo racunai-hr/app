@@ -1,5 +1,7 @@
-import { PlaceholderPage } from '@/components/app-shell/PlaceholderPage';
+'use client';
+
+import { BankingOverviewRoute } from '@/components/banking/routes';
 
 export default function BankarstvoPage() {
-  return <PlaceholderPage id="bankarstvo" />;
+  return <BankingOverviewRoute />;
 }

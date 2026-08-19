@@ -6,6 +6,7 @@ describe('APP_NAV', () => {
   it('builds tenant paths from the active slug', () => {
     const byId = Object.fromEntries(APP_NAV.map((item) => [item.id, item]));
     expect(byId.pregled.href('finestar')).toBe('/dashboard');
+    expect(byId.bankarstvo.href('finestar')).toBe('/t/finestar/bankarstvo');
     expect(byId.saldakonti.href('finestar')).toBe('/t/finestar/saldakonti');
     expect(byId.dokumenti.href('finestar')).toBe('/t/finestar/dokumenti');
     expect(byId.porezi.href('finestar')).toBe('/t/finestar/porezi');
@@ -14,10 +15,14 @@ describe('APP_NAV', () => {
   it('marks the current module as active', () => {
     const docs = APP_NAV.find((item) => item.id === 'dokumenti');
     const saldakonti = APP_NAV.find((item) => item.id === 'saldakonti');
+    const bankarstvo = APP_NAV.find((item) => item.id === 'bankarstvo');
     const pregled = APP_NAV.find((item) => item.id === 'pregled');
-    expect(docs && saldakonti && pregled).toBeTruthy();
+    expect(docs && saldakonti && bankarstvo && pregled).toBeTruthy();
     expect(isNavActive('/dashboard', pregled!, 'finestar')).toBe(true);
     expect(isNavActive('/t/finestar/saldakonti', saldakonti!, 'finestar')).toBe(true);
     expect(isNavActive('/t/finestar/saldakonti', docs!, 'finestar')).toBe(false);
+    expect(isNavActive('/t/finestar/bankarstvo', bankarstvo!, 'finestar')).toBe(true);
+    expect(isNavActive('/t/finestar/bankarstvo/racuni', bankarstvo!, 'finestar')).toBe(true);
+    expect(isNavActive('/t/finestar/bankarstvo/uskladivanje', docs!, 'finestar')).toBe(false);
   });
 });

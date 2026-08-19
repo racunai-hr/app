@@ -36,7 +36,7 @@ export function isNavActive(pathname: string, item: AppNavItem, slug: string): b
 }
 
 export const MODULE_PLACEHOLDERS: Record<
-  Exclude<AppNavId, 'pregled' | 'saldakonti'>,
+  Exclude<AppNavId, 'pregled' | 'saldakonti' | 'bankarstvo'>,
   { title: string; description: string }
 > = {
   dokumenti: {
@@ -50,10 +50,6 @@ export const MODULE_PLACEHOLDERS: Record<
   partneri: {
     title: 'Partneri',
     description: 'Kartice kupaca i dobavljača još nisu spojene na ovu rutu.',
-  },
-  bankarstvo: {
-    title: 'Bankarstvo',
-    description: 'Izvodi i usklađenje banke ostaju u postojećem backend modulu.',
   },
   porezi: {
     title: 'Porezi i obrasci',
