@@ -16,6 +16,8 @@ export type UserInfo = {
   username: string;
   email: string;
   is_superuser: boolean;
+  /** Present only after the backend adds the Django-staff gate. Strictly opt-in. */
+  can_access_django_admin?: boolean;
 };
 
 export type MeResponse = {
@@ -39,7 +41,7 @@ export class ApiError extends Error {
   }
 }
 
-async function parseError(response: Response): Promise<string> {
+export async function parseError(response: Response): Promise<string> {
   try {
     const data = await response.json();
     if (data.detail) return String(data.detail);
