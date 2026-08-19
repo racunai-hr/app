@@ -58,6 +58,7 @@ export type DocumentListQuery = {
   status?: string;
   date_from?: string;
   date_to?: string;
+  partner?: number | string;
   page?: number;
   page_size?: number;
 };
@@ -83,6 +84,9 @@ export function buildDocumentQuery(query: DocumentListQuery, options?: { include
   if (query.status) params.set('status', query.status);
   if (query.date_from) params.set('date_from', query.date_from);
   if (query.date_to) params.set('date_to', query.date_to);
+  if (query.partner !== undefined && query.partner !== '') {
+    params.set('partner', String(query.partner));
+  }
   if (includePage) {
     params.set('page', String(query.page || 1));
     params.set('page_size', String(query.page_size || 20));

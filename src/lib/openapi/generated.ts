@@ -332,6 +332,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/partners/{id}/financial-summary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_partner_financial_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/partners/{id}/subledger/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_partner_subledger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["partners_list"];
+        put?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        post: operations["partners_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["partners_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        patch: operations["partners_partial_update"];
+        trace?: never;
+    };
+    "/api/partners/{id}/bank-accounts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["partners_bank_accounts_list"];
+        put?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        post: operations["partners_bank_accounts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners/{id}/bank-accounts/{account_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["partners_bank_accounts_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["partners_bank_accounts_partial_update"];
+        trace?: never;
+    };
+    "/api/partners/{id}/contacts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["partners_contacts_list"];
+        put?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        post: operations["partners_contacts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners/{id}/contacts/{contact_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["partners_contacts_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["partners_contacts_partial_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -419,6 +555,42 @@ export interface components {
             status: string;
             provider_code: string;
             last_sync_at: string | null;
+        };
+        Contact: {
+            id: number;
+            partner_id: number;
+            contact_type: string;
+            first_name: string;
+            last_name: string;
+            full_name: string;
+            position: string;
+            department: string;
+            email: string;
+            phone: string;
+            mobile: string;
+            notes: string;
+            is_primary: boolean;
+            is_active: boolean;
+            created_at: string | null;
+        };
+        ContactList: {
+            as_of: string;
+            count: number;
+            results: components["schemas"]["Contact"][];
+        };
+        ContactWriteRequest: {
+            contact_type?: string;
+            first_name?: string;
+            last_name?: string;
+            position?: string;
+            department?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            mobile?: string;
+            notes?: string;
+            is_primary?: boolean;
+            is_active?: boolean;
         };
         CurrencySummary: {
             outgoing_count: number;
@@ -619,6 +791,13 @@ export interface components {
             results: components["schemas"]["DocumentSummary"][];
             summary: components["schemas"]["DocumentListSummary"];
         };
+        PaginatedPartners: {
+            as_of: string;
+            count: number;
+            page: number;
+            page_size: number;
+            results: components["schemas"]["PartnerListItem"][];
+        };
         PaginatedPaymentOrders: {
             as_of: string;
             count: number;
@@ -639,6 +818,185 @@ export interface components {
             page: number;
             page_size: number;
             results: components["schemas"]["Transaction"][];
+        };
+        Partner: {
+            id: number;
+            partner_code: string;
+            name: string;
+            short_name: string;
+            partner_type: string;
+            status: string;
+            tax_number: string;
+            vat_number: string;
+            registration_number: string;
+            address: string;
+            city: string;
+            postal_code: string;
+            country: string;
+            email: string;
+            phone: string;
+            mobile: string;
+            fax: string;
+            website: string;
+            payment_terms: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            credit_limit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            discount_percentage: string;
+            notes: string;
+            internal_notes: string;
+            created_at: string | null;
+            updated_at: string | null;
+        };
+        PartnerBankAccount: {
+            id: number;
+            partner_id: number;
+            bank_name: string;
+            bic: string;
+            iban: string;
+            currency: string;
+            is_primary: boolean;
+            is_active: boolean;
+            created_at: string | null;
+        };
+        PartnerBankAccountList: {
+            as_of: string;
+            count: number;
+            results: components["schemas"]["PartnerBankAccount"][];
+        };
+        PartnerBankAccountWriteRequest: {
+            bank_name?: string;
+            bic?: string;
+            iban?: string;
+            currency?: string;
+            is_primary?: boolean;
+            is_active?: boolean;
+        };
+        PartnerConflict: {
+            code: string;
+            field: string;
+        };
+        PartnerFinancialSummary: {
+            partner_id: number;
+            as_of_date: string;
+            currency: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            receivables_open: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            payables_open: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            receivables_overdue: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            payables_overdue: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            net_balance: string;
+        };
+        PartnerListItem: {
+            id: number;
+            partner_code: string;
+            name: string;
+            short_name: string;
+            partner_type: string;
+            status: string;
+            tax_number: string;
+            city: string;
+            country: string;
+            email: string;
+            phone: string;
+        };
+        PartnerSubledgerItem: {
+            item_id: number;
+            partner_id: number;
+            partner_name: string;
+            direction: string;
+            direction_label: string;
+            source_type: string;
+            source_id: number;
+            source_label: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            original_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            open_amount: string;
+            due_date: string | null;
+            days_overdue: number;
+            aging_bucket: string;
+            status: string;
+        };
+        PartnerSubledgerList: {
+            as_of_date: string;
+            partner_id: number;
+            count: number;
+            results: components["schemas"]["PartnerSubledgerItem"][];
+        };
+        PartnerWriteRequest: {
+            name?: string;
+            short_name?: string;
+            partner_type?: string;
+            status?: string;
+            tax_number?: string;
+            vat_number?: string;
+            registration_number?: string;
+            address?: string;
+            city?: string;
+            postal_code?: string;
+            country?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            mobile?: string;
+            fax?: string;
+            website?: string;
+            payment_terms?: number;
+            credit_limit?: string;
+            discount_percentage?: string;
+            notes?: string;
+            internal_notes?: string;
+        };
+        PatchedContactWriteRequest: {
+            contact_type?: string;
+            first_name?: string;
+            last_name?: string;
+            position?: string;
+            department?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            mobile?: string;
+            notes?: string;
+            is_primary?: boolean;
+            is_active?: boolean;
+        };
+        PatchedPartnerBankAccountWriteRequest: {
+            bank_name?: string;
+            bic?: string;
+            iban?: string;
+            currency?: string;
+            is_primary?: boolean;
+            is_active?: boolean;
+        };
+        PatchedPartnerWriteRequest: {
+            name?: string;
+            short_name?: string;
+            partner_type?: string;
+            status?: string;
+            tax_number?: string;
+            vat_number?: string;
+            registration_number?: string;
+            address?: string;
+            city?: string;
+            postal_code?: string;
+            country?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            mobile?: string;
+            fax?: string;
+            website?: string;
+            payment_terms?: number;
+            credit_limit?: string;
+            discount_percentage?: string;
+            notes?: string;
+            internal_notes?: string;
         };
         /** @description Allowlist only — no SCA, tokens, provider secrets, or internal errors. */
         PaymentOrder: {
@@ -1773,6 +2131,694 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CodeDetail"];
+                };
+            };
+        };
+    };
+    finance_partner_financial_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerFinancialSummary"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_partner_subledger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerSubledgerList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    partners_list: {
+        parameters: {
+            query?: {
+                /** @description Default active-only; "all" = every status; "inactive" = inactive+blocked */
+                filter?: string;
+                /** @description Page number (min 1, default 1) */
+                page?: number;
+                /** @description Page size (default 20, max 100) */
+                page_size?: number;
+                /** @description customer|supplier|both|other|customers|suppliers */
+                partner_type?: string;
+                /** @description Search name, code, OIB, VAT */
+                search?: string;
+                /** @description Exact status filter (overrides default active when set) */
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPartners"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    partners_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PartnerWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PartnerWriteRequest"];
+                "multipart/form-data": components["schemas"]["PartnerWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Partner"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerConflict"];
+                };
+            };
+        };
+    };
+    partners_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Partner"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    partners_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPartnerWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPartnerWriteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPartnerWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Partner"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerConflict"];
+                };
+            };
+        };
+    };
+    partners_bank_accounts_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerBankAccountList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    partners_bank_accounts_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PartnerBankAccountWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PartnerBankAccountWriteRequest"];
+                "multipart/form-data": components["schemas"]["PartnerBankAccountWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerBankAccount"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerConflict"];
+                };
+            };
+        };
+    };
+    partners_bank_accounts_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    partners_bank_accounts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPartnerBankAccountWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPartnerBankAccountWriteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPartnerBankAccountWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerBankAccount"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerConflict"];
+                };
+            };
+        };
+    };
+    partners_contacts_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    partners_contacts_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ContactWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ContactWriteRequest"];
+                "multipart/form-data": components["schemas"]["ContactWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    partners_contacts_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    partners_contacts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedContactWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedContactWriteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedContactWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
         };

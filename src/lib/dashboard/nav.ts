@@ -49,7 +49,7 @@ export const MODULE_PLACEHOLDERS: Record<
   },
   partneri: {
     title: 'Partneri',
-    description: 'Kartice kupaca i dobavljača još nisu spojene na ovu rutu.',
+    description: 'Kartice kupaca i dobavljača (MDM) s kontaktima, IBAN-ima, dokumentima i saldakontom.',
   },
   porezi: {
     title: 'Porezi i obrasci',
