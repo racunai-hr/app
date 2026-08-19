@@ -1,35 +1,19 @@
+import type { components } from './openapi/generated';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://admin.racunai.hr';
 const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || 'racunai.hr';
 
 export { API_URL, PLATFORM_DOMAIN };
 
-export type TenantInfo = {
-  slug: string;
-  name: string;
-  role: string;
-  is_default: boolean;
-  admin_url: string;
-};
-
-export type UserInfo = {
-  id: number;
-  username: string;
-  email: string;
-  is_superuser: boolean;
+export type TenantInfo = components['schemas']['AuthMeTenant'];
+export type UserInfo = components['schemas']['AuthMeUser'] & {
   /** Present only after the backend adds the Django-staff gate. Strictly opt-in. */
   can_access_django_admin?: boolean;
 };
-
-export type MeResponse = {
+export type MeResponse = Omit<components['schemas']['AuthMeResponse'], 'user'> & {
   user: UserInfo;
-  tenants: TenantInfo[];
-  platform_admin_url: string;
 };
-
-export type TokenResponse = {
-  access: string;
-  refresh: string;
-};
+export type TokenResponse = components['schemas']['TokenPairResponse'];
 
 export class ApiError extends Error {
   status: number;
@@ -51,9 +35,11 @@ export async function parseError(response: Response): Promise<string> {
       return data[firstKey].join(' ');
     }
   } catch {
-    /* ignore */
+    /* non-JSON body — do not surface HTML/proxy text */
   }
-  return 'Došlo je do greške. Pokušajte ponovno.';
+  const requestId = response.headers.get('x-request-id') || response.headers.get('cf-ray');
+  const base = `Zahtjev nije uspio (HTTP ${response.status}).`;
+  return requestId ? `${base} Ref: ${requestId}` : base;
 }
 
 export async function login(

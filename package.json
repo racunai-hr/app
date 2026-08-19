@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "generate:api-types": "openapi-typescript openapi/openapi.yaml -o src/lib/openapi/generated.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "15.2.9",
@@ -24,6 +26,7 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^6.0.5",
     "jsdom": "^29.1.1",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5.8.2",
     "vitest": "^4.1.11"
   }

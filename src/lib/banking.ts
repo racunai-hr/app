@@ -1,45 +1,16 @@
 import { ApiError, parseError as parseApiError } from './api';
 import { tenantApiOrigin } from './documents';
+import type { components } from './openapi/generated';
 
 export { tenantApiOrigin };
 
-export type BalanceDto = {
-  balance_type: string;
-  amount: string;
-  currency: string;
-  as_of: string;
-  source: string;
-  is_stale: boolean;
-};
-
-export type ConnectionSummary = {
-  id: number;
-  status: string;
-  provider_code: string | null;
-  last_sync_at: string | null;
-} | null;
-
-export type BankAccountDto = {
-  id: number;
-  account_name: string;
-  bank_name: string;
-  account_number: string;
-  iban: string;
-  currency: string;
-  status: string;
-  is_active: boolean;
-  connection: ConnectionSummary;
-  balances: BalanceDto[];
-};
-
-export type BankingOverviewResponse = {
-  as_of: string;
-  accounts: BankAccountDto[];
-  account_count_by_currency: Record<string, number>;
-  unmatched_transaction_count: number;
-  suggested_transaction_count: number;
-  statement_count: number;
-};
+export type BalanceDto = components['schemas']['Balance'];
+export type ConnectionSummary = components['schemas']['ConnectionSummary'] | null;
+export type BankAccountDto = components['schemas']['BankAccount'];
+export type BankingOverviewResponse = components['schemas']['BankingOverview'];
+export type StatementDto = components['schemas']['StatementListItem'];
+export type TransactionDto = components['schemas']['Transaction'];
+export type PaymentOrderDto = components['schemas']['PaymentOrder'];
 
 export type Paginated<T> = {
   as_of: string;
@@ -47,51 +18,6 @@ export type Paginated<T> = {
   page: number;
   page_size: number;
   results: T[];
-};
-
-export type StatementDto = {
-  id: number;
-  statement_number: string;
-  bank_account_id: number;
-  statement_date: string;
-  opening_balance: string;
-  closing_balance: string;
-  status: string;
-  currency: string | null;
-  imported_at: string | null;
-  reconciled_at: string | null;
-  transaction_count: number | null;
-};
-
-export type TransactionDto = {
-  id: number;
-  bank_statement_id: number;
-  bank_account_id: number | null;
-  transaction_date: string;
-  value_date: string | null;
-  amount: string;
-  currency: string;
-  transaction_type: string;
-  description: string;
-  reference: string;
-  counterparty_name: string;
-  counterparty_iban: string;
-  external_id: string;
-  match_status: string;
-  matched_payment_id: number | null;
-  matched_journal_entry_id: number | null;
-};
-
-export type PaymentOrderDto = {
-  id: number;
-  status: string;
-  amount: string;
-  currency: string;
-  debtor_iban: string;
-  creditor_iban: string;
-  creditor_name: string;
-  reference: string;
-  created_at: string | null;
 };
 
 export type StatementListQuery = {
