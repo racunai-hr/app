@@ -19,6 +19,7 @@ export type PartnerListQuery = {
   filter?: 'all' | 'inactive' | '';
   partner_type?: string;
   status?: string;
+  jurisdiction?: 'HR' | 'EU' | 'NON_EU' | '';
   search?: string;
   page?: number;
   page_size?: number;
@@ -90,6 +91,7 @@ export async function fetchPartners(
     filter: query.filter,
     partner_type: query.partner_type,
     status: query.status,
+    jurisdiction: query.jurisdiction,
     search: query.search,
     page: query.page || 1,
     page_size: query.page_size || 20,
@@ -295,6 +297,36 @@ export function partnerStatusLabel(value: string): string {
       return 'Potencijalni';
     default:
       return value;
+  }
+}
+
+export function partnerTaxLabel(jurisdiction?: string): string {
+  switch (jurisdiction) {
+    case 'HR':
+      return 'OIB';
+    case 'EU':
+      return 'Porezni broj';
+    case 'NON_EU':
+      return 'Porezni broj';
+    default:
+      return 'Porezni broj';
+  }
+}
+
+export function partnerVatLabel(jurisdiction?: string): string {
+  return jurisdiction === 'HR' ? 'PDV broj' : 'VAT ID';
+}
+
+export function partnerJurisdictionLabel(value?: string): string {
+  switch (value) {
+    case 'HR':
+      return 'Hrvatska';
+    case 'EU':
+      return 'EU';
+    case 'NON_EU':
+      return 'Ostale zemlje';
+    default:
+      return value || '';
   }
 }
 

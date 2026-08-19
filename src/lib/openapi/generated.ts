@@ -826,6 +826,8 @@ export interface components {
             short_name: string;
             partner_type: string;
             status: string;
+            jurisdiction: string;
+            country_code: string;
             tax_number: string;
             vat_number: string;
             registration_number: string;
@@ -898,6 +900,8 @@ export interface components {
             short_name: string;
             partner_type: string;
             status: string;
+            jurisdiction: string;
+            country_code: string;
             tax_number: string;
             city: string;
             country: string;
@@ -933,13 +937,13 @@ export interface components {
             short_name?: string;
             partner_type?: string;
             status?: string;
+            country_code?: string;
             tax_number?: string;
             vat_number?: string;
             registration_number?: string;
             address?: string;
             city?: string;
             postal_code?: string;
-            country?: string;
             /** Format: email */
             email?: string;
             phone?: string;
@@ -979,13 +983,13 @@ export interface components {
             short_name?: string;
             partner_type?: string;
             status?: string;
+            country_code?: string;
             tax_number?: string;
             vat_number?: string;
             registration_number?: string;
             address?: string;
             city?: string;
             postal_code?: string;
-            country?: string;
             /** Format: email */
             email?: string;
             phone?: string;
@@ -2218,13 +2222,15 @@ export interface operations {
             query?: {
                 /** @description Default active-only; "all" = every status; "inactive" = inactive+blocked */
                 filter?: string;
+                /** @description HR|EU|NON_EU (orthogonal to status; EU never includes HR) */
+                jurisdiction?: string;
                 /** @description Page number (min 1, default 1) */
                 page?: number;
                 /** @description Page size (default 20, max 100) */
                 page_size?: number;
                 /** @description customer|supplier|both|other|customers|suppliers */
                 partner_type?: string;
-                /** @description Search name, code, OIB, VAT */
+                /** @description Search name, code, tax number, VAT */
                 search?: string;
                 /** @description Exact status filter (overrides default active when set) */
                 status?: string;

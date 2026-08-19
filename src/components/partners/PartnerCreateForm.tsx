@@ -1,13 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ApiError } from '@/lib/api';
+import {
+  jurisdictionFromCountryCode,
+  PARTNER_COUNTRY_OPTIONS,
+} from '@/lib/partnerCountries';
 import {
   canWritePartners,
   createPartner,
   PartnerApiError,
+  partnerTaxLabel,
+  partnerVatLabel,
 } from '@/lib/partners';
 
 import { usePartnerSession } from './usePartnerSession';
@@ -19,6 +25,9 @@ export function PartnerCreateForm({ slug }: Props) {
   const { session, loading, error: sessionError } = usePartnerSession(slug);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [countryCode, setCountryCode] = useState('HR');
+  const jurisdiction = useMemo(() => jurisdictionFromCountryCode(countryCode), [countryCode]);
+  const taxRequired = jurisdiction === 'HR';
 
   if (session && !canWritePartners(session.role)) {
     return <div className="error">Nemate ovlast za kreiranje partnera.</div>;
@@ -47,19 +56,21 @@ export function PartnerCreateForm({ slug }: Props) {
               const created = await createPartner(session.origin, session.token, {
                 name: String(fd.get('name') || ''),
                 partner_type: String(fd.get('partner_type') || 'customer'),
+                country_code: countryCode,
                 tax_number: String(fd.get('tax_number') || ''),
                 vat_number: String(fd.get('vat_number') || ''),
                 address: String(fd.get('address') || ''),
                 city: String(fd.get('city') || ''),
                 postal_code: String(fd.get('postal_code') || ''),
-                country: String(fd.get('country') || 'Hrvatska'),
                 email: String(fd.get('email') || ''),
                 phone: String(fd.get('phone') || ''),
               });
               router.replace(`/t/${slug}/partneri/${created.id}`);
             } catch (err) {
               if (err instanceof PartnerApiError && err.conflict?.code === 'partner_tax_number_conflict') {
-                setError('Partner s ovim OIB-om već postoji.');
+                setError(`Partner s ovim ${partnerTaxLabel(jurisdiction)}om već postoji.`);
+              } else if (err instanceof PartnerApiError && err.conflict?.code === 'partner_vat_number_conflict') {
+                setError('Partner s ovim VAT ID-om već postoji.');
               } else {
                 setError(err instanceof ApiError ? err.message : 'Spremanje nije uspjelo.');
               }
@@ -82,11 +93,42 @@ export function PartnerCreateForm({ slug }: Props) {
             </select>
           </label>
           <label>
-            OIB
-            <input name="tax_number" required />
+            Država
+            <select
+              name="country_code"
+              value={countryCode}
+              onChange={(event) => setCountryCode(event.target.value)}
+              required
+            >
+              <optgroup label="Hrvatska">
+                {PARTNER_COUNTRY_OPTIONS.filter((row) => row.group === 'HR').map((row) => (
+                  <option key={row.code} value={row.code}>
+                    {row.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="EU">
+                {PARTNER_COUNTRY_OPTIONS.filter((row) => row.group === 'EU').map((row) => (
+                  <option key={row.code} value={row.code}>
+                    {row.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Ostale zemlje">
+                {PARTNER_COUNTRY_OPTIONS.filter((row) => row.group === 'NON_EU').map((row) => (
+                  <option key={row.code} value={row.code}>
+                    {row.label}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
           </label>
           <label>
-            PDV broj
+            {partnerTaxLabel(jurisdiction)}
+            <input name="tax_number" required={taxRequired} />
+          </label>
+          <label>
+            {partnerVatLabel(jurisdiction)}
             <input name="vat_number" />
           </label>
           <label>
@@ -100,10 +142,6 @@ export function PartnerCreateForm({ slug }: Props) {
           <label>
             Poštanski broj
             <input name="postal_code" required />
-          </label>
-          <label>
-            Država
-            <input name="country" defaultValue="Hrvatska" />
           </label>
           <label>
             E-mail

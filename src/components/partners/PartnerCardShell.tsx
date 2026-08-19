@@ -8,7 +8,9 @@ import { ApiError } from '@/lib/api';
 import { clearTokens } from '@/lib/auth';
 import {
   fetchPartner,
+  partnerJurisdictionLabel,
   partnerStatusLabel,
+  partnerTaxLabel,
   partnerTypeLabel,
   type PartnerDto,
 } from '@/lib/partners';
@@ -74,8 +76,9 @@ export function PartnerCardShell({ slug, partnerId, children }: Props) {
           <h1>{partner?.name || (loading ? 'Učitavanje…' : 'Partner')}</h1>
           {partner && (
             <p>
-              {partnerTypeLabel(partner.partner_type)} · {partnerStatusLabel(partner.status)} · OIB{' '}
-              {partner.tax_number}
+              {partnerTypeLabel(partner.partner_type)} · {partnerStatusLabel(partner.status)} ·{' '}
+              {partnerJurisdictionLabel(partner.jurisdiction)} · {partnerTaxLabel(partner.jurisdiction)}{' '}
+              {partner.tax_number || '—'}
             </p>
           )}
         </div>

@@ -10,6 +10,7 @@ import {
   canWritePartners,
   fetchPartners,
   partnerStatusLabel,
+  partnerTaxLabel,
   partnerTypeLabel,
   type PartnerListItem,
 } from '@/lib/partners';
@@ -25,6 +26,13 @@ const FILTERS = [
   { id: 'inactive', label: 'Neaktivni' },
 ] as const;
 
+const JURISDICTIONS = [
+  { id: '', label: 'Sve zemlje' },
+  { id: 'HR', label: 'Hrvatska' },
+  { id: 'EU', label: 'EU' },
+  { id: 'NON_EU', label: 'Ostale zemlje' },
+] as const;
+
 type Props = { slug: string };
 
 export function PartnerList({ slug }: Props) {
@@ -37,6 +45,7 @@ export function PartnerList({ slug }: Props) {
   const [error, setError] = useState('');
 
   const filter = searchParams.get('filter') || '';
+  const jurisdiction = (searchParams.get('jurisdiction') || '') as '' | 'HR' | 'EU' | 'NON_EU';
   const search = searchParams.get('search') || '';
   const page = Math.max(1, Number(searchParams.get('page') || 1));
 
@@ -64,6 +73,7 @@ export function PartnerList({ slug }: Props) {
         ? {
             filter: '' as const,
             partner_type: filter === 'both' ? 'both' : filter,
+            jurisdiction,
             search,
             page,
           }
@@ -72,6 +82,7 @@ export function PartnerList({ slug }: Props) {
               | 'all'
               | 'inactive'
               | '',
+            jurisdiction,
             search,
             page,
           };
@@ -96,7 +107,7 @@ export function PartnerList({ slug }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [session, filter, search, page, router]);
+  }, [session, filter, jurisdiction, search, page, router]);
 
   const pageSize = 20;
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
@@ -128,6 +139,19 @@ export function PartnerList({ slug }: Props) {
         ))}
       </nav>
 
+      <nav className="tabs" aria-label="Jurisdikcija partnera">
+        {JURISDICTIONS.map((item) => (
+          <button
+            key={item.id || 'all-jur'}
+            type="button"
+            className={jurisdiction === item.id ? 'tab tab-active' : 'tab'}
+            onClick={() => setQuery({ jurisdiction: item.id })}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
       <form
         className="filter-bar"
         onSubmit={(event) => {
@@ -138,7 +162,7 @@ export function PartnerList({ slug }: Props) {
       >
         <label>
           Pretraži
-          <input name="search" defaultValue={search} placeholder="Naziv, OIB, šifra…" />
+          <input name="search" defaultValue={search} placeholder="Naziv, porezni broj, šifra…" />
         </label>
         <button type="submit" className="btn btn-secondary">
           Traži
@@ -157,7 +181,7 @@ export function PartnerList({ slug }: Props) {
                 <th>Naziv</th>
                 <th>Tip</th>
                 <th>Status</th>
-                <th>OIB</th>
+                <th>ID</th>
                 <th>Grad</th>
               </tr>
             </thead>
@@ -177,7 +201,10 @@ export function PartnerList({ slug }: Props) {
                     </td>
                     <td>{partnerTypeLabel(row.partner_type)}</td>
                     <td>{partnerStatusLabel(row.status)}</td>
-                    <td>{row.tax_number}</td>
+                    <td>
+                      <span className="banking-role-note">{partnerTaxLabel(row.jurisdiction)}</span>{' '}
+                      {row.tax_number || '—'}
+                    </td>
                     <td>{row.city}</td>
                   </tr>
                 ))

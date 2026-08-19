@@ -7,6 +7,8 @@ import {
   canWritePartners,
   fetchPartnerFinancialSummary,
   patchPartner,
+  partnerTaxLabel,
+  partnerVatLabel,
   type PartnerDto,
   type PartnerFinancialSummary,
 } from '@/lib/partners';
@@ -94,11 +96,16 @@ export function PartnerOverview({ origin, token, role, partner, onSaved }: Props
             <tr>
               <th>Adresa</th>
               <td>
-                {partner.address}, {partner.postal_code} {partner.city}, {partner.country}
+                {partner.address}, {partner.postal_code} {partner.city}, {partner.country} (
+                {partner.country_code})
               </td>
             </tr>
             <tr>
-              <th>PDV ID</th>
+              <th>{partnerTaxLabel(partner.jurisdiction)}</th>
+              <td>{partner.tax_number || '—'}</td>
+            </tr>
+            <tr>
+              <th>{partnerVatLabel(partner.jurisdiction)}</th>
               <td>{partner.vat_number || '—'}</td>
             </tr>
             <tr>
