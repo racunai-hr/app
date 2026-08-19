@@ -8,7 +8,10 @@ describe('DateField', () => {
     render(<DateField name="date_from" label="Od datuma" defaultValue="2026-08-19" />);
     expect(screen.getByLabelText('Od datuma')).toHaveValue('19.08.2026.');
     fireEvent.click(screen.getByLabelText('Kalendar Od datuma'));
-    expect(screen.getByRole('dialog', { name: 'Kalendar Od datuma' })).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog', { name: 'Kalendar Od datuma' });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog.parentElement).toBe(document.body);
+    expect(screen.getByLabelText('Od datuma').closest('.date-field')).toHaveClass('is-open');
     expect(screen.getByText(/kolovoz/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Očisti' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Danas' })).toBeInTheDocument();
