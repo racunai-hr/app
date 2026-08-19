@@ -885,6 +885,43 @@
   grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)) auto;
 }
 
+.banking-import {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.65rem 0.85rem;
+}
+
+.banking-import .filter-field input[type='file'] {
+  padding: 0.35rem 0;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.banking-import-file {
+  margin: 0;
+  font-size: 0.8rem;
+  min-width: 10rem;
+}
+
+.banking-import-status {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.banking-import-status.is-error {
+  color: var(--danger);
+}
+
+.banking-import-status.is-success {
+  color: var(--success);
+}
+
+.banking-import-status.is-info {
+  color: var(--text-muted);
+}
+
 .app-shell .text-muted {
   color: var(--text-muted);
 }

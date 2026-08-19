@@ -50,8 +50,8 @@ export function BankingStatementsRoute() {
       title="Izvodi"
       description="Uvezeni bankovni izvodi po računu i razdoblju."
     >
-      {({ origin, token }) => (
-        <StatementList slug={params.slug} origin={origin} token={token} />
+      {({ origin, token, role }) => (
+        <StatementList slug={params.slug} origin={origin} token={token} role={role} />
       )}
     </BankingPage>,
   );

@@ -45,10 +45,10 @@ export function labelOrRaw(map: Record<string, string>, value: string | null | u
 /** Visible capability note — backend remains authoritative. */
 export function bankingRoleCapabilityNote(role: string): string {
   if (role === 'viewer') {
-    return 'Vaša uloga: Pregled. Uvoz, usklađivanje i sinkronizacija nisu dostupni u ovom koraku (samo čitanje).';
+    return 'Imate pristup samo pregledu bankovnih podataka.';
   }
   if (role === 'accountant' || role === 'owner') {
-    return `Vaša uloga: ${role === 'owner' ? 'Vlasnik' : 'Računovođa'}. Trenutačno je prikaz samo za čitanje; akcije usklađivanja dolaze u sljedećem koraku.`;
+    return 'Možete uvesti CAMT izvod. Sinkronizacija i usklađivanje još nisu dostupni u ovom sučelju.';
   }
   return 'Prikaz bankovnih podataka ovisi o ulozi na tvrtki; backend potvrđuje ovlasti.';
 }

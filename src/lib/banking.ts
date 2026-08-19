@@ -11,6 +11,8 @@ export type BankingOverviewResponse = components['schemas']['BankingOverview'];
 export type StatementDto = components['schemas']['StatementListItem'];
 export type TransactionDto = components['schemas']['Transaction'];
 export type PaymentOrderDto = components['schemas']['PaymentOrder'];
+export type ImportRunCreateResponse = components['schemas']['ImportRunCreateResponse'];
+export type ImportRunDetail = components['schemas']['ImportRunDetail'];
 
 export type Paginated<T> = {
   as_of: string;
@@ -53,11 +55,18 @@ export type BankAccountListQuery = {
   page_size?: number;
 };
 
-async function authorized(origin: string, path: string, token: string): Promise<Response> {
+async function authorized(
+  origin: string,
+  path: string,
+  token: string,
+  init: RequestInit = {},
+): Promise<Response> {
   return fetch(`${origin}${path}`, {
+    ...init,
     headers: {
       Accept: 'application/json',
       Authorization: `Bearer ${token}`,
+      ...(init.headers || {}),
     },
   });
 }
@@ -152,6 +161,42 @@ export async function fetchPaymentOrders(
     page_size: query.page_size || 20,
   });
   const response = await authorized(origin, `/api/banking/payment-orders/?${params}`, token);
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function createStatementImport(
+  origin: string,
+  token: string,
+  file: File,
+  idempotencyKey: string,
+  signal?: AbortSignal,
+): Promise<ImportRunCreateResponse> {
+  const body = new FormData();
+  body.append('file', file);
+  const response = await fetch(`${origin}/api/banking/statement-imports/`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+      'Idempotency-Key': idempotencyKey,
+    },
+    body,
+    signal,
+  });
+  if (response.status === 202) return response.json();
+  throw new ApiError(await parseApiError(response), response.status);
+}
+
+export async function fetchStatementImport(
+  origin: string,
+  token: string,
+  id: number,
+  signal?: AbortSignal,
+): Promise<ImportRunDetail> {
+  const response = await authorized(origin, `/api/banking/statement-imports/${id}/`, token, {
+    signal,
+  });
   if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
   return response.json();
 }

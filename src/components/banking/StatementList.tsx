@@ -10,8 +10,9 @@ import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
 import { DateField } from '@/components/documents/DateField';
 
 import { BankingPager } from './BankingPager';
+import { StatementImport } from './StatementImport';
 
-type Props = { slug: string; origin: string; token: string };
+type Props = { slug: string; origin: string; token: string; role: string };
 
 function queryFromSearch(params: URLSearchParams) {
   return {
@@ -24,7 +25,7 @@ function queryFromSearch(params: URLSearchParams) {
   };
 }
 
-export function StatementList({ slug, origin, token }: Props) {
+export function StatementList({ slug, origin, token, role }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchKey = searchParams.toString();
@@ -32,6 +33,7 @@ export function StatementList({ slug, origin, token }: Props) {
   const [data, setData] = useState<Paginated<StatementDto> | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [listEpoch, setListEpoch] = useState(0);
 
   function replaceQuery(next: Partial<typeof query>) {
     const merged = { ...query, ...next };
@@ -62,7 +64,7 @@ export function StatementList({ slug, origin, token }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [origin, token, searchKey, query]);
+  }, [origin, token, searchKey, query, listEpoch]);
 
   function handleFilter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,6 +82,15 @@ export function StatementList({ slug, origin, token }: Props) {
 
   return (
     <>
+      <StatementImport
+        origin={origin}
+        token={token}
+        role={role}
+        onImported={() => {
+          replaceQuery({ page: 1 });
+          setListEpoch((value) => value + 1);
+        }}
+      />
       <form className="filter-bar banking-filter-bar" onSubmit={handleFilter} key={searchKey}>
         <label className="filter-field">
           <span>ID računa</span>

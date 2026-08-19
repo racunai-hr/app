@@ -30,8 +30,12 @@ describe('bankingLabels', () => {
   });
 
   it('explains role capabilities without implying write access', () => {
-    expect(bankingRoleCapabilityNote('viewer')).toContain('Pregled');
-    expect(bankingRoleCapabilityNote('accountant')).toContain('samo za čitanje');
-    expect(bankingRoleCapabilityNote('owner')).toContain('Vlasnik');
+    expect(bankingRoleCapabilityNote('viewer')).toBe(
+      'Imate pristup samo pregledu bankovnih podataka.',
+    );
+    expect(bankingRoleCapabilityNote('accountant')).toContain('Možete uvesti CAMT izvod');
+    expect(bankingRoleCapabilityNote('owner')).toContain(
+      'Sinkronizacija i usklađivanje još nisu dostupni u ovom sučelju',
+    );
   });
 });
