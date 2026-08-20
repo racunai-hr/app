@@ -33,6 +33,29 @@ export type DocumentSummary = {
   amounts: DocumentAmounts;
 };
 
+export type DocumentDetailItem = {
+  item_name: string;
+  quantity: string | null;
+  unit_price: string | null;
+  tax_rate: string | null;
+  vat_procedure?: string | null;
+  line_total: string | null;
+};
+
+export type DocumentDetail = DocumentSummary & {
+  partner_id: number | null;
+  description: string | null;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  created_by: string | null;
+  items: DocumentDetailItem[];
+  service_date: string | null;
+  ubl_available: boolean;
+  pdf_available: boolean;
+  as_of: string;
+};
+
 export type CurrencyKpi = {
   outgoing_count: number;
   incoming_count: number;
@@ -108,6 +131,43 @@ async function authorized(origin: string, path: string, token: string, init?: Re
   return response;
 }
 
+function filenameFromDisposition(disposition: string | null, fallback: string): string {
+  const match = (disposition || '').match(/filename="([^"]+)"/i);
+  return match?.[1] || fallback;
+}
+
+/** Trigger a browser download and always revoke the object URL. */
+export function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  try {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function downloadAuthorizedBlob(
+  origin: string,
+  path: string,
+  token: string,
+  options: { accept: string; fallbackFilename: string },
+): Promise<void> {
+  const response = await authorized(origin, path, token, {
+    headers: { Accept: options.accept },
+  });
+  if (!response.ok) {
+    throw new ApiError(await parseApiError(response), response.status);
+  }
+  const filename = filenameFromDisposition(
+    response.headers.get('Content-Disposition'),
+    options.fallbackFilename,
+  );
+  triggerBlobDownload(await response.blob(), filename);
+}
+
 export async function fetchDocuments(
   origin: string,
   token: string,
@@ -119,6 +179,43 @@ export async function fetchDocuments(
     throw new ApiError(await parseApiError(response), response.status);
   }
   return response.json();
+}
+
+export async function fetchDocument(
+  origin: string,
+  token: string,
+  direction: DocumentDirection,
+  id: number,
+): Promise<DocumentDetail> {
+  const response = await authorized(origin, `/api/documents/${direction}/${id}/`, token);
+  if (!response.ok) {
+    throw new ApiError(await parseApiError(response), response.status);
+  }
+  return response.json();
+}
+
+export async function downloadDocumentPdf(
+  origin: string,
+  token: string,
+  direction: DocumentDirection,
+  id: number,
+): Promise<void> {
+  await downloadAuthorizedBlob(origin, `/api/documents/${direction}/${id}/pdf/`, token, {
+    accept: 'application/pdf',
+    fallbackFilename: `document-${id}.pdf`,
+  });
+}
+
+export async function downloadDocumentUbl(
+  origin: string,
+  token: string,
+  direction: DocumentDirection,
+  id: number,
+): Promise<void> {
+  await downloadAuthorizedBlob(origin, `/api/documents/${direction}/${id}/ubl/`, token, {
+    accept: 'application/xml',
+    fallbackFilename: `document-${id}.xml`,
+  });
 }
 
 export async function exportDocuments(
@@ -139,8 +236,9 @@ export async function exportDocuments(
   if (!response.ok) {
     throw new ApiError(await parseApiError(response), response.status);
   }
-  const disposition = response.headers.get('Content-Disposition') || '';
-  const match = disposition.match(/filename="([^"]+)"/i);
-  const filename = match?.[1] || `documents.${format}`;
+  const filename = filenameFromDisposition(
+    response.headers.get('Content-Disposition'),
+    `documents.${format}`,
+  );
   return { blob: await response.blob(), filename };
 }

@@ -12,6 +12,7 @@ import {
   exportDocuments,
   fetchDocuments,
   tenantApiOrigin,
+  triggerBlobDownload,
   type DocumentDirection,
   type DocumentListQuery,
   type DocumentListResponse,
@@ -19,6 +20,7 @@ import {
 import { canWritePurchasing } from '@/lib/purchasing';
 
 import { DateField } from './DateField';
+import { DocumentDetailPanel } from './DocumentDetailPanel';
 import { DocumentKpi } from './DocumentKpi';
 import { DocumentTable } from './DocumentTable';
 
@@ -58,6 +60,10 @@ export function DocumentList({ slug }: { slug: string }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<'csv' | 'xlsx' | null>(null);
+  const [selection, setSelection] = useState<{
+    direction: DocumentDirection;
+    id: number;
+  } | null>(null);
 
   function replaceQuery(next: Partial<DocumentListQuery>) {
     const merged = { ...query, ...next };
@@ -128,12 +134,7 @@ export function DocumentList({ slug }: { slug: string }) {
         query,
         format,
       );
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.click();
-      URL.revokeObjectURL(url);
+      triggerBlobDownload(blob, filename);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Izvoz nije uspio.');
     } finally {
@@ -260,7 +261,20 @@ export function DocumentList({ slug }: { slug: string }) {
             Status predaje PDV razdoblja ne potvrđuje pojedinačni obuhvat računa.
           </p>
         )}
-        {data && <DocumentTable rows={data.results} />}
+        {data && (
+          <DocumentTable
+            rows={data.results}
+            onOpenDocument={(next) => setSelection(next)}
+          />
+        )}
+
+        {selection && tenant && (
+          <DocumentDetailPanel
+            selection={selection}
+            origin={tenantApiOrigin(tenant.admin_url)}
+            onClose={() => setSelection(null)}
+          />
+        )}
 
         {data && data.count > data.page_size && (
           <nav className="pager" aria-label="Paginacija">

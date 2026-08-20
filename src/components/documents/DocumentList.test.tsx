@@ -77,7 +77,7 @@ describe('DocumentList', () => {
     exportDocuments.mockReset();
   });
 
-  it('shows tabs, KPI, controls and export without write or detail actions', async () => {
+  it('shows tabs, KPI, controls and export without write admin or detail route', async () => {
     const { container } = render(<DocumentList slug="finestar" />);
     await waitFor(() => {
       expect(screen.getByTestId('document-kpi')).toBeInTheDocument();
@@ -96,6 +96,7 @@ describe('DocumentList', () => {
     expect(screen.getByText('nije dokazivo')).toHaveAttribute('data-tone', 'unknown');
     expect(screen.getByText('Status dokumenta: Poslan')).toBeInTheDocument();
     expect(screen.getByText('19. 8. 2026. u 12:00')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Detalji računa Izlazni · R-100' })).toBeInTheDocument();
     expect(container.querySelector('a[href*="/saldakonti/"]')).toBeNull();
     expect(screen.queryByRole('link', { name: 'Učitaj račun' })).toBeNull();
     expect(screen.queryByRole('button', { name: /spremi|obriši|pošalji/i })).toBeNull();

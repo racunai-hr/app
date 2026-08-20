@@ -1,4 +1,4 @@
-import type { DocumentSummary } from '@/lib/documents';
+import type { DocumentDetail, DocumentSummary } from '@/lib/documents';
 import type { Provenance } from '@/lib/provenance';
 
 function field<T>(value: T | null, reason: Provenance['reason'] = null): Provenance<T> {
@@ -30,6 +30,24 @@ export function sampleDocument(overrides: Partial<DocumentSummary> = {}): Docume
       gross: '125.00',
       fx_rate: field(null, 'not_applicable'),
     },
+    ...overrides,
+  };
+}
+
+export function sampleDocumentDetail(overrides: Partial<DocumentDetail> = {}): DocumentDetail {
+  return {
+    ...sampleDocument(),
+    partner_id: 1,
+    description: 'Usluga',
+    notes: '',
+    created_at: '2026-03-01T10:00:00Z',
+    updated_at: '2026-03-01T10:00:00Z',
+    created_by: 'viewer',
+    items: [],
+    service_date: null,
+    ubl_available: true,
+    pdf_available: false,
+    as_of: '2026-08-20T10:00:00Z',
     ...overrides,
   };
 }
