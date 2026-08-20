@@ -97,6 +97,7 @@ describe('DocumentList', () => {
     expect(screen.getByText('Status dokumenta: Poslan')).toBeInTheDocument();
     expect(screen.getByText('19. 8. 2026. u 12:00')).toBeInTheDocument();
     expect(container.querySelector('a[href*="/saldakonti/"]')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Učitaj račun' })).toBeNull();
     expect(screen.queryByRole('button', { name: /spremi|obriši|pošalji/i })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull();
     expect(screen.queryByText('Otvori admin')).toBeNull();

@@ -468,6 +468,118 @@ export interface paths {
         patch: operations["partners_contacts_partial_update"];
         trace?: never;
     };
+    "/api/purchasing/invoices/import/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_invoice_imports_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/invoices/import/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["purchasing_invoice_imports_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/invoices/import/{id}/apply-partner-updates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_invoice_imports_apply_partner_updates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/invoices/import/{id}/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_invoice_imports_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/invoices/import/{id}/create-partner/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_invoice_imports_create_partner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/invoices/import/{id}/discard/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_invoice_imports_discard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/invoices/import/{id}/retry/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_invoice_imports_retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -550,6 +662,21 @@ export interface components {
             code: string;
             detail: string;
         };
+        ConfirmInvoiceImportRequest: {
+            invoice_number?: string;
+            issue_date?: string;
+            due_date?: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            net_amount?: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            tax_amount?: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_amount?: string;
+            currency?: string;
+            description?: string;
+            iban?: string;
+            duplicate_override?: boolean;
+        };
         ConnectionSummary: {
             id: number;
             status: string;
@@ -591,6 +718,18 @@ export interface components {
             notes?: string;
             is_primary?: boolean;
             is_active?: boolean;
+        };
+        CreatePartnerFromImportRequest: {
+            name: string;
+            tax_number: string;
+            address: string;
+            city: string;
+            postal_code: string;
+            country?: string;
+            country_code?: string;
+            partner_type?: string;
+            iban?: string;
+            vat_number?: string;
         };
         CurrencySummary: {
             outgoing_count: number;
@@ -689,6 +828,14 @@ export interface components {
             notices: string[];
             amounts: components["schemas"]["AmountsBlock"];
         };
+        Duplicate: {
+            kind: string;
+            expense_id: number | null;
+            label: string;
+            detail: {
+                [key: string]: unknown;
+            };
+        };
         EracunBlock: {
             as4_status: components["schemas"]["Provenanced"];
             message_id: components["schemas"]["Provenanced"];
@@ -702,6 +849,23 @@ export interface components {
             detail: string;
             limit: number;
             count: number;
+        };
+        ExtractedInvoice: {
+            supplier: components["schemas"]["SupplierExtracted"];
+            invoice_number: string;
+            issue_date: string;
+            due_date?: string | null;
+            currency: string;
+            net_amount: string;
+            tax_amount: string;
+            total_amount: string;
+            iban: string;
+            vat_breakdown?: {
+                [key: string]: unknown;
+            }[];
+            line_items?: {
+                [key: string]: unknown;
+            }[];
         };
         FiscalBlock: {
             jir: components["schemas"]["Provenanced"];
@@ -748,6 +912,28 @@ export interface components {
             started_at: string | null;
             finished_at: string | null;
             as_of: string;
+        };
+        IncomingInvoiceImport: {
+            id: number;
+            status: string;
+            original_filename: string;
+            content_type: string;
+            file_sha256: string;
+            file_size: number;
+            ocr_provider: string;
+            ocr_model: string;
+            ocr_schema_version: string;
+            ocr_extracted_at: string | null;
+            extracted: components["schemas"]["ExtractedInvoice"];
+            warnings: string[];
+            partner: components["schemas"]["PartnerMatch"];
+            duplicate: components["schemas"]["Duplicate"];
+            confirmed_expense_id: number | null;
+            last_error: string;
+            created_at: string | null;
+            started_at: string | null;
+            finished_at: string | null;
+            created?: boolean;
         };
         JournalLine: {
             account_code: string;
@@ -878,6 +1064,11 @@ export interface components {
             code: string;
             field: string;
         };
+        PartnerDiff: {
+            field: string;
+            existing: string;
+            extracted: string;
+        };
         PartnerFinancialSummary: {
             partner_id: number;
             as_of_date: string;
@@ -907,6 +1098,14 @@ export interface components {
             country: string;
             email: string;
             phone: string;
+        };
+        PartnerMatch: {
+            match: string;
+            partner_id: number | null;
+            candidate_id: number | null;
+            name: string;
+            tax_number: string;
+            diff: components["schemas"]["PartnerDiff"][];
         };
         PartnerSubledgerItem: {
             item_id: number;
@@ -1042,6 +1241,10 @@ export interface components {
             reason: (components["schemas"]["ReasonEnum"] | components["schemas"]["NullEnum"]) | null;
             source: string | null;
         };
+        PurchasingConflict: {
+            code: string;
+            detail: string;
+        };
         /**
          * @description * `not_recorded` - not_recorded
          *     * `not_provable` - not_provable
@@ -1091,6 +1294,17 @@ export interface components {
             original_amount: components["schemas"]["Provenanced"];
             aging_bucket: components["schemas"]["Provenanced"];
             days: components["schemas"]["Provenanced"];
+        };
+        SupplierExtracted: {
+            name: string;
+            oib: string;
+            vat_number: string;
+            address: string;
+            city: string;
+            postal_code: string;
+            country: string;
+            country_code: string;
+            iban: string;
         };
         SyncEnqueueResponse: {
             id: number;
@@ -2825,6 +3039,382 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    purchasing_invoice_imports_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            /** @description Neprocesibilan zahtjev (validacija write operacije) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    purchasing_invoice_imports_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    purchasing_invoice_imports_apply_partner_updates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    purchasing_invoice_imports_confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConfirmInvoiceImportRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ConfirmInvoiceImportRequest"];
+                "multipart/form-data": components["schemas"]["ConfirmInvoiceImportRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            /** @description Neprocesibilan zahtjev (validacija write operacije) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    purchasing_invoice_imports_create_partner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePartnerFromImportRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreatePartnerFromImportRequest"];
+                "multipart/form-data": components["schemas"]["CreatePartnerFromImportRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    purchasing_invoice_imports_discard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    purchasing_invoice_imports_retry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
                 };
             };
         };

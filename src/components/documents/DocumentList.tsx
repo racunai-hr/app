@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
@@ -15,6 +16,7 @@ import {
   type DocumentListQuery,
   type DocumentListResponse,
 } from '@/lib/documents';
+import { canWritePurchasing } from '@/lib/purchasing';
 
 import { DateField } from './DateField';
 import { DocumentKpi } from './DocumentKpi';
@@ -160,6 +162,11 @@ export function DocumentList({ slug }: { slug: string }) {
             <p>Pregled ulaznih i izlaznih računa te otvorenih stavaka.</p>
           </div>
           <div className="export-actions">
+            {query.direction === 'incoming' && tenant && canWritePurchasing(tenant.role) && (
+              <Link className="btn btn-primary" href={`/t/${slug}/ulazni-racuni/ucitaj`}>
+                Učitaj račun
+              </Link>
+            )}
             <button
               type="button"
               className="btn btn-secondary"
