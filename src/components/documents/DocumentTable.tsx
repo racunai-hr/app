@@ -1,11 +1,12 @@
 import { controlLabel, noticeLabel, DIRECTION_LABELS, statusLabel } from '@/lib/documentLabels';
-import type { DocumentSummary } from '@/lib/documents';
+import type { DocumentDirection, DocumentSummary } from '@/lib/documents';
 import { formatHrAmount, formatHrMoney } from '@/lib/formatHr';
 import { provenanceText } from '@/lib/provenance';
 import { ProvenanceBadge } from './ProvenanceBadge';
 
 type Props = {
   rows: DocumentSummary[];
+  onOpenDocument?: (selection: { direction: DocumentDirection; id: number }) => void;
 };
 
 function formatDate(value: string | null): string {
@@ -15,7 +16,7 @@ function formatDate(value: string | null): string {
   return `${day}.${month}.${year}.`;
 }
 
-export function DocumentTable({ rows }: Props) {
+export function DocumentTable({ rows, onOpenDocument }: Props) {
   if (rows.length === 0) {
     return <p className="table-empty">Nema dokumenata za odabrani filter.</p>;
   }
@@ -38,14 +39,25 @@ export function DocumentTable({ rows }: Props) {
           {rows.map((row) => {
             const rawStatus = row.document_status.value;
             const period = row.vat.period;
+            const label = `${DIRECTION_LABELS[row.direction]}${
+              row.internal_number ? ` · ${row.internal_number}` : ''
+            }`;
             return (
               <tr key={`${row.direction}-${row.id}`}>
                 <td>
                   <div className="cell-stack">
-                    <span>
-                      {DIRECTION_LABELS[row.direction]}
-                      {row.internal_number ? ` · ${row.internal_number}` : ''}
-                    </span>
+                    {onOpenDocument ? (
+                      <button
+                        type="button"
+                        className="docs-row-open"
+                        onClick={() => onOpenDocument({ direction: row.direction, id: row.id })}
+                        aria-label={`Detalji računa ${label}`}
+                      >
+                        {label}
+                      </button>
+                    ) : (
+                      <span>{label}</span>
+                    )}
                     <span className="muted-inline">
                       {row.source_number ? `Izvorni broj: ${row.source_number}` : 'Izvorni broj: —'}
                     </span>

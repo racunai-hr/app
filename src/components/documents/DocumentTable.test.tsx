@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { sampleDocument } from '@/test/documentFixtures';
 
@@ -25,6 +25,15 @@ describe('DocumentTable', () => {
     expect(screen.queryByText('OIB')).toBeNull();
     expect(container.querySelector('a')).toBeNull();
     expect(container.querySelector('.badge-success')).toBeNull();
+  });
+
+  it('opens detail via focusable invoice action without saldakonti id route', () => {
+    const onOpenDocument = vi.fn();
+    render(<DocumentTable rows={[sampleDocument()]} onOpenDocument={onOpenDocument} />);
+    const open = screen.getByRole('button', { name: 'Detalji računa Izlazni · R-100' });
+    fireEvent.click(open);
+    expect(onOpenDocument).toHaveBeenCalledWith({ direction: 'outgoing', id: 4 });
+    expect(screen.queryByRole('link')).toBeNull();
   });
 
   it('does not paint success from raw paid when operational status is empty', () => {
