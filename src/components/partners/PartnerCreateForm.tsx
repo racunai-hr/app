@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { ApiError } from '@/lib/api';
 import {
   jurisdictionFromCountryCode,
   PARTNER_COUNTRY_OPTIONS,
@@ -11,7 +10,8 @@ import {
 import {
   canWritePartners,
   createPartner,
-  PartnerApiError,
+  getPartnerConflict,
+  partnerErrorMessage,
   partnerTaxLabel,
   partnerVatLabel,
 } from '@/lib/partners';
@@ -45,8 +45,7 @@ export function PartnerCreateForm({ slug }: Props) {
       {loading && <div className="loading">Učitavanje…</div>}
       {session && (
         <form
-          className="filter-bar"
-          style={{ flexDirection: 'column', alignItems: 'stretch', maxWidth: 480 }}
+          className="partner-form"
           onSubmit={async (event) => {
             event.preventDefault();
             const fd = new FormData(event.currentTarget);
@@ -55,24 +54,29 @@ export function PartnerCreateForm({ slug }: Props) {
             try {
               const created = await createPartner(session.origin, session.token, {
                 name: String(fd.get('name') || ''),
+                short_name: String(fd.get('short_name') || ''),
                 partner_type: String(fd.get('partner_type') || 'customer'),
                 country_code: countryCode,
                 tax_number: String(fd.get('tax_number') || ''),
                 vat_number: String(fd.get('vat_number') || ''),
+                registration_number: String(fd.get('registration_number') || ''),
                 address: String(fd.get('address') || ''),
                 city: String(fd.get('city') || ''),
                 postal_code: String(fd.get('postal_code') || ''),
                 email: String(fd.get('email') || ''),
                 phone: String(fd.get('phone') || ''),
+                mobile: String(fd.get('mobile') || ''),
+                payment_terms: Number(fd.get('payment_terms') || 30),
               });
               router.replace(`/t/${slug}/partneri/${created.id}`);
             } catch (err) {
-              if (err instanceof PartnerApiError && err.conflict?.code === 'partner_tax_number_conflict') {
+              const conflict = getPartnerConflict(err)?.code;
+              if (conflict === 'partner_tax_number_conflict') {
                 setError(`Partner s ovim ${partnerTaxLabel(jurisdiction)}om već postoji.`);
-              } else if (err instanceof PartnerApiError && err.conflict?.code === 'partner_vat_number_conflict') {
+              } else if (conflict === 'partner_vat_number_conflict') {
                 setError('Partner s ovim VAT ID-om već postoji.');
               } else {
-                setError(err instanceof ApiError ? err.message : 'Spremanje nije uspjelo.');
+                setError(partnerErrorMessage(err));
               }
             } finally {
               setSaving(false);
@@ -82,6 +86,10 @@ export function PartnerCreateForm({ slug }: Props) {
           <label>
             Naziv
             <input name="name" required />
+          </label>
+          <label>
+            Kratki naziv
+            <input name="short_name" />
           </label>
           <label>
             Tip
@@ -132,6 +140,10 @@ export function PartnerCreateForm({ slug }: Props) {
             <input name="vat_number" />
           </label>
           <label>
+            MB / MBS
+            <input name="registration_number" />
+          </label>
+          <label>
             Adresa
             <input name="address" required />
           </label>
@@ -150,6 +162,14 @@ export function PartnerCreateForm({ slug }: Props) {
           <label>
             Telefon
             <input name="phone" />
+          </label>
+          <label>
+            Mobitel
+            <input name="mobile" />
+          </label>
+          <label>
+            Uvjeti plaćanja (dani)
+            <input name="payment_terms" type="number" defaultValue={30} />
           </label>
           <button type="submit" className="btn" disabled={saving}>
             Spremi
