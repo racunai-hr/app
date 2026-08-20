@@ -84,17 +84,19 @@ export function InvoiceReview({ slug, importId }: Props) {
     event.preventDefault();
     if (!session || !run) return;
     const fd = new FormData(event.currentTarget);
+    const countryCode = String(fd.get('country_code') || '').trim().toUpperCase();
+    const isHr = countryCode === 'HR';
     setBusy(true);
     setError('');
     try {
       const next = await createPartnerFromImport(session.origin, session.token, run.id, {
         name: String(fd.get('name') || ''),
-        tax_number: String(fd.get('tax_number') || ''),
+        tax_number: isHr ? String(fd.get('tax_number') || '') : '',
+        vat_number: String(fd.get('vat_number') || ''),
         address: String(fd.get('address') || ''),
         city: String(fd.get('city') || ''),
         postal_code: String(fd.get('postal_code') || ''),
-        country: String(fd.get('country') || ''),
-        country_code: String(fd.get('country_code') || ''),
+        country_code: countryCode,
         iban: String(fd.get('iban') || ''),
         partner_type: 'supplier',
       });
@@ -160,6 +162,8 @@ export function InvoiceReview({ slug, importId }: Props) {
   const confirmed = run?.status === 'confirmed';
   const discarded = run?.status === 'discarded';
   const canAct = run?.status === 'extracted' && !busy;
+  const supplierCountry = (supplier?.country_code || '').toUpperCase();
+  const supplierIsForeign = Boolean(supplierCountry && supplierCountry !== 'HR');
 
   return (
     <section className="docs-shell">
@@ -208,17 +212,29 @@ export function InvoiceReview({ slug, importId }: Props) {
                   <strong>Novi dobavljač pronađen</strong>
                 </p>
                 <p>
-                  {supplier?.name} · {supplier?.country_code === 'HR' ? 'OIB' : 'Porezni ID'}{' '}
-                  {supplier?.oib || '—'}
+                  {supplier?.name}
+                  {supplierIsForeign
+                    ? ` · VAT ID ${supplier?.vat_number || '—'}`
+                    : ` · OIB ${supplier?.oib || '—'}`}
                 </p>
                 <form className="ocr-partner-form" onSubmit={handleCreatePartner}>
                   <label>
                     Naziv
                     <input name="name" required defaultValue={supplier?.name || ''} />
                   </label>
+                  {!supplierIsForeign && (
+                    <label>
+                      OIB
+                      <input name="tax_number" required defaultValue={supplier?.oib || ''} />
+                    </label>
+                  )}
                   <label>
-                    {supplier?.country_code === 'HR' || !supplier?.country_code ? 'OIB' : 'Porezni ID'}
-                    <input name="tax_number" required defaultValue={supplier?.oib || ''} />
+                    VAT ID
+                    <input
+                      name="vat_number"
+                      required={supplierIsForeign}
+                      defaultValue={supplier?.vat_number || ''}
+                    />
                   </label>
                   <label>
                     Adresa
@@ -236,11 +252,11 @@ export function InvoiceReview({ slug, importId }: Props) {
                     Država (ISO, npr. HR)
                     <input
                       name="country_code"
+                      required
                       defaultValue={supplier?.country_code || ''}
                       placeholder="HR"
                     />
                   </label>
-                  <input type="hidden" name="country" value={supplier?.country || ''} />
                   <label>
                     IBAN
                     <input name="iban" defaultValue={supplier?.iban || ''} />
@@ -253,7 +269,12 @@ export function InvoiceReview({ slug, importId }: Props) {
             ) : (
               <>
                 <p>
-                  {run.partner.name} · OIB {run.partner.tax_number}
+                  {run.partner.name}
+                  {run.partner.tax_number
+                    ? ` · OIB ${run.partner.tax_number}`
+                    : run.partner.match === 'vat'
+                      ? ' · VAT match'
+                      : ''}
                   {run.partner.match === 'iban_candidate' ? ' · spojeno preko IBAN-a ⚠' : ''}
                 </p>
                 {hasDiff ? (

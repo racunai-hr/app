@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ApiError } from '@/lib/api';
-import { fetchPaymentOrders, maskIban, type Paginated, type PaymentOrderDto } from '@/lib/banking';
+import { fetchPaymentOrders, formatIban, type Paginated, type PaymentOrderDto } from '@/lib/banking';
 import { PAYMENT_ORDER_STATUS_LABELS, labelOrRaw } from '@/lib/bankingLabels';
 import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
 import { DateField } from '@/components/documents/DateField';
@@ -127,12 +127,12 @@ export function PaymentOrderList({ slug, origin, token }: Props) {
                   </td>
                   <td>{formatHrMoney(row.amount, row.currency)}</td>
                   <td>
-                    <code>{maskIban(row.debtor_iban)}</code>
+                    <code>{formatIban(row.debtor_iban)}</code>
                   </td>
                   <td>
                     <div className="cell-stack">
                       <span>{row.creditor_name}</span>
-                      <code>{maskIban(row.creditor_iban)}</code>
+                      <code>{formatIban(row.creditor_iban)}</code>
                     </div>
                   </td>
                   <td>{row.reference || '—'}</td>

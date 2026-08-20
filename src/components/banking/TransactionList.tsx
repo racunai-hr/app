@@ -5,8 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ApiError } from '@/lib/api';
 import {
+  fetchOpenItemCandidates,
   fetchTransactions,
-  maskIban,
+  formatIban,
+  newBankingIdempotencyKey,
+  reconcileOpenItem,
+  type OpenItemCandidate,
   type Paginated,
   type TransactionDto,
 } from '@/lib/banking';
@@ -28,6 +32,55 @@ type Props = {
   /** When set, force match_status and show status tabs. */
   reconcileMode?: boolean;
 };
+
+function IconLink({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconCheck({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M20 6 9 17l-5-5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconClose({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M18 6 6 18M6 6l12 12"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function matchTone(status: string): string {
   if (status === 'matched') return 'success';
@@ -60,6 +113,14 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
   const [data, setData] = useState<Paginated<TransactionDto> | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [activeTxId, setActiveTxId] = useState<number | null>(null);
+  const [candidates, setCandidates] = useState<OpenItemCandidate[]>([]);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  function reload() {
+    return fetchTransactions(origin, token, query).then((list) => setData(list));
+  }
 
   function replaceQuery(next: Partial<typeof query>) {
     const merged = { ...query, ...next };
@@ -110,6 +171,44 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
       date_to: String(form.get('date_to') || ''),
       page: 1,
     });
+  }
+
+  async function openPicker(txId: number) {
+    setActiveTxId(txId);
+    setCandidates([]);
+    setCandidatesLoading(true);
+    setError('');
+    try {
+      const list = await fetchOpenItemCandidates(origin, token, txId);
+      setCandidates(list.results);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Kandidati nisu učitani.');
+      setActiveTxId(null);
+    } finally {
+      setCandidatesLoading(false);
+    }
+  }
+
+  async function confirmReconcile(item: OpenItemCandidate) {
+    if (activeTxId == null) return;
+    setBusy(true);
+    setError('');
+    try {
+      await reconcileOpenItem(
+        origin,
+        token,
+        activeTxId,
+        item.item_id,
+        newBankingIdempotencyKey(),
+      );
+      setActiveTxId(null);
+      setCandidates([]);
+      await reload();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Usklađivanje nije uspjelo.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
@@ -173,8 +272,9 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
 
       {reconcileMode && (
         <p className="disclaimer" role="note">
-          Usklađivanje ovdje znači vezu stavke s plaćanjem ili temeljnicom — nije knjiženje ni
-          zatvaranje saldakonta. Akcije match/unmatch dolaze u sljedećem koraku.
+          Veza je eksplicitna: odabir otvorene saldakonto stavke (ili kaucije) pokreće Finance
+          knjiženje i zatim bankovni match. CAMT/uvoz ne zatvara saldakonto. Unmatch samo skida
+          bankovnu vezu — ne stornira temeljnicu.
         </p>
       )}
 
@@ -200,11 +300,15 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
                 <th>Opis</th>
                 <th>Protustrana</th>
                 <th>Status</th>
+                {reconcileMode ? <th>Akcija</th> : null}
               </tr>
             </thead>
             <tbody>
               {data.results.map((row) => (
-                <tr key={row.id}>
+                <tr
+                  key={row.id}
+                  className={activeTxId === row.id ? 'banking-row-active' : undefined}
+                >
                   <td>{row.transaction_date}</td>
                   <td>{labelOrRaw(TRANSACTION_TYPE_LABELS, row.transaction_type)}</td>
                   <td>{formatHrMoney(row.amount, row.currency)}</td>
@@ -217,7 +321,7 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
                   <td>
                     <div className="cell-stack">
                       <span>{row.counterparty_name || '—'}</span>
-                      <code>{maskIban(row.counterparty_iban)}</code>
+                      <code>{formatIban(row.counterparty_iban)}</code>
                     </div>
                   </td>
                   <td>
@@ -225,12 +329,102 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
                       {labelOrRaw(MATCH_STATUS_LABELS, row.match_status)}
                     </span>
                   </td>
+                  {reconcileMode ? (
+                    <td className="banking-col-action">
+                      {row.match_status === 'unmatched' || row.match_status === 'suggested' ? (
+                        <button
+                          type="button"
+                          className={
+                            activeTxId === row.id
+                              ? 'banking-icon-btn banking-icon-btn-active'
+                              : 'banking-icon-btn'
+                          }
+                          disabled={busy || candidatesLoading}
+                          onClick={() => openPicker(row.id)}
+                          title="Poveži s otvorenom stavkom"
+                          aria-label={`Poveži transakciju ${row.id}`}
+                          aria-pressed={activeTxId === row.id}
+                        >
+                          <IconLink />
+                        </button>
+                      ) : (
+                        <span className="banking-action-muted" aria-hidden>
+                          ·
+                        </span>
+                      )}
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      {reconcileMode && activeTxId != null && (
+        <div className="banking-reconcile-panel">
+          <div className="banking-reconcile-panel-head">
+            <div>
+              <h2>Odaberi otvorenu stavku</h2>
+              <p className="banking-role-note">
+                Transakcija #{activeTxId}. Bankovni račun dolazi iz izvoda.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="banking-icon-btn"
+              disabled={busy}
+              onClick={() => setActiveTxId(null)}
+              title="Zatvori"
+              aria-label="Zatvori odabir stavke"
+            >
+              <IconClose />
+            </button>
+          </div>
+          {candidatesLoading && <div className="loading">Učitavanje kandidata…</div>}
+          {!candidatesLoading && candidates.length === 0 && (
+            <p className="table-empty">Nema otvorenih stavki istog iznosa i smjera.</p>
+          )}
+          {candidates.length > 0 && (
+            <div className="table-wrap">
+              <table className="docs-table">
+                <thead>
+                  <tr>
+                    <th>Partner</th>
+                    <th>Dokument</th>
+                    <th>Otvoreno</th>
+                    <th className="banking-col-action">Akcija</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {candidates.map((item) => (
+                    <tr key={item.item_id}>
+                      <td>{item.partner_name || '—'}</td>
+                      <td>
+                        {item.source_type} · {item.source_label}
+                      </td>
+                      <td>{item.open_amount}</td>
+                      <td className="banking-col-action">
+                        <button
+                          type="button"
+                          className="banking-action-btn"
+                          disabled={busy}
+                          onClick={() => confirmReconcile(item)}
+                          title={item.action_label}
+                        >
+                          <IconCheck />
+                          <span>{item.action_label}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {data && data.count > data.page_size && (
         <BankingPager page={data.page} pageCount={pageCount} onPage={(page) => replaceQuery({ page })} />
       )}

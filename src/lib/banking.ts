@@ -80,12 +80,13 @@ function buildParams(entries: Record<string, string | number | undefined>): URLS
   return params;
 }
 
-export function maskIban(iban: string | null | undefined): string {
+export function formatIban(iban: string | null | undefined): string {
   const raw = (iban || '').replace(/\s/g, '');
-  if (!raw) return '—';
-  if (raw.length <= 8) return raw;
-  return `${raw.slice(0, 4)}${'*'.repeat(raw.length - 8)}${raw.slice(-4)}`;
+  return raw || '—';
 }
+
+/** @deprecated Use formatIban — IBAN is shown in full. */
+export const maskIban = formatIban;
 
 export async function fetchBankingOverview(
   origin: string,
@@ -197,6 +198,70 @@ export async function fetchStatementImport(
   const response = await authorized(origin, `/api/banking/statement-imports/${id}/`, token, {
     signal,
   });
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export type OpenItemCandidate = {
+  item_id: number;
+  partner_id: number | null;
+  partner_name: string;
+  direction: string;
+  source_type: string;
+  source_id: number;
+  source_label: string;
+  open_amount: string;
+  due_date: string | null;
+  action_label: string;
+};
+
+export type OpenItemCandidateList = {
+  count: number;
+  results: OpenItemCandidate[];
+};
+
+export function newBankingIdempotencyKey(): string {
+  return crypto.randomUUID();
+}
+
+export async function fetchOpenItemCandidates(
+  origin: string,
+  token: string,
+  transactionId: number,
+  q?: string,
+): Promise<OpenItemCandidateList> {
+  const params = new URLSearchParams();
+  if (q) params.set('q', q);
+  const qs = params.toString();
+  const response = await authorized(
+    origin,
+    `/api/banking/transactions/${transactionId}/open-item-candidates/${qs ? `?${qs}` : ''}`,
+    token,
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function reconcileOpenItem(
+  origin: string,
+  token: string,
+  transactionId: number,
+  subledgerItemId: number,
+  idempotencyKey: string,
+): Promise<TransactionDto> {
+  const response = await authorized(
+    origin,
+    `/api/banking/transactions/${transactionId}/reconcile-open-item/`,
+    token,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify({ subledger_item_id: subledgerItemId }),
+    },
+  );
   if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
   return response.json();
 }

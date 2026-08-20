@@ -80,7 +80,7 @@ export function BankingReconciliationRoute() {
     <BankingPage
       slug={params.slug}
       title="Usklađivanje"
-      description="Pregled veza bankovnih stavki s evidencijom. Bez akcija match/unmatch u ovom koraku."
+      description="Eksplicitno povezivanje bankovnih stavki s otvorenim saldakontom ili kaucijom."
     >
       {({ origin, token }) => (
         <TransactionList origin={origin} token={token} basePath={basePath} reconcileMode />

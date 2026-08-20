@@ -49,13 +49,13 @@ describe('BankingOverview', () => {
     vi.clearAllMocks();
   });
 
-  it('shows KPI, masked IBAN and balance provenance without write actions', async () => {
+  it('shows KPI, full IBAN and balance provenance without write actions', async () => {
     render(<BankingOverview origin="https://finestar-stage.racunai.hr" token="token" />);
     await waitFor(() => {
       expect(screen.getByText('Neusklađene transakcije')).toBeInTheDocument();
     });
     expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('HR12*************0160')).toBeInTheDocument();
+    expect(screen.getByText('HR1210010051863000160')).toBeInTheDocument();
     expect(screen.getByText(/izvor Izvod/)).toBeInTheDocument();
     expect(screen.getByText('Svježe')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /uvoz|sync|match|usklađi/i })).toBeNull();

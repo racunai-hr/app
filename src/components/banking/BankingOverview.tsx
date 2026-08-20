@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { ApiError } from '@/lib/api';
 import {
   fetchBankingOverview,
-  maskIban,
+  formatIban,
   type BankingOverviewResponse,
 } from '@/lib/banking';
 import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
@@ -106,7 +106,7 @@ export function BankingOverview({ origin, token }: Props) {
                       </div>
                     </td>
                     <td>
-                      <code>{maskIban(account.iban)}</code>
+                      <code>{formatIban(account.iban)}</code>
                     </td>
                     <td>{account.currency}</td>
                     <td>

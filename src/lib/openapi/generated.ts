@@ -236,6 +236,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/banking/transactions/{id}/open-item-candidates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["banking_transactions_open_item_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/transactions/{id}/reconcile-open-item/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["banking_transactions_reconcile_open_item"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/banking/transactions/{id}/unmatch/": {
         parameters: {
             query?: never;
@@ -326,6 +358,118 @@ export interface paths {
         get: operations["documents_attachment_download"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/deposits/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_deposits_list"];
+        put?: never;
+        post: operations["finance_deposits_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/deposits/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_deposits_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/deposits/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_deposits_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/deposits/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_deposits_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/deposits/{id}/return/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_deposits_return"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/deposits/{id}/reverse/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_deposits_reverse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/expenses/{id}/approve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_expenses_approve"];
         delete?: never;
         options?: never;
         head?: never;
@@ -719,9 +863,20 @@ export interface components {
             is_primary?: boolean;
             is_active?: boolean;
         };
+        CreateDepositRequest: {
+            partner_id: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount: string;
+            /** @default EUR */
+            currency: string;
+            /** Format: date */
+            deposit_date: string;
+            reference?: string;
+            notes?: string;
+        };
         CreatePartnerFromImportRequest: {
             name: string;
-            tax_number: string;
+            tax_number?: string;
             address: string;
             city: string;
             postal_code: string;
@@ -739,14 +894,45 @@ export interface components {
             open_receivables: string | null;
             open_payables: string | null;
         };
+        Deposit: {
+            id: number;
+            number: string;
+            partner_id: number;
+            partner_name: string;
+            direction: string;
+            amount: string;
+            currency: string;
+            deposit_date: string | null;
+            workflow_status: string;
+            operational_status: string;
+            open_amount: string;
+            reference: string;
+            notes: string;
+            return_date: string | null;
+            return_bank_account_id: number | null;
+            given_journal_entry_id: number | null;
+            return_journal_entry_id: number | null;
+            reverse_journal_entry_id: number | null;
+            created_at: string | null;
+        };
+        DepositConflict: {
+            code: string;
+            detail: string;
+        };
+        DepositList: {
+            count: number;
+            results: components["schemas"]["Deposit"][];
+        };
         /**
          * @description * `incoming` - incoming
          *     * `outgoing` - outgoing
+         *     * `deposit` - deposit
          * @enum {string}
          */
-        DirectionEnum: "incoming" | "outgoing";
+        DirectionEnum: "incoming" | "outgoing" | "deposit";
         DocumentDetail: {
             id: number;
+            kind: components["schemas"]["KindEnum"];
             direction: components["schemas"]["DirectionEnum"];
             internal_number: string | null;
             source_number: string | null;
@@ -807,6 +993,7 @@ export interface components {
         };
         DocumentSummary: {
             id: number;
+            kind: components["schemas"]["KindEnum"];
             direction: components["schemas"]["DirectionEnum"];
             internal_number: string | null;
             source_number: string | null;
@@ -844,6 +1031,18 @@ export interface components {
         /** @description DRF-style error body: ``{"detail": ...}`` where detail may be str or object. */
         ErrorDetail: {
             detail: unknown;
+        };
+        ExpenseApproveResponse: {
+            id: number;
+            expense_number: string;
+            status: string;
+            amount: string;
+            currency: string;
+            expense_date: string | null;
+            due_date: string | null;
+            supplier_id: number | null;
+            settlement_method: string;
+            approved_by_id: number | null;
         };
         ExportLimitError: {
             detail: string;
@@ -944,6 +1143,13 @@ export interface components {
             credit: string;
             description: string;
         };
+        /**
+         * @description * `invoice` - invoice
+         *     * `expense` - expense
+         *     * `deposit` - deposit
+         * @enum {string}
+         */
+        KindEnum: "invoice" | "expense" | "deposit";
         LedgerEntry: {
             ledger_type: string;
             vat_box: string | null;
@@ -962,6 +1168,23 @@ export interface components {
         };
         /** @enum {unknown} */
         NullEnum: null;
+        OpenItemCandidate: {
+            item_id: number;
+            partner_id: number | null;
+            partner_name: string;
+            direction: string;
+            source_type: string;
+            source_id: number;
+            source_label: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            open_amount: string;
+            due_date: string | null;
+            action_label: string;
+        };
+        OpenItemCandidateList: {
+            count: number;
+            results: components["schemas"]["OpenItemCandidate"][];
+        };
         PaginatedBankAccounts: {
             as_of: string;
             count: number;
@@ -1208,9 +1431,9 @@ export interface components {
             /** @description Decimal as string, e.g. "1100.00" */
             amount: string;
             currency: string;
-            /** @description Masked IBAN */
+            /** @description IBAN dužnika */
             debtor_iban: string;
-            /** @description Masked IBAN */
+            /** @description IBAN vjerovnika */
             creditor_iban: string;
             creditor_name: string;
             reference: string;
@@ -1252,6 +1475,16 @@ export interface components {
          * @enum {string}
          */
         ReasonEnum: "not_recorded" | "not_provable" | "not_applicable";
+        ReconcileOpenItemRequestRequest: {
+            subledger_item_id: number;
+        };
+        ReturnDepositRequest: {
+            return_bank_account_id: number;
+            /** Format: date */
+            return_date?: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount?: string;
+        };
         StatementDetail: {
             id: number;
             statement_number: string;
@@ -2030,6 +2263,112 @@ export interface operations {
             };
         };
     };
+    banking_transactions_open_item_candidates: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenItemCandidateList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    banking_transactions_reconcile_open_item: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReconcileOpenItemRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReconcileOpenItemRequestRequest"];
+                "multipart/form-data": components["schemas"]["ReconcileOpenItemRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Neprocesibilan zahtjev (validacija write operacije) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     banking_transactions_unmatch: {
         parameters: {
             query?: never;
@@ -2086,7 +2425,7 @@ export interface operations {
                 currency?: string;
                 date_from?: string;
                 date_to?: string;
-                direction?: "incoming" | "outgoing";
+                direction?: "deposit" | "incoming" | "outgoing";
                 due_from?: string;
                 due_to?: string;
                 month?: number;
@@ -2242,7 +2581,7 @@ export interface operations {
                 currency?: string;
                 date_from?: string;
                 date_to?: string;
-                direction?: "incoming" | "outgoing";
+                direction?: "deposit" | "incoming" | "outgoing";
                 due_from?: string;
                 due_to?: string;
                 /** @description Export file type (default csv) */
@@ -2349,6 +2688,419 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CodeDetail"];
+                };
+            };
+        };
+    };
+    finance_deposits_list: {
+        parameters: {
+            query?: {
+                partner_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_deposits_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDepositRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateDepositRequest"];
+                "multipart/form-data": components["schemas"]["CreateDepositRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deposit"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_deposits_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deposit"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_deposits_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deposit"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositConflict"];
+                };
+            };
+        };
+    };
+    finance_deposits_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deposit"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositConflict"];
+                };
+            };
+        };
+    };
+    finance_deposits_return: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnDepositRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReturnDepositRequest"];
+                "multipart/form-data": components["schemas"]["ReturnDepositRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deposit"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositConflict"];
+                };
+            };
+        };
+    };
+    finance_deposits_reverse: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deposit"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositConflict"];
+                };
+            };
+        };
+    };
+    finance_expenses_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseApproveResponse"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositConflict"];
                 };
             };
         };

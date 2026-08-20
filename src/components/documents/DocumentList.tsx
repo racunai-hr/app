@@ -26,12 +26,16 @@ const TABS: { value: '' | DocumentDirection; label: string }[] = [
   { value: '', label: 'Svi' },
   { value: 'outgoing', label: 'Izlazni' },
   { value: 'incoming', label: 'Ulazni' },
+  { value: 'deposit', label: 'Kaucije' },
 ];
 
 function queryFromSearch(params: URLSearchParams): DocumentListQuery {
   const direction = params.get('direction');
   return {
-    direction: direction === 'incoming' || direction === 'outgoing' ? direction : '',
+    direction:
+      direction === 'incoming' || direction === 'outgoing' || direction === 'deposit'
+        ? direction
+        : '',
     view: params.get('view') || '',
     search: params.get('search') || '',
     year: params.get('year') || '',

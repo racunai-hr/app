@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ApiError } from '@/lib/api';
 import {
   fetchBankAccounts,
-  maskIban,
+  formatIban,
   type BankAccountDto,
   type Paginated,
 } from '@/lib/banking';
@@ -87,7 +87,7 @@ export function BankAccountList({ slug, origin, token }: Props) {
                   <td>{row.account_name}</td>
                   <td>{row.bank_name}</td>
                   <td>
-                    <code>{maskIban(row.iban)}</code>
+                    <code>{formatIban(row.iban)}</code>
                   </td>
                   <td>{row.currency}</td>
                   <td>{row.connection ? row.connection.status : '—'}</td>

@@ -1,7 +1,8 @@
 import { API_URL, ApiError, parseError as parseApiError } from './api';
 import type { Provenance } from './provenance';
 
-export type DocumentDirection = 'incoming' | 'outgoing';
+export type DocumentDirection = 'incoming' | 'outgoing' | 'deposit';
+export type DocumentKind = 'invoice' | 'expense' | 'deposit';
 
 export type DocumentAmounts = {
   currency: string;
@@ -13,6 +14,7 @@ export type DocumentAmounts = {
 
 export type DocumentSummary = {
   id: number;
+  kind?: DocumentKind;
   direction: DocumentDirection;
   internal_number: string | null;
   source_number: string | null;
@@ -74,7 +76,7 @@ export function tenantApiOrigin(adminUrl: string): string {
 export function buildDocumentQuery(query: DocumentListQuery, options?: { includePage?: boolean }): URLSearchParams {
   const params = new URLSearchParams();
   const includePage = options?.includePage !== false;
-  if (query.direction === 'incoming' || query.direction === 'outgoing') {
+  if (query.direction === 'incoming' || query.direction === 'outgoing' || query.direction === 'deposit') {
     params.set('direction', query.direction);
   }
   if (query.view) params.set('view', query.view);

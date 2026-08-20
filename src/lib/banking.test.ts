@@ -1,25 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import { maskIban } from './banking';
+import { formatIban } from './banking';
 import { bankingRoleCapabilityNote, labelOrRaw, MATCH_STATUS_LABELS } from './bankingLabels';
 
-describe('maskIban', () => {
-  it('masks middle characters and keeps first/last 4', () => {
-    expect(maskIban('HR1210010051863000160')).toBe('HR12*************0160');
+describe('formatIban', () => {
+  it('returns the full IBAN without masking', () => {
+    expect(formatIban('HR1210010051863000160')).toBe('HR1210010051863000160');
   });
 
   it('returns em dash for empty values', () => {
-    expect(maskIban('')).toBe('—');
-    expect(maskIban(null)).toBe('—');
-    expect(maskIban(undefined)).toBe('—');
+    expect(formatIban('')).toBe('—');
+    expect(formatIban(null)).toBe('—');
+    expect(formatIban(undefined)).toBe('—');
   });
 
-  it('leaves short values unmasked', () => {
-    expect(maskIban('HR12')).toBe('HR12');
-  });
-
-  it('strips spaces before masking', () => {
-    expect(maskIban('HR12 1001 0051 8630 0016 0')).toBe('HR12*************0160');
+  it('strips spaces', () => {
+    expect(formatIban('HR12 1001 0051 8630 0016 0')).toBe('HR1210010051863000160');
   });
 });
 

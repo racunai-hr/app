@@ -3,6 +3,7 @@ import type { ProvenanceReason } from './provenance';
 export const DIRECTION_LABELS = {
   outgoing: 'Izlazni',
   incoming: 'Ulazni',
+  deposit: 'Kaucija',
 } as const;
 
 export const SYSTEM_VIEWS = [
@@ -28,6 +29,9 @@ export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
   cancelled: 'Otkazan',
   approved: 'Odobren',
   rejected: 'Odbijen',
+  open: 'Otvoreno',
+  returned: 'Vraćeno',
+  reversed: 'Stornirano',
 };
 
 export const OPERATIONAL_STATUS_LABELS: Record<string, string> = {
@@ -47,6 +51,9 @@ export const OPERATIONAL_STATUS_LABELS: Record<string, string> = {
   approved: 'Odobren',
   pending_approval: 'Čeka odobrenje',
   received: 'Zaprimljen',
+  open: 'Otvoreno',
+  closed: 'Zatvoreno',
+  reversed: 'Stornirano',
 };
 
 export const SUBLEDGER_LABELS: Record<string, string> = {
@@ -64,7 +71,7 @@ export const VAT_LIFECYCLE_LABELS: Record<string, string> = {
 };
 
 export const CONTROL_LABELS: Record<string, string> = {
-  missing_partner_or_oib: 'Nedostaje partner ili OIB',
+  missing_partner_or_oib: 'Nedostaje partner ili porezni ID',
   missing_due_date: 'Nedostaje datum dospijeća',
   missing_pdf_xml: 'Nedostaje PDF/XML',
   possible_duplicate: 'Mogući duplikat',
