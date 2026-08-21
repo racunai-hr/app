@@ -17,5 +17,9 @@ yarn-error.log*
 
 .env*
 !.env.example
+scripts/.env.turnstile
 
 *.tsbuildinfo
+
+# Local review screenshots, not product assets
+/public/review-*.png

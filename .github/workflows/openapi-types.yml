@@ -1,0 +1,30 @@
+name: OpenAPI TypeScript types
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Regenerate types from synced contract
+        run: npm run generate:api-types
+      - name: Fail on stale generated.ts
+        run: git diff --exit-code -- src/lib/openapi/generated.ts
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Upload generated types (PR review)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-api-types
+          path: |
+            openapi/openapi.yaml
+            src/lib/openapi/generated.ts
