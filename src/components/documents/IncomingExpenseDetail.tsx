@@ -420,14 +420,14 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                   <dt>Obveza</dt>
                   <dd>
                     {money(detail.settlement_trail.totals.obligation, currency)}
-                    {detail.settlement_trail.obligation?.journal_entry_id &&
-                    detail.settlement_trail.obligation.entry_number ? (
+                    {detail.settlement_trail.obligation?.journal_entry_id != null ? (
                       <>
                         {' · '}
                         <Link
                           href={`/t/${slug}/glavna-knjiga/${detail.settlement_trail.obligation.journal_entry_id}`}
                         >
-                          {detail.settlement_trail.obligation.entry_number}
+                          {detail.settlement_trail.obligation.entry_number ||
+                            `#${detail.settlement_trail.obligation.journal_entry_id}`}
                         </Link>
                       </>
                     ) : null}
@@ -459,12 +459,12 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                           <td>{row.label}</td>
                           <td className="cell-amount">{money(row.amount, currency)}</td>
                           <td>
-                            {row.journal_entry_id && row.entry_number ? (
+                            {row.journal_entry_id != null ? (
                               <Link href={`/t/${slug}/glavna-knjiga/${row.journal_entry_id}`}>
-                                {row.entry_number}
+                                {row.entry_number || `#${row.journal_entry_id}`}
                               </Link>
                             ) : (
-                              row.entry_number || row.journal_entry_id || '—'
+                              row.entry_number || '—'
                             )}
                           </td>
                           <td>
@@ -512,12 +512,12 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                   <ul className="incoming-trail-system-list">
                     {detail.settlement_trail.system_entries.map((entry) => (
                       <li key={entry.journal_entry_id}>
-                        {entry.entry_number && entry.journal_entry_id ? (
+                        {entry.journal_entry_id != null ? (
                           <Link href={`/t/${slug}/glavna-knjiga/${entry.journal_entry_id}`}>
-                            {entry.entry_number}
+                            {entry.entry_number || `#${entry.journal_entry_id}`}
                           </Link>
                         ) : (
-                          entry.entry_number || `#${entry.journal_entry_id}`
+                          entry.entry_number || '—'
                         )}
                         {' · '}
                         {money(entry.amount, currency)}
