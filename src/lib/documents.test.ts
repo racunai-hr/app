@@ -27,8 +27,26 @@ describe('documents client', () => {
   });
 
   it('reads the tenant API origin from the admin URL', () => {
+    const previous = process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE;
+    delete process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE;
     expect(tenantApiOrigin('https://finestar-stage.racunai.hr/admin/')).toBe(
       'https://finestar-stage.racunai.hr',
     );
+    if (previous === undefined) {
+      delete process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE;
+    } else {
+      process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE = previous;
+    }
+  });
+
+  it('honours API origin override for local WSL', () => {
+    const previous = process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE;
+    process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE = 'http://localhost:8000';
+    expect(tenantApiOrigin('https://finestar-stage.racunai.hr/admin/')).toBe('http://localhost:8000');
+    if (previous === undefined) {
+      delete process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE;
+    } else {
+      process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE = previous;
+    }
   });
 });

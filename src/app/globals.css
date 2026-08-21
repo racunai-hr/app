@@ -861,3 +861,176 @@ input {
     grid-template-columns: 1fr;
   }
 }
+
+/* Incoming expense detail (PR B) */
+.incoming-detail {
+  max-width: 1440px;
+  overflow-x: hidden;
+}
+
+.incoming-detail-crumb {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.incoming-detail-crumb a {
+  color: var(--accent);
+}
+
+.incoming-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.incoming-detail-subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+}
+
+.incoming-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.incoming-top-grid,
+.incoming-mid-grid,
+.incoming-skel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.incoming-mid-grid {
+  grid-template-columns: 1.4fr 1fr;
+}
+
+.incoming-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  min-width: 0;
+}
+
+.incoming-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.incoming-card-title {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+
+.incoming-card-title a {
+  color: var(--accent);
+}
+
+.incoming-dl {
+  display: grid;
+  gap: 0.45rem 1rem;
+  margin: 0;
+}
+
+.incoming-dl > div {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.incoming-dl dt {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.incoming-dl dd {
+  margin: 0;
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.incoming-dl-inline {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.incoming-dl-inline > div {
+  grid-template-columns: 1fr;
+}
+
+.incoming-totals .incoming-total-strong dt,
+.incoming-totals .incoming-total-strong dd {
+  font-weight: 700;
+}
+
+.incoming-table-wrap {
+  overflow-x: auto;
+}
+
+.incoming-notes {
+  margin: 0;
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.incoming-ref-list {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.incoming-technical summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.incoming-detail-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.incoming-skel-row,
+.incoming-skel-card,
+.incoming-skel-table {
+  background: linear-gradient(90deg, var(--surface-hover), var(--surface), var(--surface-hover));
+  background-size: 200% 100%;
+  animation: incoming-skel 1.2s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.incoming-skel-row {
+  height: 3.5rem;
+}
+
+.incoming-skel-card {
+  height: 10rem;
+}
+
+.incoming-skel-table {
+  height: 12rem;
+}
+
+@keyframes incoming-skel {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .incoming-top-grid,
+  .incoming-mid-grid,
+  .incoming-skel-grid {
+    grid-template-columns: 1fr;
+  }
+}
