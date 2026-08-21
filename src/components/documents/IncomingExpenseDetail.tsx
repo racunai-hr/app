@@ -437,7 +437,15 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
             <dl className="incoming-dl incoming-dl-inline">
               <div>
                 <dt>Temeljnica</dt>
-                <dd>{detail.accounting?.entry_number || '—'}</dd>
+                <dd>
+                  {detail.accounting?.journal_entry_id && detail.accounting.entry_number ? (
+                    <Link href={`/t/${slug}/glavna-knjiga/${detail.accounting.journal_entry_id}`}>
+                      {detail.accounting.entry_number}
+                    </Link>
+                  ) : (
+                    detail.accounting?.entry_number || '—'
+                  )}
+                </dd>
               </div>
               <div>
                 <dt>Datum</dt>

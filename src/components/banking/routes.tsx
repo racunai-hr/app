@@ -67,7 +67,7 @@ export function BankingTransactionsRoute() {
       description="Stavke bankovnih izvoda s filterima i statusom usklađivanja."
     >
       {({ origin, token }) => (
-        <TransactionList origin={origin} token={token} basePath={basePath} />
+        <TransactionList slug={params.slug} origin={origin} token={token} basePath={basePath} />
       )}
     </BankingPage>,
   );
@@ -83,7 +83,7 @@ export function BankingReconciliationRoute() {
       description="Eksplicitno povezivanje bankovnih stavki s otvorenim saldakontom ili kaucijom."
     >
       {({ origin, token }) => (
-        <TransactionList origin={origin} token={token} basePath={basePath} reconcileMode />
+        <TransactionList slug={params.slug} origin={origin} token={token} basePath={basePath} reconcileMode />
       )}
     </BankingPage>,
   );

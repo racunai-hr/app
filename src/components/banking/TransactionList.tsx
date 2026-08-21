@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ApiError } from '@/lib/api';
@@ -25,6 +26,7 @@ import { DateField } from '@/components/documents/DateField';
 import { BankingPager } from './BankingPager';
 
 type Props = {
+  slug: string;
   origin: string;
   token: string;
   /** Base path for URL filters, e.g. /t/x/bankarstvo/transakcije */
@@ -102,7 +104,7 @@ function queryFromSearch(params: URLSearchParams, reconcileMode?: boolean) {
   };
 }
 
-export function TransactionList({ origin, token, basePath, reconcileMode }: Props) {
+export function TransactionList({ slug, origin, token, basePath, reconcileMode }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchKey = searchParams.toString();
@@ -325,9 +327,19 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
                     </div>
                   </td>
                   <td>
-                    <span className={`badge badge-${matchTone(row.match_status)}`}>
-                      {labelOrRaw(MATCH_STATUS_LABELS, row.match_status)}
-                    </span>
+                    <div className="cell-stack">
+                      <span className={`badge badge-${matchTone(row.match_status)}`}>
+                        {labelOrRaw(MATCH_STATUS_LABELS, row.match_status)}
+                      </span>
+                      {row.match_status === 'matched' && row.matched_journal_entry_id != null ? (
+                        <Link
+                          className="banking-je-link"
+                          href={`/t/${slug}/glavna-knjiga/${row.matched_journal_entry_id}`}
+                        >
+                          Temeljnica
+                        </Link>
+                      ) : null}
+                    </div>
                   </td>
                   {reconcileMode ? (
                     <td className="banking-col-action">

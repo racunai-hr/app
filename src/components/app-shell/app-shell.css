@@ -977,6 +977,17 @@
   opacity: 0.45;
 }
 
+.banking-je-link {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent, #2f6fed);
+  text-decoration: none;
+}
+
+.banking-je-link:hover {
+  text-decoration: underline;
+}
+
 .banking-row-active td {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
