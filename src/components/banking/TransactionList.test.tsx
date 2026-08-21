@@ -48,6 +48,40 @@ describe('TransactionList GL deep-link', () => {
     fetchTransactions.mockReset();
     searchParams.delete('match_status');
     searchParams.delete('page');
+    searchParams.delete('tx');
+    searchParams.delete('statement');
+  });
+
+  it('highlights row when ?tx= matches transaction id', async () => {
+    searchParams.set('statement', '28');
+    searchParams.set('tx', '39');
+    fetchTransactions.mockResolvedValue({
+      as_of: '2026-08-19T10:00:00Z',
+      count: 2,
+      page: 1,
+      page_size: 20,
+      results: [
+        tx({ id: 10, description: 'Other' }),
+        tx({ id: 39, description: 'Target tx', bank_statement_id: 28 }),
+      ],
+    });
+    const { container } = render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/transakcije"
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('Target tx')).toBeInTheDocument());
+    const row = container.querySelector('#tx-39');
+    expect(row).not.toBeNull();
+    expect(row).toHaveClass('banking-row-active');
+    expect(fetchTransactions).toHaveBeenCalledWith(
+      'https://x',
+      't',
+      expect.objectContaining({ statement: '28' }),
+    );
   });
 
   it('shows Temeljnica link under Usklađeno when matched with journal id', async () => {

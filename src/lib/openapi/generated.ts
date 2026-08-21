@@ -1142,6 +1142,7 @@ export interface components {
             vat_context?: components["schemas"]["VatContext"];
             subledger_context?: components["schemas"]["SubledgerContext"];
             payment?: components["schemas"]["PaymentBlock"];
+            settlement_trail?: components["schemas"]["SettlementTrail"];
         };
         DocumentItem: {
             item_name: string;
@@ -1721,6 +1722,51 @@ export interface components {
             reference: string | null;
             reconcile_status: string | null;
             bank_transaction_id: number | null;
+        };
+        SettlementTrailObligation: {
+            amount: string | null;
+            journal_entry_id: number | null;
+            entry_number: string | null;
+            entry_date: string | null;
+        };
+        SettlementTrailClosing: {
+            /** @enum {string} */
+            kind: "bank" | "private_funds" | "other";
+            amount: string | null;
+            journal_entry_id: number | null;
+            entry_number: string | null;
+            allocation_id: number;
+            bank_transaction_id: number | null;
+            bank_statement_id: number | null;
+            counterparty_name: string | null;
+            private_funds_claim_id: number | null;
+            claim_number: string | null;
+            partner_id: number | null;
+            partner_name: string | null;
+            label: string;
+        };
+        SettlementTrailSystemEntry: {
+            kind: string;
+            amount: string | null;
+            journal_entry_id: number;
+            entry_number: string | null;
+            note: string;
+        };
+        SettlementTrailWarning: {
+            code: string;
+            message: string;
+        };
+        SettlementTrailTotals: {
+            obligation: string | null;
+            allocated: string | null;
+            open: string | null;
+        };
+        SettlementTrail: {
+            obligation: components["schemas"]["SettlementTrailObligation"] | null;
+            closings: components["schemas"]["SettlementTrailClosing"][];
+            system_entries: components["schemas"]["SettlementTrailSystemEntry"][];
+            warnings: components["schemas"]["SettlementTrailWarning"][];
+            totals: components["schemas"]["SettlementTrailTotals"];
         };
         /** @description Allowlist only — no SCA, tokens, provider secrets, or internal errors. */
         PaymentOrder: {

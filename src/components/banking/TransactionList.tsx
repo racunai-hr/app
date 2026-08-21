@@ -112,6 +112,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
     () => queryFromSearch(searchParams, reconcileMode),
     [searchKey, searchParams, reconcileMode],
   );
+  const highlightTxId = Number(searchParams.get('tx') || '') || null;
   const [data, setData] = useState<Paginated<TransactionDto> | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -158,6 +159,16 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
       cancelled = true;
     };
   }, [origin, token, searchKey, query]);
+
+  useEffect(() => {
+    if (highlightTxId == null || !data?.results.some((row) => row.id === highlightTxId)) {
+      return;
+    }
+    const node = document.getElementById(`tx-${highlightTxId}`);
+    if (node && typeof node.scrollIntoView === 'function') {
+      node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [data, highlightTxId]);
 
   function handleFilter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -309,7 +320,12 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
               {data.results.map((row) => (
                 <tr
                   key={row.id}
-                  className={activeTxId === row.id ? 'banking-row-active' : undefined}
+                  id={highlightTxId === row.id ? `tx-${row.id}` : undefined}
+                  className={
+                    activeTxId === row.id || highlightTxId === row.id
+                      ? 'banking-row-active'
+                      : undefined
+                  }
                 >
                   <td>{row.transaction_date}</td>
                   <td>{labelOrRaw(TRANSACTION_TYPE_LABELS, row.transaction_type)}</td>

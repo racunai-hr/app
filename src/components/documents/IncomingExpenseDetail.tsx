@@ -405,6 +405,131 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
             </section>
           </div>
 
+          {detail.settlement_trail ? (
+            <section className="incoming-card" aria-labelledby="settlement-trail-heading">
+              <h2 id="settlement-trail-heading">Tijek zatvaranja</h2>
+              {detail.settlement_trail.warnings.length > 0 ? (
+                <div className="error" role="alert">
+                  {detail.settlement_trail.warnings.map((warning) => (
+                    <p key={warning.code}>{warning.message}</p>
+                  ))}
+                </div>
+              ) : null}
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Obveza</dt>
+                  <dd>
+                    {money(detail.settlement_trail.totals.obligation, currency)}
+                    {detail.settlement_trail.obligation?.journal_entry_id &&
+                    detail.settlement_trail.obligation.entry_number ? (
+                      <>
+                        {' · '}
+                        <Link
+                          href={`/t/${slug}/glavna-knjiga/${detail.settlement_trail.obligation.journal_entry_id}`}
+                        >
+                          {detail.settlement_trail.obligation.entry_number}
+                        </Link>
+                      </>
+                    ) : null}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Alocirano</dt>
+                  <dd>{money(detail.settlement_trail.totals.allocated, currency)}</dd>
+                </div>
+                <div>
+                  <dt>Otvoreno</dt>
+                  <dd>{money(detail.settlement_trail.totals.open, currency)}</dd>
+                </div>
+              </dl>
+              {detail.settlement_trail.closings.length > 0 ? (
+                <div className="table-wrap incoming-table-wrap">
+                  <table className="docs-table">
+                    <thead>
+                      <tr>
+                        <th>Vrsta</th>
+                        <th>Iznos</th>
+                        <th>Temeljnica</th>
+                        <th>Dokaz</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.settlement_trail.closings.map((row) => (
+                        <tr key={row.allocation_id}>
+                          <td>{row.label}</td>
+                          <td className="cell-amount">{money(row.amount, currency)}</td>
+                          <td>
+                            {row.journal_entry_id && row.entry_number ? (
+                              <Link href={`/t/${slug}/glavna-knjiga/${row.journal_entry_id}`}>
+                                {row.entry_number}
+                              </Link>
+                            ) : (
+                              row.entry_number || row.journal_entry_id || '—'
+                            )}
+                          </td>
+                          <td>
+                            {row.kind === 'bank' && row.bank_transaction_id != null ? (
+                              <span className="cell-stack">
+                                <Link
+                                  href={
+                                    row.bank_statement_id != null
+                                      ? `/t/${slug}/bankarstvo/transakcije?statement=${row.bank_statement_id}&tx=${row.bank_transaction_id}`
+                                      : `/t/${slug}/bankarstvo/transakcije?tx=${row.bank_transaction_id}`
+                                  }
+                                >
+                                  Transakcija #{row.bank_transaction_id}
+                                </Link>
+                                {row.bank_statement_id != null ? (
+                                  <span>Izvod #{row.bank_statement_id}</span>
+                                ) : null}
+                              </span>
+                            ) : null}
+                            {row.kind === 'private_funds' ? (
+                              <span className="cell-stack">
+                                {row.claim_number ? <span>{row.claim_number}</span> : null}
+                                {row.partner_id && row.partner_name ? (
+                                  <Link href={`/t/${slug}/partneri/${row.partner_id}`}>
+                                    {row.partner_name}
+                                  </Link>
+                                ) : (
+                                  row.partner_name || null
+                                )}
+                              </span>
+                            ) : null}
+                            {row.kind === 'other' ? <span>—</span> : null}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="muted-inline">Nema alokacija zatvaranja.</p>
+              )}
+              {detail.settlement_trail.system_entries.length > 0 ? (
+                <div className="incoming-trail-system">
+                  <h3>Sistemska knjiženja</h3>
+                  <ul className="incoming-trail-system-list">
+                    {detail.settlement_trail.system_entries.map((entry) => (
+                      <li key={entry.journal_entry_id}>
+                        {entry.entry_number && entry.journal_entry_id ? (
+                          <Link href={`/t/${slug}/glavna-knjiga/${entry.journal_entry_id}`}>
+                            {entry.entry_number}
+                          </Link>
+                        ) : (
+                          entry.entry_number || `#${entry.journal_entry_id}`
+                        )}
+                        {' · '}
+                        {money(entry.amount, currency)}
+                        <span className="muted-inline"> — {entry.note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
           {integration ? (
             <section className="incoming-card">
               <h2>eRačun</h2>

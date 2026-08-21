@@ -924,6 +924,23 @@ input {
   font-size: 0.95rem;
 }
 
+.incoming-trail-system {
+  margin-top: 1rem;
+}
+
+.incoming-trail-system h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.incoming-trail-system-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
 .incoming-card-title {
   margin: 0 0 0.75rem;
   font-weight: 600;
