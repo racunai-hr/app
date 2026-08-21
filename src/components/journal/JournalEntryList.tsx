@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -88,7 +89,7 @@ export function JournalEntryList({ slug }: Props) {
       <header className="docs-heading">
         <div>
           <h1>Glavna knjiga{session ? ` — ${session.tenant.name}` : ''}</h1>
-          <p>Pregled knjiženih i nacrta temeljnica. Stavke i izvorni dokument dolaze u sljedećem koraku.</p>
+          <p>Pregled knjiženih i nacrta temeljnica. Klik na broj otvara stavke.</p>
         </div>
       </header>
 
@@ -141,7 +142,9 @@ export function JournalEntryList({ slug }: Props) {
             <tbody>
               {data.results.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.entry_number}</td>
+                  <td>
+                    <Link href={`/t/${slug}/glavna-knjiga/${row.id}`}>{row.entry_number}</Link>
+                  </td>
                   <td>{row.entry_date ? formatHrInputDate(row.entry_date) : '—'}</td>
                   <td>{row.description || '—'}</td>
                   <td>{journalSourceLabel(row.source_type)}</td>

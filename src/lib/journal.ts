@@ -2,6 +2,8 @@ import { ApiError, parseError as parseApiError } from './api';
 import type { components } from './openapi/generated';
 
 export type JournalEntryListItem = components['schemas']['JournalEntryListItem'];
+export type JournalEntryDetail = components['schemas']['JournalEntryDetail'];
+export type JournalEntryLine = components['schemas']['JournalEntryLine'];
 export type PaginatedJournalEntries = components['schemas']['PaginatedJournalEntries'];
 export type JournalSourceType = components['schemas']['SourceTypeEnum'];
 export type JournalStatus = components['schemas']['StatusEnum'];
@@ -74,6 +76,16 @@ export async function fetchJournalEntries(
     page_size: query.page_size || 20,
   });
   const response = await authorized(origin, `/api/finance/journal-entries/?${params}`, token);
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function fetchJournalEntry(
+  origin: string,
+  token: string,
+  id: number,
+): Promise<JournalEntryDetail> {
+  const response = await authorized(origin, `/api/finance/journal-entries/${id}/`, token);
   if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
   return response.json();
 }

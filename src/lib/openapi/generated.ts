@@ -532,6 +532,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/journal-entries/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_journal_entries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/partners/{id}/financial-summary/": {
         parameters: {
             query?: never;
@@ -1353,6 +1369,34 @@ export interface components {
             external_id: string | null;
             /** Format: uri */
             external_view_url: string | null;
+        };
+        JournalEntryDetail: {
+            id: number;
+            entry_number: string;
+            /** Format: date */
+            entry_date: string | null;
+            description: string;
+            status: components["schemas"]["StatusEnum"];
+            is_auto: boolean;
+            source_type: components["schemas"]["SourceTypeEnum"];
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_credit: string;
+            as_of: string;
+            reference: string;
+            source_id: number | null;
+            lines: components["schemas"]["JournalEntryLine"][];
+        };
+        JournalEntryLine: {
+            id: number;
+            account_code: string;
+            account_name: string;
+            description: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            credit: string;
         };
         JournalEntryListItem: {
             id: number;
@@ -3539,6 +3583,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_journal_entries_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntryDetail"];
                 };
             };
             /** @description Nedostaje ili je nevaljan Bearer token */

@@ -76,10 +76,10 @@ describe('JournalEntryList', () => {
     searchParams.delete('page');
   });
 
-  it('renders the read-only journal list with HR labels and no open action', async () => {
-    const { container } = render(<JournalEntryList slug="finestar" />);
+  it('renders the read-only journal list with HR labels and entry number links', async () => {
+    render(<JournalEntryList slug="finestar" />);
     await waitFor(() => {
-      expect(screen.getByText('202608-MAN')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: '202608-MAN' })).toBeInTheDocument();
     });
     expect(screen.getByText('Glavna knjiga — Fine Star d.o.o.')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Broj' })).toBeInTheDocument();
@@ -92,9 +92,16 @@ describe('JournalEntryList', () => {
     expect(screen.getByRole('cell', { name: 'Nacrt' })).toBeInTheDocument();
     expect(screen.getAllByText('10.347,20')).toHaveLength(2);
     expect(screen.getByText('19. 8. 2026. u 12:00')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '202608-MAN' })).toHaveAttribute(
+      'href',
+      '/t/finestar/glavna-knjiga/1',
+    );
+    expect(screen.getByRole('link', { name: '202607-INV' })).toHaveAttribute(
+      'href',
+      '/t/finestar/glavna-knjiga/2',
+    );
     expect(screen.queryByRole('button', { name: /otvori/i })).toBeNull();
     expect(screen.queryByRole('link', { name: /otvori/i })).toBeNull();
-    expect(container.querySelector('a[href*="/glavna-knjiga/"]')).toBeNull();
     expect(fetchJournalEntries).toHaveBeenCalledWith(
       'https://finestar-stage.racunai.hr',
       'token',
