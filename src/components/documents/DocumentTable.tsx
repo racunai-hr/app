@@ -57,6 +57,8 @@ export function DocumentTable({ rows, slug, onOpenDocument }: Props) {
                       <Link
                         href={incomingHref}
                         className="docs-row-open"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         aria-label={`Detalji računa ${label}`}
                       >
                         {label}

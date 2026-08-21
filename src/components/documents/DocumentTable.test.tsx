@@ -50,6 +50,8 @@ describe('DocumentTable', () => {
 
     const incoming = screen.getByRole('link', { name: 'Detalji računa Ulazni · T-30' });
     expect(incoming).toHaveAttribute('href', '/t/finestar/dokumenti/ulazni/30');
+    expect(incoming).toHaveAttribute('target', '_blank');
+    expect(incoming).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('does not paint success from raw paid when operational status is empty', () => {
