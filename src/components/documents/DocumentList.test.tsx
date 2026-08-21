@@ -96,8 +96,16 @@ describe('DocumentList', () => {
     expect(screen.getByText('nije dokazivo')).toHaveAttribute('data-tone', 'unknown');
     expect(screen.getByText('Status dokumenta: Poslan')).toBeInTheDocument();
     expect(screen.getByText('19. 8. 2026. u 12:00')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Detalji računa Izlazni · R-100' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Detalji računa Izlazni · R-100' })).toHaveAttribute(
+      'href',
+      '/t/finestar/dokumenti/izlazni/4',
+    );
+    expect(screen.getByRole('link', { name: 'Detalji računa Izlazni · R-100' })).toHaveAttribute(
+      'target',
+      '_blank',
+    );
     expect(container.querySelector('a[href*="/saldakonti/"]')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Detalji računa Izlazni · R-100' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Učitaj račun' })).toBeNull();
     expect(screen.queryByRole('button', { name: /spremi|obriši|pošalji/i })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull();

@@ -266,17 +266,18 @@ export function DocumentList({ slug }: { slug: string }) {
             rows={data.results}
             slug={slug}
             onOpenDocument={(next) => {
-              if (next.direction === 'incoming') return;
+              if (next.direction !== 'deposit') return;
               setSelection(next);
             }}
           />
         )}
 
-        {selection && selection.direction !== 'incoming' && tenant && (
+        {selection && selection.direction === 'deposit' && tenant && (
           <DocumentDetailPanel
             selection={selection}
             origin={tenantApiOrigin(tenant.admin_url)}
             onClose={() => setSelection(null)}
+            slug={slug}
           />
         )}
 

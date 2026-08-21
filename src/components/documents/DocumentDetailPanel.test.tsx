@@ -109,4 +109,51 @@ describe('DocumentDetailPanel', () => {
       );
     });
   });
+
+  it('renders page mode with back link and expanded sections', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleDocumentDetail({
+        direction: 'outgoing',
+        id: 4,
+        internal_number: '2026-0001',
+        journal_lines: [
+          {
+            account_code: '1200',
+            account_name: 'Kupci',
+            debit: '1000.00',
+            credit: '0.00',
+            description: 'AR',
+          },
+        ],
+        payments: [
+          {
+            id: 1,
+            payment_number: 'P-1',
+            amount: '1000.00',
+            payment_date: '2026-07-10',
+            payment_method: 'bank',
+            status: 'completed',
+          },
+        ],
+      }),
+    );
+    render(
+      <DocumentDetailPanel
+        mode="page"
+        slug="finestar"
+        selection={{ direction: 'outgoing', id: 4 }}
+        origin="https://example.test"
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: '2026-0001' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('link', { name: 'Natrag na saldakonte' })).toHaveAttribute(
+      'href',
+      '/t/finestar/saldakonti?direction=outgoing',
+    );
+    expect(screen.getByRole('heading', { name: 'Stavke temeljnice' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Plaćanja' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Zatvori' })).toBeNull();
+  });
 });

@@ -27,7 +27,7 @@ describe('DocumentTable', () => {
     expect(container.querySelector('.badge-success')).toBeNull();
   });
 
-  it('opens outgoing detail via button; incoming uses dokumenti/ulazni link', () => {
+  it('opens outgoing and incoming detail in a new tab via dokumenti routes', () => {
     const onOpenDocument = vi.fn();
     render(
       <DocumentTable
@@ -44,14 +44,29 @@ describe('DocumentTable', () => {
         onOpenDocument={onOpenDocument}
       />,
     );
-    const open = screen.getByRole('button', { name: 'Detalji računa Izlazni · R-100' });
-    fireEvent.click(open);
-    expect(onOpenDocument).toHaveBeenCalledWith({ direction: 'outgoing', id: 4 });
+    const outgoing = screen.getByRole('link', { name: 'Detalji računa Izlazni · R-100' });
+    expect(outgoing).toHaveAttribute('href', '/t/finestar/dokumenti/izlazni/4');
+    expect(outgoing).toHaveAttribute('target', '_blank');
+    expect(outgoing).toHaveAttribute('rel', 'noopener noreferrer');
 
     const incoming = screen.getByRole('link', { name: 'Detalji računa Ulazni · T-30' });
     expect(incoming).toHaveAttribute('href', '/t/finestar/dokumenti/ulazni/30');
     expect(incoming).toHaveAttribute('target', '_blank');
-    expect(incoming).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(onOpenDocument).not.toHaveBeenCalled();
+  });
+
+  it('uses button overlay only for deposit when onOpenDocument is set', () => {
+    const onOpenDocument = vi.fn();
+    render(
+      <DocumentTable
+        slug="finestar"
+        rows={[sampleDocument({ id: 9, direction: 'deposit', internal_number: 'K-9' })]}
+        onOpenDocument={onOpenDocument}
+      />,
+    );
+    const open = screen.getByRole('button', { name: 'Detalji računa Kaucija · K-9' });
+    fireEvent.click(open);
+    expect(onOpenDocument).toHaveBeenCalledWith({ direction: 'deposit', id: 9 });
   });
 
   it('does not paint success from raw paid when operational status is empty', () => {

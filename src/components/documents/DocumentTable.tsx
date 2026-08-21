@@ -45,17 +45,19 @@ export function DocumentTable({ rows, slug, onOpenDocument }: Props) {
             const label = `${DIRECTION_LABELS[row.direction]}${
               row.internal_number ? ` · ${row.internal_number}` : ''
             }`;
-            const incomingHref =
-              row.direction === 'incoming' && slug
+            const detailHref =
+              slug && row.direction === 'incoming'
                 ? `/t/${slug}/dokumenti/ulazni/${row.id}`
-                : null;
+                : slug && row.direction === 'outgoing'
+                  ? `/t/${slug}/dokumenti/izlazni/${row.id}`
+                  : null;
             return (
               <tr key={`${row.direction}-${row.id}`}>
                 <td>
                   <div className="cell-stack">
-                    {incomingHref ? (
+                    {detailHref ? (
                       <Link
-                        href={incomingHref}
+                        href={detailHref}
                         className="docs-row-open"
                         target="_blank"
                         rel="noopener noreferrer"
