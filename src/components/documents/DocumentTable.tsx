@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { controlLabel, noticeLabel, DIRECTION_LABELS, statusLabel } from '@/lib/documentLabels';
 import type { DocumentDirection, DocumentSummary } from '@/lib/documents';
 import { formatHrAmount, formatHrMoney } from '@/lib/formatHr';
@@ -6,6 +8,7 @@ import { ProvenanceBadge } from './ProvenanceBadge';
 
 type Props = {
   rows: DocumentSummary[];
+  slug?: string;
   onOpenDocument?: (selection: { direction: DocumentDirection; id: number }) => void;
 };
 
@@ -16,7 +19,7 @@ function formatDate(value: string | null): string {
   return `${day}.${month}.${year}.`;
 }
 
-export function DocumentTable({ rows, onOpenDocument }: Props) {
+export function DocumentTable({ rows, slug, onOpenDocument }: Props) {
   if (rows.length === 0) {
     return <p className="table-empty">Nema dokumenata za odabrani filter.</p>;
   }
@@ -42,11 +45,23 @@ export function DocumentTable({ rows, onOpenDocument }: Props) {
             const label = `${DIRECTION_LABELS[row.direction]}${
               row.internal_number ? ` · ${row.internal_number}` : ''
             }`;
+            const incomingHref =
+              row.direction === 'incoming' && slug
+                ? `/t/${slug}/dokumenti/ulazni/${row.id}`
+                : null;
             return (
               <tr key={`${row.direction}-${row.id}`}>
                 <td>
                   <div className="cell-stack">
-                    {onOpenDocument ? (
+                    {incomingHref ? (
+                      <Link
+                        href={incomingHref}
+                        className="docs-row-open"
+                        aria-label={`Detalji računa ${label}`}
+                      >
+                        {label}
+                      </Link>
+                    ) : onOpenDocument ? (
                       <button
                         type="button"
                         className="docs-row-open"

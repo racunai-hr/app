@@ -264,11 +264,15 @@ export function DocumentList({ slug }: { slug: string }) {
         {data && (
           <DocumentTable
             rows={data.results}
-            onOpenDocument={(next) => setSelection(next)}
+            slug={slug}
+            onOpenDocument={(next) => {
+              if (next.direction === 'incoming') return;
+              setSelection(next);
+            }}
           />
         )}
 
-        {selection && tenant && (
+        {selection && selection.direction !== 'incoming' && tenant && (
           <DocumentDetailPanel
             selection={selection}
             origin={tenantApiOrigin(tenant.admin_url)}

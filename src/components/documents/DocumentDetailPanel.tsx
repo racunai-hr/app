@@ -154,34 +154,38 @@ export function DocumentDetailPanel({ selection, origin, onClose }: Props) {
               </div>
               <div>
                 <dt>Neto</dt>
-                <dd>{formatHrMoney(detail.amounts.net, detail.amounts.currency)}</dd>
+                <dd>{formatHrMoney(detail.amounts.net, detail.amounts.currency || 'EUR')}</dd>
               </div>
               <div>
                 <dt>PDV</dt>
-                <dd>{formatHrMoney(detail.amounts.vat, detail.amounts.currency)}</dd>
+                <dd>{formatHrMoney(detail.amounts.vat, detail.amounts.currency || 'EUR')}</dd>
               </div>
               <div>
                 <dt>Bruto</dt>
-                <dd>{formatHrMoney(detail.amounts.gross, detail.amounts.currency)}</dd>
+                <dd>{formatHrMoney(detail.amounts.gross, detail.amounts.currency || 'EUR')}</dd>
               </div>
               <div>
                 <dt>Status dokumenta</dt>
                 <dd>
                   {detail.document_status.value != null
-                    ? statusLabel(detail.document_status.value)
-                    : provenanceText(detail.document_status)}
+                    ? statusLabel(String(detail.document_status.value))
+                    : provenanceText(detail.document_status as Parameters<typeof provenanceText>[0])}
                 </dd>
               </div>
               <div>
                 <dt>Operativni status</dt>
                 <dd>
-                  <ProvenanceBadge field={detail.operational_status} />
+                  <ProvenanceBadge
+                    field={detail.operational_status as Parameters<typeof ProvenanceBadge>[0]['field']}
+                  />
                 </dd>
               </div>
               <div>
                 <dt>PDV lifecycle</dt>
                 <dd>
-                  <ProvenanceBadge field={detail.vat.lifecycle} />
+                  <ProvenanceBadge
+                    field={detail.vat.lifecycle as Parameters<typeof ProvenanceBadge>[0]['field']}
+                  />
                 </dd>
               </div>
             </dl>
@@ -220,7 +224,7 @@ export function DocumentDetailPanel({ selection, origin, onClose }: Props) {
                     <li key={`${item.item_name}-${index}`}>
                       <span>{item.item_name}</span>
                       <span className="muted-inline">
-                        {formatHrMoney(item.line_total, detail.amounts.currency)}
+                        {formatHrMoney(item.line_total, detail.amounts.currency || 'EUR')}
                       </span>
                     </li>
                   ))}

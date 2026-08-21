@@ -27,13 +27,29 @@ describe('DocumentTable', () => {
     expect(container.querySelector('.badge-success')).toBeNull();
   });
 
-  it('opens detail via focusable invoice action without saldakonti id route', () => {
+  it('opens outgoing detail via button; incoming uses dokumenti/ulazni link', () => {
     const onOpenDocument = vi.fn();
-    render(<DocumentTable rows={[sampleDocument()]} onOpenDocument={onOpenDocument} />);
+    render(
+      <DocumentTable
+        slug="finestar"
+        rows={[
+          sampleDocument(),
+          sampleDocument({
+            id: 30,
+            direction: 'incoming',
+            internal_number: 'T-30',
+            source_number: '26210-H120-5154',
+          }),
+        ]}
+        onOpenDocument={onOpenDocument}
+      />,
+    );
     const open = screen.getByRole('button', { name: 'Detalji računa Izlazni · R-100' });
     fireEvent.click(open);
     expect(onOpenDocument).toHaveBeenCalledWith({ direction: 'outgoing', id: 4 });
-    expect(screen.queryByRole('link')).toBeNull();
+
+    const incoming = screen.getByRole('link', { name: 'Detalji računa Ulazni · T-30' });
+    expect(incoming).toHaveAttribute('href', '/t/finestar/dokumenti/ulazni/30');
   });
 
   it('does not paint success from raw paid when operational status is empty', () => {

@@ -1,8 +1,12 @@
 import { API_URL, ApiError, parseError as parseApiError } from './api';
+import type { components } from './openapi/generated';
 import type { Provenance } from './provenance';
 
 export type DocumentDirection = 'incoming' | 'outgoing' | 'deposit';
 export type DocumentKind = 'invoice' | 'expense' | 'deposit';
+
+/** Incoming/outgoing detail payload — OpenAPI SSOT (PR A fields included). */
+export type DocumentDetail = components['schemas']['DocumentDetail'];
 
 export type DocumentAmounts = {
   currency: string;
@@ -42,20 +46,6 @@ export type DocumentDetailItem = {
   line_total: string | null;
 };
 
-export type DocumentDetail = DocumentSummary & {
-  partner_id: number | null;
-  description: string | null;
-  notes: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-  created_by: string | null;
-  items: DocumentDetailItem[];
-  service_date: string | null;
-  ubl_available: boolean;
-  pdf_available: boolean;
-  as_of: string;
-};
-
 export type CurrencyKpi = {
   outgoing_count: number;
   incoming_count: number;
@@ -89,6 +79,15 @@ export type DocumentListQuery = {
 };
 
 export function tenantApiOrigin(adminUrl: string): string {
+  // Local WSL: ignore remote admin_url origin so evidence endpoints hit local API.
+  const override = process.env.NEXT_PUBLIC_API_ORIGIN_OVERRIDE || '';
+  if (override) {
+    try {
+      return new URL(override).origin;
+    } catch {
+      /* fall through */
+    }
+  }
   try {
     return new URL(adminUrl).origin;
   } catch {

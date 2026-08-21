@@ -323,7 +323,35 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description File downloads return HttpResponse/FileResponse, not DRF renderer output.
+         *
+         *     Clients send Accept: application/xml|pdf (etc.); default JSON renderers would
+         *     otherwise 406 before the view runs. Same bypass as export (`?format=`).
+         */
         get: operations["documents_pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{direction}/{id}/ubl/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description File downloads return HttpResponse/FileResponse, not DRF renderer output.
+         *
+         *     Clients send Accept: application/xml|pdf (etc.); default JSON renderers would
+         *     otherwise 406 before the view runs. Same bypass as export (`?format=`).
+         */
+        get: operations["documents_ubl"];
         put?: never;
         post?: never;
         delete?: never;
@@ -339,6 +367,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description File downloads return HttpResponse/FileResponse, not DRF renderer output.
+         *
+         *     Clients send Accept: application/xml|pdf (etc.); default JSON renderers would
+         *     otherwise 406 before the view runs. Same bypass as export (`?format=`).
+         */
         get: operations["documents_export"];
         put?: never;
         post?: never;
@@ -355,6 +389,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description File downloads return HttpResponse/FileResponse, not DRF renderer output.
+         *
+         *     Clients send Accept: application/xml|pdf (etc.); default JSON renderers would
+         *     otherwise 406 before the view runs. Same bypass as export (`?format=`).
+         */
         get: operations["documents_attachment_download"];
         put?: never;
         post?: never;
@@ -502,6 +542,54 @@ export interface paths {
         get: operations["finance_partner_subledger"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/private-funds-claims/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_private_funds_claim_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/private-funds-claims/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_private_funds_claim_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/private-funds-claims/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_private_funds_claim_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -728,6 +816,23 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountingBlock: {
+            journal_entry_id: number | null;
+            entry_number: string | null;
+            entry_date: string | null;
+            status: string | null;
+            debit_total: string | null;
+            credit_total: string | null;
+            lines: components["schemas"]["AccountingLine"][];
+        };
+        AccountingLine: {
+            account_code: string | null;
+            account_name: string | null;
+            partner_name: string | null;
+            debit: string | null;
+            credit: string | null;
+            description: string;
+        };
         Allocation: {
             id: number;
             /** @description Decimal as string, e.g. "1100.00" */
@@ -747,6 +852,7 @@ export interface components {
             created_at: string | null;
             uploaded_by: string | null;
             download_available: components["schemas"]["Provenanced"];
+            kind?: string | null;
         };
         AuthMeResponse: {
             user: components["schemas"]["AuthMeUser"];
@@ -802,6 +908,12 @@ export interface components {
             suggested_transaction_count: number;
             statement_count: number;
         };
+        /**
+         * @description * `supplier_payment` - supplier_payment
+         *     * `deposit_funding` - deposit_funding
+         * @enum {string}
+         */
+        ClaimTypeEnum: "supplier_payment" | "deposit_funding";
         CodeDetail: {
             code: string;
             detail: string;
@@ -886,6 +998,20 @@ export interface components {
             iban?: string;
             vat_number?: string;
         };
+        CreatePrivateFundsClaimRequest: {
+            partner_id: number;
+            claim_type: components["schemas"]["ClaimTypeEnum"];
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount: string;
+            /** @default EUR */
+            currency: string;
+            /** Format: date */
+            claim_date: string;
+            related_type: components["schemas"]["RelatedTypeEnum"];
+            related_id: number;
+            reference?: string;
+            notes?: string;
+        };
         CurrencySummary: {
             outgoing_count: number;
             incoming_count: number;
@@ -967,7 +1093,23 @@ export interface components {
             ledger_entries: components["schemas"]["LedgerEntry"][];
             attachments: components["schemas"]["Attachment"][];
             ubl_available: boolean;
+            pdf_available: boolean;
             as_of: string;
+            number?: string | null;
+            supplier?: components["schemas"]["Supplier"];
+            document?: components["schemas"]["IncomingDocumentMeta"];
+            status?: components["schemas"]["IncomingLifecycleStatus"];
+            lines?: components["schemas"]["IncomingLine"][];
+            charges?: components["schemas"]["IncomingCharge"][];
+            tax_summary?: components["schemas"]["TaxSummaryRow"][];
+            totals?: components["schemas"]["IncomingTotals"];
+            references?: components["schemas"]["DocumentReference"][];
+            integration?: components["schemas"]["IntegrationBlock"];
+            technical?: components["schemas"]["TechnicalBlock"];
+            accounting?: components["schemas"]["AccountingBlock"];
+            vat_context?: components["schemas"]["VatContext"];
+            subledger_context?: components["schemas"]["SubledgerContext"];
+            payment?: components["schemas"]["PaymentBlock"];
         };
         DocumentItem: {
             item_name: string;
@@ -990,6 +1132,10 @@ export interface components {
             payment_date: string | null;
             payment_method: string;
             status: string;
+        };
+        DocumentReference: {
+            type: string;
+            value: string;
         };
         DocumentSummary: {
             id: number;
@@ -1112,6 +1258,24 @@ export interface components {
             finished_at: string | null;
             as_of: string;
         };
+        IncomingCharge: {
+            code: string | null;
+            type: string | null;
+            description: string | null;
+            amount: string | null;
+            vat_rate: string | null;
+        };
+        IncomingDocumentMeta: {
+            issue_date: string | null;
+            delivery_date: string | null;
+            due_date: string | null;
+            received_at: string | null;
+            currency: string | null;
+            business_process: string | null;
+            source_label: string | null;
+            format: string | null;
+            primary_reference: string | null;
+        };
         IncomingInvoiceImport: {
             id: number;
             status: string;
@@ -1133,6 +1297,46 @@ export interface components {
             started_at: string | null;
             finished_at: string | null;
             created?: boolean;
+        };
+        IncomingLifecycleStatus: {
+            document: string | null;
+            workflow: string | null;
+            integration: string | null;
+            posting: string | null;
+            vat: string | null;
+            subledger: string | null;
+            payment: string | null;
+        };
+        IncomingLine: {
+            position: number;
+            classification: components["schemas"]["LineClassification"] | null;
+            name: string | null;
+            description: string | null;
+            unit: string | null;
+            quantity: string | null;
+            unit_price: string | null;
+            vat_rate: string | null;
+            net_amount: string | null;
+            vat_amount: string | null;
+            gross_amount: string | null;
+        };
+        IncomingTotals: {
+            line_net: string | null;
+            charges_total: string | null;
+            allowances_total: string | null;
+            vat_total: string | null;
+            grand_total: string | null;
+            prepaid: string | null;
+            payable: string | null;
+            currency: string | null;
+        };
+        IntegrationBlock: {
+            source: string | null;
+            status: string | null;
+            received_at: string | null;
+            external_id: string | null;
+            /** Format: uri */
+            external_view_url: string | null;
         };
         JournalLine: {
             account_code: string;
@@ -1161,6 +1365,10 @@ export interface components {
             entry_category: string;
             entry_date: string | null;
             document_number: string;
+        };
+        LineClassification: {
+            scheme: string | null;
+            code: string | null;
         };
         MatchRequestRequest: {
             target_type: components["schemas"]["TargetTypeEnum"];
@@ -1424,6 +1632,15 @@ export interface components {
             notes?: string;
             internal_notes?: string;
         };
+        PaymentBlock: {
+            matched: boolean;
+            date: string | null;
+            amount: string | null;
+            account_mask: string | null;
+            reference: string | null;
+            reconcile_status: string | null;
+            bank_transaction_id: number | null;
+        };
         /** @description Allowlist only — no SCA, tokens, provider secrets, or internal errors. */
         PaymentOrder: {
             id: number;
@@ -1459,6 +1676,25 @@ export interface components {
             fiscal_period: components["schemas"]["Provenanced"];
             fiscal_locked: components["schemas"]["Provenanced"];
         };
+        PrivateFundsClaim: {
+            id: number;
+            number: string;
+            claim_type: string;
+            partner_id: number;
+            partner_name: string;
+            amount: string;
+            currency: string;
+            claim_date: string | null;
+            status: string;
+            operational_status: string;
+            open_amount: string;
+            reference: string;
+            notes: string;
+            related_type: string;
+            related_id: number;
+            journal_entry_id: number | null;
+            created_at: string | null;
+        };
         Provenanced: {
             value: unknown;
             reason: (components["schemas"]["ReasonEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -1478,6 +1714,12 @@ export interface components {
         ReconcileOpenItemRequestRequest: {
             subledger_item_id: number;
         };
+        /**
+         * @description * `expense` - expense
+         *     * `deposit` - deposit
+         * @enum {string}
+         */
+        RelatedTypeEnum: "expense" | "deposit";
         ReturnDepositRequest: {
             return_bank_account_id: number;
             /** Format: date */
@@ -1521,12 +1763,43 @@ export interface components {
             reconciled_at: string | null;
             transaction_count: number;
         };
+        SubledgerAllocationContext: {
+            id: number;
+            amount: string | null;
+            created_at: string | null;
+            journal_entry_id: number | null;
+            status: string | null;
+        };
         SubledgerBlock: {
             state: components["schemas"]["Provenanced"];
             open_amount: components["schemas"]["Provenanced"];
             original_amount: components["schemas"]["Provenanced"];
             aging_bucket: components["schemas"]["Provenanced"];
             days: components["schemas"]["Provenanced"];
+        };
+        SubledgerContext: {
+            item_id: number | null;
+            state: string | null;
+            original_amount: string | null;
+            allocated_amount: string | null;
+            open_amount: string | null;
+            due_date: string | null;
+            allocations: components["schemas"]["SubledgerAllocationContext"][];
+        };
+        Supplier: {
+            id: number | null;
+            name: string | null;
+            country_code: string | null;
+            address: components["schemas"]["SupplierAddress"];
+            oib: string | null;
+            vat_id: string | null;
+            tax_id: string | null;
+            primary_iban: string | null;
+        };
+        SupplierAddress: {
+            street: string | null;
+            postal_code: string | null;
+            city: string | null;
         };
         SupplierExtracted: {
             name: string;
@@ -1579,6 +1852,17 @@ export interface components {
          * @enum {string}
          */
         TargetTypeEnum: "payment" | "journal_entry";
+        TaxSummaryRow: {
+            rate: string | null;
+            base: string | null;
+            vat: string | null;
+        };
+        TechnicalBlock: {
+            message_id: string | null;
+            parser_version: string | null;
+            imported_at: string | null;
+            source_hash: string | null;
+        };
         TokenObtainRequestRequest: {
             username: string;
             password: string;
@@ -1620,6 +1904,19 @@ export interface components {
             document_in_submitted_return: components["schemas"]["Provenanced"];
             period_returns: components["schemas"]["PeriodReturn"][];
             disclaimer: string | null;
+        };
+        VatContext: {
+            period: string | null;
+            recorded: boolean;
+            deductible: boolean | null;
+            total_base: string | null;
+            total_vat: string | null;
+            rates: components["schemas"]["VatContextRate"][];
+        };
+        VatContextRate: {
+            rate: string | null;
+            base: string | null;
+            vat: string | null;
         };
     };
     responses: never;
@@ -2535,7 +2832,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Outgoing invoice PDF. Content-Type: application/pdf. Header Content-Disposition: inline; filename="R-....pdf". Incoming direction returns 404. */
+            /** @description PDF bytes. Outgoing: generated invoice PDF (inline). Incoming: SUPER visualization PDF from controlled media storage (attachment). Deposit direction returns 404. Content-Type: application/pdf. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2562,6 +2859,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
+            /** @description Attachment content unavailable */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeDetail"];
+                };
+            };
             /** @description Invoice PDF unavailable */
             503: {
                 headers: {
@@ -2569,6 +2875,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CodeDetail"];
+                };
+            };
+        };
+    };
+    documents_ubl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                direction: string;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Incoming UBL XML. Priority: SUPER non-empty ubl_xml, else AS4. Content-Type: application/xml. Outgoing/deposit return 404. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
         };
@@ -3179,6 +3526,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_private_funds_claim_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePrivateFundsClaimRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreatePrivateFundsClaimRequest"];
+                "multipart/form-data": components["schemas"]["CreatePrivateFundsClaimRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivateFundsClaim"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositConflict"];
+                };
+            };
+        };
+    };
+    finance_private_funds_claim_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivateFundsClaim"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_private_funds_claim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivateFundsClaim"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositConflict"];
                 };
             };
         };
