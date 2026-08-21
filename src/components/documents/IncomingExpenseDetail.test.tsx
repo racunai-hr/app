@@ -179,6 +179,100 @@ describe('IncomingExpenseDetail', () => {
     expect(screen.queryByText('Zatvoreno')).toBeNull();
   });
 
+  it('renders settlement trail closings, bank deep-link, and possible-duplicate alert', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        settlement_trail: {
+          obligation: {
+            amount: '33000.00',
+            journal_entry_id: 68,
+            entry_number: '202607-0010',
+            entry_date: '2026-07-30',
+          },
+          closings: [
+            {
+              kind: 'bank',
+              amount: '23100.00',
+              journal_entry_id: 69,
+              entry_number: '202607-0011',
+              allocation_id: 7,
+              bank_transaction_id: 39,
+              bank_statement_id: 28,
+              counterparty_name: 'SaM',
+              private_funds_claim_id: null,
+              claim_number: null,
+              partner_id: null,
+              partner_name: null,
+              label: 'Banka',
+            },
+            {
+              kind: 'private_funds',
+              amount: '9900.00',
+              journal_entry_id: 71,
+              entry_number: '202607-0012',
+              allocation_id: 8,
+              bank_transaction_id: null,
+              bank_statement_id: null,
+              counterparty_name: null,
+              private_funds_claim_id: 2,
+              claim_number: 'PFC-202608-0001',
+              partner_id: 24,
+              partner_name: 'Ante Vrcan',
+              label: 'Privatna sredstva',
+            },
+          ],
+          system_entries: [
+            {
+              kind: 'expense_paid',
+              amount: '33000.00',
+              journal_entry_id: 72,
+              entry_number: '202607-0013',
+              note: 'Sistemski generirano (expense_paid); nije alokacija saldakonta.',
+            },
+          ],
+          warnings: [
+            {
+              code: 'possible_duplicate_expense_paid',
+              message:
+                'Obveza je u cijelosti zatvorena alokacijama, a postoji i zasebno sistemsko expense_paid knjiženje. Provjerite predstavlja li dodatno knjiženje duplikat.',
+            },
+          ],
+          totals: {
+            obligation: '33000.00',
+            allocated: '33000.00',
+            open: '0.00',
+          },
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={18} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Tijek zatvaranja' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('duplikat');
+    expect(screen.getByRole('link', { name: '202607-0010' })).toHaveAttribute(
+      'href',
+      '/t/finestar/glavna-knjiga/68',
+    );
+    expect(screen.getByRole('link', { name: 'Transakcija #39' })).toHaveAttribute(
+      'href',
+      '/t/finestar/bankarstvo/transakcije?statement=28&tx=39',
+    );
+    expect(screen.getByText('Izvod #28')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Izvod #28' })).toBeNull();
+    expect(screen.getByText('PFC-202608-0001')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ante Vrcan' })).toHaveAttribute(
+      'href',
+      '/t/finestar/partneri/24',
+    );
+    expect(screen.getByRole('heading', { name: 'Sistemska knjiženja' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '202607-0013' })).toHaveAttribute(
+      'href',
+      '/t/finestar/glavna-knjiga/72',
+    );
+  });
+
   it('does not link temeljnica when journal_entry_id is missing', async () => {
     fetchDocument.mockResolvedValue(
       sampleIncomingDetail({

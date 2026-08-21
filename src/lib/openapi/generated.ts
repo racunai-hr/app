@@ -1142,6 +1142,7 @@ export interface components {
             vat_context?: components["schemas"]["VatContext"];
             subledger_context?: components["schemas"]["SubledgerContext"];
             payment?: components["schemas"]["PaymentBlock"];
+            settlement_trail?: components["schemas"]["SettlementTrail"];
         };
         DocumentItem: {
             item_name: string;
@@ -1807,6 +1808,50 @@ export interface components {
             return_date?: string;
             /** @description Decimal as string, e.g. "1100.00" */
             amount?: string;
+        };
+        SettlementTrail: {
+            obligation: components["schemas"]["SettlementTrailObligation"] | null;
+            closings: components["schemas"]["SettlementTrailClosing"][];
+            system_entries: components["schemas"]["SettlementTrailSystemEntry"][];
+            warnings: components["schemas"]["SettlementTrailWarning"][];
+            totals: components["schemas"]["SettlementTrailTotals"];
+        };
+        SettlementTrailClosing: {
+            kind: string;
+            amount: string | null;
+            journal_entry_id: number | null;
+            entry_number: string | null;
+            allocation_id: number;
+            bank_transaction_id: number | null;
+            bank_statement_id: number | null;
+            counterparty_name: string | null;
+            private_funds_claim_id: number | null;
+            claim_number: string | null;
+            partner_id: number | null;
+            partner_name: string | null;
+            label: string;
+        };
+        SettlementTrailObligation: {
+            amount: string | null;
+            journal_entry_id: number | null;
+            entry_number: string | null;
+            entry_date: string | null;
+        };
+        SettlementTrailSystemEntry: {
+            kind: string;
+            amount: string | null;
+            journal_entry_id: number;
+            entry_number: string | null;
+            note: string;
+        };
+        SettlementTrailTotals: {
+            obligation: string | null;
+            allocated: string | null;
+            open: string | null;
+        };
+        SettlementTrailWarning: {
+            code: string;
+            message: string;
         };
         /**
          * @description * `invoice` - invoice

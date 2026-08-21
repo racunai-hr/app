@@ -185,6 +185,13 @@ export function sampleIncomingDetail(overrides: Partial<DocumentDetail> = {}): D
       reconcile_status: null,
       bank_transaction_id: null,
     },
+    settlement_trail: {
+      obligation: null,
+      closings: [],
+      system_entries: [],
+      warnings: [],
+      totals: { obligation: null, allocated: null, open: null },
+    },
     lines: [
       {
         position: 1,
