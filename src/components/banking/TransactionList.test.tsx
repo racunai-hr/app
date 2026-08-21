@@ -90,7 +90,7 @@ describe('TransactionList GL deep-link', () => {
       count: 1,
       page: 1,
       page_size: 20,
-      results: [tx({ id: 7, match_status: 'matched', matched_journal_entry_id: 76 })],
+      results: [tx({ id: 7, match_status: 'matched', matched_journal_entry_id: 123 })],
     });
     render(
       <TransactionList
@@ -103,7 +103,7 @@ describe('TransactionList GL deep-link', () => {
     await waitFor(() => expect(screen.getByText('Usklađeno')).toBeInTheDocument());
     expect(screen.getByRole('link', { name: 'Temeljnica' })).toHaveAttribute(
       'href',
-      '/t/finestar/glavna-knjiga/76',
+      '/t/finestar/glavna-knjiga/123',
     );
   });
 

@@ -273,6 +273,92 @@ describe('IncomingExpenseDetail', () => {
     );
   });
 
+  it('links settlement_trail journal_entry_id=123 to tenant-scoped JE detail', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        settlement_trail: {
+          obligation: {
+            amount: '100.00',
+            journal_entry_id: 123,
+            entry_number: 'JE-123',
+            entry_date: '2026-08-21',
+          },
+          closings: [
+            {
+              kind: 'other',
+              amount: '100.00',
+              journal_entry_id: 123,
+              entry_number: 'JE-123',
+              allocation_id: 1,
+              bank_transaction_id: null,
+              bank_statement_id: null,
+              counterparty_name: null,
+              private_funds_claim_id: null,
+              claim_number: null,
+              partner_id: null,
+              partner_name: null,
+              label: 'Ostalo',
+            },
+          ],
+          system_entries: [],
+          warnings: [],
+          totals: { obligation: '100.00', allocated: '100.00', open: '0.00' },
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Tijek zatvaranja' })).toBeInTheDocument();
+    });
+    const links = screen.getAllByRole('link', { name: 'JE-123' });
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link).toHaveAttribute('href', '/t/finestar/glavna-knjiga/123');
+    }
+  });
+
+  it('does not link settlement_trail temeljnica when journal_entry_id is null', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        settlement_trail: {
+          obligation: {
+            amount: '50.00',
+            journal_entry_id: null,
+            entry_number: 'JE-NO-ID',
+            entry_date: null,
+          },
+          closings: [
+            {
+              kind: 'other',
+              amount: '50.00',
+              journal_entry_id: null,
+              entry_number: 'JE-CLOSE-NO-ID',
+              allocation_id: 9,
+              bank_transaction_id: null,
+              bank_statement_id: null,
+              counterparty_name: null,
+              private_funds_claim_id: null,
+              claim_number: null,
+              partner_id: null,
+              partner_name: null,
+              label: 'Ostalo',
+            },
+          ],
+          system_entries: [],
+          warnings: [],
+          totals: { obligation: '50.00', allocated: '50.00', open: '0.00' },
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Tijek zatvaranja' })).toBeInTheDocument();
+    });
+    expect(screen.getByText('JE-CLOSE-NO-ID')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'JE-NO-ID' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'JE-CLOSE-NO-ID' })).toBeNull();
+  });
+
   it('does not link temeljnica when journal_entry_id is missing', async () => {
     fetchDocument.mockResolvedValue(
       sampleIncomingDetail({
