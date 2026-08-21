@@ -36,16 +36,12 @@ export function isNavActive(pathname: string, item: AppNavItem, slug: string): b
 }
 
 export const MODULE_PLACEHOLDERS: Record<
-  Exclude<AppNavId, 'pregled' | 'saldakonti' | 'bankarstvo'>,
+  Exclude<AppNavId, 'pregled' | 'saldakonti' | 'bankarstvo' | 'glavna-knjiga'>,
   { title: string; description: string }
 > = {
   dokumenti: {
     title: 'Dokumenti',
     description: 'Ulazni i izlazni dokumenti bit će spojeni na read-model u sljedećoj fazi.',
-  },
-  'glavna-knjiga': {
-    title: 'Glavna knjiga',
-    description: 'Pregled temeljnica i konta još nije izložen u ovom sučelju.',
   },
   partneri: {
     title: 'Partneri',

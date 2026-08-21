@@ -516,6 +516,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/journal-entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_journal_entries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/partners/{id}/financial-summary/": {
         parameters: {
             query?: never;
@@ -1338,6 +1354,20 @@ export interface components {
             /** Format: uri */
             external_view_url: string | null;
         };
+        JournalEntryListItem: {
+            id: number;
+            entry_number: string;
+            /** Format: date */
+            entry_date: string | null;
+            description: string;
+            status: components["schemas"]["StatusEnum"];
+            is_auto: boolean;
+            source_type: components["schemas"]["SourceTypeEnum"];
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_credit: string;
+        };
         JournalLine: {
             account_code: string;
             account_name: string;
@@ -1407,6 +1437,13 @@ export interface components {
             page_size: number;
             results: components["schemas"]["DocumentSummary"][];
             summary: components["schemas"]["DocumentListSummary"];
+        };
+        PaginatedJournalEntries: {
+            as_of: string;
+            count: number;
+            page: number;
+            page_size: number;
+            results: components["schemas"]["JournalEntryListItem"][];
         };
         PaginatedPartners: {
             as_of: string;
@@ -1727,6 +1764,15 @@ export interface components {
             /** @description Decimal as string, e.g. "1100.00" */
             amount?: string;
         };
+        /**
+         * @description * `invoice` - invoice
+         *     * `expense` - expense
+         *     * `manual` - manual
+         *     * `asset` - asset
+         *     * `other` - other
+         * @enum {string}
+         */
+        SourceTypeEnum: "invoice" | "expense" | "manual" | "asset" | "other";
         StatementDetail: {
             id: number;
             statement_number: string;
@@ -1763,6 +1809,13 @@ export interface components {
             reconciled_at: string | null;
             transaction_count: number;
         };
+        /**
+         * @description * `draft` - draft
+         *     * `posted` - posted
+         *     * `reversed` - reversed
+         * @enum {string}
+         */
+        StatusEnum: "draft" | "posted" | "reversed";
         SubledgerAllocationContext: {
             id: number;
             amount: string | null;
@@ -3448,6 +3501,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DepositConflict"];
+                };
+            };
+        };
+    };
+    finance_journal_entries_list: {
+        parameters: {
+            query?: {
+                date_from?: string;
+                date_to?: string;
+                /** @description Page number (min 1, default 1) */
+                page?: number;
+                /** @description Page size (default 20, max 100) */
+                page_size?: number;
+                /** @description Filter by entry_number, description, or reference */
+                search?: string;
+                status?: "draft" | "posted" | "reversed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedJournalEntries"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
         };
