@@ -1,12 +1,19 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { ApiError } from '@/lib/api';
+import {
+  shouldShowSubledgerItemBankClose,
+  subledgerItemBankCloseHref,
+  subledgerItemDocumentLink,
+} from '@/lib/bankingReconcile';
 import { formatHrAmount, formatHrInputDate } from '@/lib/formatHr';
 import { fetchPartnerSubledger, type PartnerSubledgerList } from '@/lib/partners';
 
 type Props = {
+  slug: string;
   origin: string;
   token: string;
   partnerId: number;
@@ -24,7 +31,7 @@ function sortSubledgerByDueDateDesc(rows: PartnerSubledgerList['results']) {
   });
 }
 
-export function PartnerSubledgerPanel({ origin, token, partnerId }: Props) {
+export function PartnerSubledgerPanel({ slug, origin, token, partnerId }: Props) {
   const [data, setData] = useState<PartnerSubledgerList | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -66,26 +73,49 @@ export function PartnerSubledgerPanel({ origin, token, partnerId }: Props) {
               <th>Otvoreno</th>
               <th>Bucket</th>
               <th>Status</th>
+              <th>Akcije</th>
             </tr>
           </thead>
           <tbody>
             {!rows.length && !loading ? (
               <tr>
-                <td colSpan={6} className="table-empty">
+                <td colSpan={7} className="table-empty">
                   Nema otvorenih stavki.
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
-                <tr key={row.item_id}>
-                  <td>{row.direction_label}</td>
-                  <td>{row.source_label}</td>
-                  <td>{formatHrInputDate(row.due_date)}</td>
-                  <td>{formatHrAmount(row.open_amount)}</td>
-                  <td>{row.aging_bucket}</td>
-                  <td>{row.status}</td>
-                </tr>
-              ))
+              rows.map((row) => {
+                const documentLink = subledgerItemDocumentLink(slug, row);
+                const showBankClose = shouldShowSubledgerItemBankClose(row.status);
+                return (
+                  <tr key={row.item_id}>
+                    <td>{row.direction_label}</td>
+                    <td>
+                      {documentLink ? (
+                        <Link href={documentLink.href}>{documentLink.label}</Link>
+                      ) : (
+                        row.source_label
+                      )}
+                    </td>
+                    <td>{formatHrInputDate(row.due_date)}</td>
+                    <td>{formatHrAmount(row.open_amount)}</td>
+                    <td>{row.aging_bucket}</td>
+                    <td>{row.status}</td>
+                    <td className="banking-col-action">
+                      {showBankClose ? (
+                        <Link
+                          className="btn btn-secondary"
+                          href={subledgerItemBankCloseHref(slug, row.item_id)}
+                        >
+                          Zatvori bankom
+                        </Link>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

@@ -8,6 +8,9 @@ import {
   parseSubledgerItemParam,
   reconcileCandidateDocumentLink,
   shouldShowBankCloseCta,
+  shouldShowSubledgerItemBankClose,
+  subledgerItemBankCloseHref,
+  subledgerItemDocumentLink,
   subledgerItemIdForBanking,
   subledgerStateForBankClose,
 } from './bankingReconcile';
@@ -121,5 +124,24 @@ describe('bankingReconcile', () => {
     expect(parseSubledgerItemParam(new URLSearchParams('subledger_item=42'))).toBe(42);
     expect(parseSubledgerItemParam(new URLSearchParams('subledger_item=0'))).toBeNull();
     expect(parseSubledgerItemParam(new URLSearchParams())).toBeNull();
+  });
+
+  it('exposes partner subledger row helpers', () => {
+    expect(shouldShowSubledgerItemBankClose('open')).toBe(true);
+    expect(shouldShowSubledgerItemBankClose('partial')).toBe(true);
+    expect(shouldShowSubledgerItemBankClose('closed')).toBe(false);
+    expect(subledgerItemBankCloseHref('finestar', 42)).toBe(
+      '/t/finestar/bankarstvo/uskladivanje?match_status=unmatched&subledger_item=42',
+    );
+    expect(
+      subledgerItemDocumentLink('finestar', {
+        source_type: 'invoice',
+        source_id: 4,
+        source_label: '2026-0001',
+      }),
+    ).toEqual({
+      href: '/t/finestar/dokumenti/izlazni/4',
+      label: '2026-0001',
+    });
   });
 });

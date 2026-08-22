@@ -78,3 +78,26 @@ export function parseSubledgerItemParam(params: URLSearchParams): number | null 
   const raw = Number(params.get('subledger_item') || '');
   return Number.isFinite(raw) && raw > 0 ? raw : null;
 }
+
+export type SubledgerItemRow = {
+  item_id: number;
+  status: string;
+  source_type: string;
+  source_id: number;
+  source_label: string;
+};
+
+export function shouldShowSubledgerItemBankClose(status: string | null | undefined): boolean {
+  return status != null && BANKING_RECONCILE_OPEN_SUBLEDGER_STATES.has(status);
+}
+
+export function subledgerItemBankCloseHref(slug: string, itemId: number): string {
+  return bankingReconcileHref(slug, itemId);
+}
+
+export function subledgerItemDocumentLink(
+  slug: string,
+  row: ReconcileCandidateSource,
+): ReconcileDocumentLink | null {
+  return reconcileCandidateDocumentLink(slug, row);
+}

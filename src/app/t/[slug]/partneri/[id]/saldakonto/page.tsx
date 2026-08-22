@@ -14,7 +14,12 @@ export default function PartnerSaldakontoPage() {
       {({ origin, token, role }) => (
         <>
           <PartnerDepositsPanel origin={origin} token={token} partnerId={partnerId} role={role} />
-          <PartnerSubledgerPanel origin={origin} token={token} partnerId={partnerId} />
+          <PartnerSubledgerPanel
+            slug={params.slug}
+            origin={origin}
+            token={token}
+            partnerId={partnerId}
+          />
         </>
       )}
     </PartnerCardShell>
