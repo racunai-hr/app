@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { dokumentiRedirectUrl } from '@/lib/documentListQuery';
+import { saldakontiToDokumentiUrl } from '@/lib/documentListQuery';
 
 export default async function SaldakontiRedirectPage({
   params,
@@ -10,5 +10,5 @@ export default async function SaldakontiRedirectPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
-  redirect(dokumentiRedirectUrl(slug, await searchParams));
+  redirect(saldakontiToDokumentiUrl(slug, await searchParams));
 }

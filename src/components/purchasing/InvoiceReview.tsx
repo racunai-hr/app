@@ -14,6 +14,7 @@ import {
   type IncomingInvoiceImport,
 } from '@/lib/purchasing';
 import { pollInvoiceImport } from '@/lib/purchasingImport';
+import { DOCUMENTS_OPERATIVE_HREFS } from '@/lib/documentListQuery';
 import { formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 
 import { usePurchasingSession } from './usePurchasingSession';
@@ -173,7 +174,7 @@ export function InvoiceReview({ slug, importId }: Props) {
           <h1>Ulazni račun — nacrt</h1>
           <p>Pregledajte OCR podatke prije potvrde. AI ne knjiži ni ne mijenja MDM bez vas.</p>
         </div>
-        <Link className="btn btn-secondary" href={`/t/${slug}/saldakonti?direction=incoming`}>
+        <Link className="btn btn-secondary" href={DOCUMENTS_OPERATIVE_HREFS.incomingReadyToPay(slug)}>
           Natrag na ulazne
         </Link>
       </header>
@@ -350,7 +351,7 @@ export function InvoiceReview({ slug, importId }: Props) {
                 Ulazni račun je potvrđen kao nacrt (#{run.confirmed_expense_id}). Nije knjižen ni
                 ušao u saldakonto.
               </p>
-              <Link className="btn btn-primary" href={`/t/${slug}/saldakonti?direction=incoming`}>
+              <Link className="btn btn-primary" href={DOCUMENTS_OPERATIVE_HREFS.incomingReadyToPay(slug)}>
                 Otvori ulazne račune
               </Link>
             </div>

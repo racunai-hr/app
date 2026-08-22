@@ -5,6 +5,7 @@ import { useEffect, useId, useState } from 'react';
 
 import { ApiError } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
+import { documentsListHref } from '@/lib/documentListQuery';
 import { controlLabel, DIRECTION_LABELS, noticeLabel, statusLabel } from '@/lib/documentLabels';
 import {
   downloadDocumentPdf,
@@ -413,9 +414,9 @@ export function DocumentDetailPanel({
       {isPage && slug ? (
         <Link
           className="btn btn-secondary"
-          href={`/t/${slug}/saldakonti?direction=${selection.direction}`}
+          href={documentsListHref(slug, { direction: selection.direction })}
         >
-          Natrag na saldakonte
+          Natrag na dokumente
         </Link>
       ) : (
         <button type="button" className="btn btn-secondary" onClick={onClose}>

@@ -45,7 +45,7 @@ type DocumentListProps = {
 
 export function DocumentList({
   slug,
-  basePath = 'saldakonti',
+  basePath = 'dokumenti',
   showHeader = true,
 }: DocumentListProps) {
   const router = useRouter();

@@ -148,9 +148,9 @@ describe('DocumentDetailPanel', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: '2026-0001' })).toBeInTheDocument();
     });
-    expect(screen.getByRole('link', { name: 'Natrag na saldakonte' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Natrag na dokumente' })).toHaveAttribute(
       'href',
-      '/t/finestar/saldakonti?direction=outgoing',
+      '/t/finestar/dokumenti?direction=outgoing',
     );
     expect(screen.getByRole('heading', { name: 'Stavke temeljnice' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Plaćanja' })).toBeInTheDocument();

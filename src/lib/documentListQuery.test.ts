@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   documentListUrl,
+  documentsListHref,
   dokumentiRedirectUrl,
+  DOCUMENTS_OPERATIVE_HREFS,
   isDocumentsSubnavActive,
   parseDocumentListQuery,
   patchDirectionTab,
   patchForDocumentsSubnav,
+  saldakontiToDokumentiUrl,
 } from './documentListQuery';
 
 describe('documentListQuery', () => {
@@ -96,14 +99,14 @@ describe('documentListQuery', () => {
     expect(isDocumentsSubnavActive(deposit, 'attention')).toBe(true);
   });
 
-  describe('dokumentiRedirectUrl', () => {
+  describe('saldakontiToDokumentiUrl', () => {
     it('redirects bare saldakonti path to dokumenti', () => {
-      expect(dokumentiRedirectUrl('finestar', {})).toBe('/t/finestar/dokumenti');
+      expect(saldakontiToDokumentiUrl('finestar', {})).toBe('/t/finestar/dokumenti');
     });
 
     it('preserves full query string on redirect', () => {
       expect(
-        dokumentiRedirectUrl('finestar', {
+        saldakontiToDokumentiUrl('finestar', {
           direction: 'incoming',
           view: 'attention',
           search: 'acme',
@@ -112,18 +115,42 @@ describe('documentListQuery', () => {
     });
 
     it('preserves pagination query on redirect', () => {
-      expect(dokumentiRedirectUrl('finestar', { page: '2' })).toBe(
+      expect(saldakontiToDokumentiUrl('finestar', { page: '2' })).toBe(
         '/t/finestar/dokumenti?page=2',
       );
     });
 
     it('preserves multi-value query params on redirect', () => {
-      const url = dokumentiRedirectUrl('finestar', { status: ['open', 'overdue'] });
+      const url = saldakontiToDokumentiUrl('finestar', { status: ['open', 'overdue'] });
       expect(url).toBe('/t/finestar/dokumenti?status=open&status=overdue');
       expect(new URLSearchParams(url.split('?')[1]!).getAll('status')).toEqual([
         'open',
         'overdue',
       ]);
+    });
+
+    it('delegates to the same implementation as dokumentiRedirectUrl', () => {
+      const params = { direction: 'outgoing', search: 'sam' };
+      expect(saldakontiToDokumentiUrl('finestar', params)).toBe(
+        dokumentiRedirectUrl('finestar', params),
+      );
+    });
+  });
+
+  describe('documentsListHref', () => {
+    it('builds dokumenti URLs from partial query', () => {
+      expect(
+        documentsListHref('finestar', { direction: 'incoming', view: 'incoming_ready_to_pay' }),
+      ).toBe('/t/finestar/dokumenti?direction=incoming&view=incoming_ready_to_pay');
+    });
+
+    it('exposes operative presets without saldakonti paths', () => {
+      expect(DOCUMENTS_OPERATIVE_HREFS.outgoing('finestar')).toBe(
+        '/t/finestar/dokumenti?direction=outgoing',
+      );
+      expect(DOCUMENTS_OPERATIVE_HREFS.incomingReadyToPay('finestar')).toBe(
+        '/t/finestar/dokumenti?direction=incoming&view=incoming_ready_to_pay',
+      );
     });
   });
 });

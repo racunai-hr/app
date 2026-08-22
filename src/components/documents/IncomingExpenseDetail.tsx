@@ -15,6 +15,7 @@ import {
   tenantApiOrigin,
   type DocumentDetail,
 } from '@/lib/documents';
+import { DOCUMENTS_OPERATIVE_HREFS } from '@/lib/documentListQuery';
 import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 
 type Props = {
@@ -229,7 +230,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   return (
     <div className="docs-shell incoming-detail">
       <nav className="incoming-detail-crumb" aria-label="Navigacija">
-        <Link href={`/t/${slug}/saldakonti?direction=incoming`}>Ulazni računi</Link>
+        <Link href={DOCUMENTS_OPERATIVE_HREFS.incoming(slug)}>Ulazni računi</Link>
         <span aria-hidden="true"> / </span>
         <span>{title}</span>
       </nav>
@@ -284,7 +285,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               Odbij
             </button>
           ) : null}
-          <Link className="btn btn-secondary" href={`/t/${slug}/saldakonti?direction=incoming`}>
+          <Link className="btn btn-secondary" href={DOCUMENTS_OPERATIVE_HREFS.incoming(slug)}>
             Natrag
           </Link>
         </div>
@@ -351,7 +352,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               Pokušaj ponovno
             </button>
           ) : (
-            <Link className="btn btn-secondary" href={`/t/${slug}/saldakonti?direction=incoming`}>
+            <Link className="btn btn-secondary" href={DOCUMENTS_OPERATIVE_HREFS.incoming(slug)}>
               Natrag na listu
             </Link>
           )}

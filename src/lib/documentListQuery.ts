@@ -1,5 +1,18 @@
 import { buildDocumentQuery, type DocumentDirection, type DocumentListQuery } from './documents';
 
+const EMPTY_DOCUMENT_LIST_QUERY: DocumentListQuery = {
+  direction: '',
+  view: '',
+  search: '',
+  year: '',
+  month: '',
+  status: '',
+  date_from: '',
+  date_to: '',
+  page: 1,
+  page_size: 20,
+};
+
 export function parseDocumentListQuery(params: URLSearchParams): DocumentListQuery {
   const direction = params.get('direction');
   return {
@@ -26,6 +39,19 @@ export function serializeDocumentListUrlQuery(query: DocumentListQuery): URLSear
   }
   return params;
 }
+
+export function documentsListHref(slug: string, query: Partial<DocumentListQuery> = {}): string {
+  return documentListUrl(slug, 'dokumenti', { ...EMPTY_DOCUMENT_LIST_QUERY, ...query });
+}
+
+/** Canonical hrefs for common operativni pregledi (Faza 3a). */
+export const DOCUMENTS_OPERATIVE_HREFS = {
+  incoming: (slug: string) => documentsListHref(slug, { direction: 'incoming' }),
+  incomingReadyToPay: (slug: string) =>
+    documentsListHref(slug, { direction: 'incoming', view: 'incoming_ready_to_pay' }),
+  outgoing: (slug: string) => documentsListHref(slug, { direction: 'outgoing' }),
+  deposit: (slug: string) => documentsListHref(slug, { direction: 'deposit' }),
+} as const;
 
 export function documentListUrl(
   slug: string,
@@ -99,7 +125,7 @@ export function patchDirectionTab(
   return { ...current, direction, page: 1 };
 }
 
-export function dokumentiRedirectUrl(
+function buildDokumentiUrlFromSearchParams(
   slug: string,
   searchParams: Record<string, string | string[] | undefined>,
 ): string {
@@ -116,4 +142,20 @@ export function dokumentiRedirectUrl(
   }
   const qs = params.toString();
   return qs ? `/t/${slug}/dokumenti?${qs}` : `/t/${slug}/dokumenti`;
+}
+
+/** Legacy `/saldakonti?...` bookmark → `/dokumenti?...` (Faza 3a). */
+export function saldakontiToDokumentiUrl(
+  slug: string,
+  searchParams: Record<string, string | string[] | undefined>,
+): string {
+  return buildDokumentiUrlFromSearchParams(slug, searchParams);
+}
+
+/** @deprecated Use saldakontiToDokumentiUrl */
+export function dokumentiRedirectUrl(
+  slug: string,
+  searchParams: Record<string, string | string[] | undefined>,
+): string {
+  return saldakontiToDokumentiUrl(slug, searchParams);
 }
