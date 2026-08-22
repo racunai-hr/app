@@ -10,7 +10,7 @@ describe('APP_NAV', () => {
     expect(byId['glavna-knjiga'].href('finestar')).toBe('/t/finestar/glavna-knjiga');
     expect(byId.dokumenti.href('finestar')).toBe('/t/finestar/dokumenti');
     expect(byId.porezi.href('finestar')).toBe('/t/finestar/porezi');
-    expect(APP_NAV.some((item) => item.id === 'saldakonti')).toBe(false);
+    expect(APP_NAV.map((item) => item.id)).not.toContain('saldakonti');
   });
 
   it('marks the current module as active', () => {
