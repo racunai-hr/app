@@ -27,5 +27,8 @@ describe('APP_NAV', () => {
     expect(isNavActive('/t/finestar/bankarstvo', bankarstvo!, 'finestar')).toBe(true);
     expect(isNavActive('/t/finestar/bankarstvo/racuni', bankarstvo!, 'finestar')).toBe(true);
     expect(isNavActive('/t/finestar/bankarstvo/uskladivanje', docs!, 'finestar')).toBe(false);
+    expect(isNavActive('/t/finestar/dokumenti', docs!, 'finestar')).toBe(true);
+    expect(isNavActive('/t/finestar/dokumenti/ulazni/20', docs!, 'finestar')).toBe(true);
+    expect(isNavActive('/t/finestar/dokumenti', saldakonti!, 'finestar')).toBe(false);
   });
 });

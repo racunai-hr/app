@@ -9,6 +9,13 @@ import { clearTokens, getAccessToken } from '@/lib/auth';
 import { SYSTEM_VIEWS } from '@/lib/documentLabels';
 import { formatHrDateTime } from '@/lib/formatHr';
 import {
+  documentListUrl,
+  mergeDocumentListQuery,
+  parseDocumentListQuery,
+  patchDirectionTab,
+} from '@/lib/documentListQuery';
+import { canWritePurchasing } from '@/lib/purchasing';
+import {
   exportDocuments,
   fetchDocuments,
   tenantApiOrigin,
@@ -17,7 +24,6 @@ import {
   type DocumentListQuery,
   type DocumentListResponse,
 } from '@/lib/documents';
-import { canWritePurchasing } from '@/lib/purchasing';
 
 import { DateField } from './DateField';
 import { DocumentDetailPanel } from './DocumentDetailPanel';
@@ -31,30 +37,21 @@ const TABS: { value: '' | DocumentDirection; label: string }[] = [
   { value: 'deposit', label: 'Kaucije' },
 ];
 
-function queryFromSearch(params: URLSearchParams): DocumentListQuery {
-  const direction = params.get('direction');
-  return {
-    direction:
-      direction === 'incoming' || direction === 'outgoing' || direction === 'deposit'
-        ? direction
-        : '',
-    view: params.get('view') || '',
-    search: params.get('search') || '',
-    year: params.get('year') || '',
-    month: params.get('month') || '',
-    status: params.get('status') || '',
-    date_from: params.get('date_from') || '',
-    date_to: params.get('date_to') || '',
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
-  };
-}
+type DocumentListProps = {
+  slug: string;
+  basePath?: 'dokumenti' | 'saldakonti';
+  showHeader?: boolean;
+};
 
-export function DocumentList({ slug }: { slug: string }) {
+export function DocumentList({
+  slug,
+  basePath = 'saldakonti',
+  showHeader = true,
+}: DocumentListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchKey = searchParams.toString();
-  const query = useMemo(() => queryFromSearch(searchParams), [searchKey, searchParams]);
+  const query = useMemo(() => parseDocumentListQuery(searchParams), [searchKey, searchParams]);
   const [tenant, setTenant] = useState<TenantInfo | null>(null);
   const [data, setData] = useState<DocumentListResponse | null>(null);
   const [error, setError] = useState('');
@@ -66,19 +63,7 @@ export function DocumentList({ slug }: { slug: string }) {
   } | null>(null);
 
   function replaceQuery(next: Partial<DocumentListQuery>) {
-    const merged = { ...query, ...next };
-    const params = new URLSearchParams();
-    if (merged.direction) params.set('direction', merged.direction);
-    if (merged.view) params.set('view', merged.view);
-    if (merged.search) params.set('search', merged.search);
-    if (merged.year) params.set('year', merged.year);
-    if (merged.month) params.set('month', merged.month);
-    if (merged.status) params.set('status', merged.status);
-    if (merged.date_from) params.set('date_from', merged.date_from);
-    if (merged.date_to) params.set('date_to', merged.date_to);
-    if (merged.page && merged.page > 1) params.set('page', String(merged.page));
-    const qs = params.toString();
-    router.replace(qs ? `/t/${slug}/saldakonti?${qs}` : `/t/${slug}/saldakonti`);
+    router.replace(documentListUrl(slug, basePath, mergeDocumentListQuery(query, next)));
   }
 
   useEffect(() => {
@@ -159,37 +144,37 @@ export function DocumentList({ slug }: { slug: string }) {
 
   const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
 
-  return (
-    <section className="docs-shell">
-        <header className="docs-heading">
-          <div>
-            <h1>Saldakonti{tenant ? ` — ${tenant.name}` : ''}</h1>
-            <p>Pregled ulaznih i izlaznih računa te otvorenih stavaka.</p>
-          </div>
-          <div className="export-actions">
-            {query.direction === 'incoming' && tenant && canWritePurchasing(tenant.role) && (
-              <Link className="btn btn-primary" href={`/t/${slug}/ulazni-racuni/ucitaj`}>
-                Učitaj račun
-              </Link>
-            )}
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={!tenant || Boolean(exporting)}
-              onClick={() => handleExport('csv')}
-            >
-              {exporting === 'csv' ? 'CSV…' : 'CSV'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={!tenant || Boolean(exporting)}
-              onClick={() => handleExport('xlsx')}
-            >
-              {exporting === 'xlsx' ? 'XLSX…' : 'XLSX'}
-            </button>
-          </div>
-        </header>
+  const exportActions = (
+    <div className="export-actions">
+      {showHeader && query.direction === 'incoming' && tenant && canWritePurchasing(tenant.role) && (
+        <Link className="btn btn-primary" href={`/t/${slug}/ulazni-racuni/ucitaj`}>
+          Učitaj račun
+        </Link>
+      )}
+      <button
+        type="button"
+        className="btn btn-secondary"
+        disabled={!tenant || Boolean(exporting)}
+        onClick={() => handleExport('csv')}
+      >
+        {exporting === 'csv' ? 'CSV…' : 'CSV'}
+      </button>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        disabled={!tenant || Boolean(exporting)}
+        onClick={() => handleExport('xlsx')}
+      >
+        {exporting === 'xlsx' ? 'XLSX…' : 'XLSX'}
+      </button>
+    </div>
+  );
+
+  const listBody = (
+    <>
+        {!showHeader && (
+          <div className="docs-list-toolbar">{exportActions}</div>
+        )}
 
         <nav className="tabs" aria-label="Smjer dokumenata">
           {TABS.map((tab) => (
@@ -197,7 +182,7 @@ export function DocumentList({ slug }: { slug: string }) {
               key={tab.label}
               type="button"
               className={query.direction === tab.value ? 'tab tab-active' : 'tab'}
-              onClick={() => replaceQuery({ direction: tab.value, page: 1 })}
+              onClick={() => replaceQuery(patchDirectionTab(query, tab.value))}
             >
               {tab.label}
             </button>
@@ -304,6 +289,23 @@ export function DocumentList({ slug }: { slug: string }) {
             </button>
           </nav>
         )}
+    </>
+  );
+
+  if (!showHeader) {
+    return listBody;
+  }
+
+  return (
+    <section className="docs-shell">
+      <header className="docs-heading">
+        <div>
+          <h1>Saldakonti{tenant ? ` — ${tenant.name}` : ''}</h1>
+          <p>Pregled ulaznih i izlaznih računa te otvorenih stavaka.</p>
+        </div>
+        {exportActions}
+      </header>
+      {listBody}
     </section>
   );
 }
