@@ -3,41 +3,51 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
-const TAX_HUB = [
-  { href: 'pdv', label: 'PDV', ready: true },
-  { href: null, label: 'EU poslovanje', ready: false },
-  { href: null, label: 'Porez na dobit', ready: false },
-  { href: null, label: 'JOPPD i primici', ready: false },
-  { href: null, label: 'Ostali porezi i naknade', ready: false },
-  { href: null, label: 'Predaje i potvrde', ready: false },
-  { href: null, label: 'Porezni kalendar', ready: false },
-] as const;
+import { TAX_HUB_GROUPS } from '@/lib/taxHub';
 
 export default function PoreziHubPage() {
   const params = useParams<{ slug: string }>();
-  const base = `/t/${params.slug}/porezi`;
 
   return (
     <section className="docs-shell">
       <header className="docs-heading">
         <div>
           <h1>Porezi i obrasci</h1>
-          <p>Kanonski porezni moduli. Djelatnost nije stavka ovog izbornika.</p>
+          <p>Katalog obrazaca. Djelatnost nije stavka ovog izbornika.</p>
         </div>
       </header>
-      <ul className="tax-hub-list">
-        {TAX_HUB.map((item) => (
-          <li key={item.label}>
-            {item.ready && item.href ? (
-              <Link href={`${base}/${item.href}`}>{item.label}</Link>
+      <div className="tax-hub">
+        {TAX_HUB_GROUPS.map((group) => (
+          <section key={group.id} className="tax-hub-group">
+            <h2>{group.label}</h2>
+            {group.forms.length ? (
+              <ul className="tax-hub-list">
+                {group.forms.map((form) => {
+                  const href = form.ready && form.href ? form.href(params.slug) : null;
+                  return (
+                    <li key={form.id}>
+                      {href ? (
+                        <Link href={href}>
+                          {form.label}
+                          {form.note ? <span className="tax-hub-note">{form.note}</span> : null}
+                        </Link>
+                      ) : (
+                        <span>
+                          {form.label} <span className="app-placeholder-note">uskoro</span>
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             ) : (
-              <span>
-                {item.label} <span className="app-placeholder-note">uskoro</span>
-              </span>
+              <p className="tax-hub-empty">
+                <span className="app-placeholder-note">uskoro</span>
+              </p>
             )}
-          </li>
+          </section>
         ))}
-      </ul>
+      </div>
     </section>
   );
 }

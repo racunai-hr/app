@@ -310,16 +310,42 @@
   font-size: 0.9rem;
 }
 
+.tax-hub {
+  display: grid;
+  gap: 1.35rem;
+  margin: 1.15rem 0 0;
+}
+
+.tax-hub-group h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
 .tax-hub-list {
   list-style: none;
   padding: 0;
-  margin: 1rem 0 0;
+  margin: 0.45rem 0 0;
   display: grid;
-  gap: 0.45rem;
+  gap: 0.4rem;
 }
 
 .tax-hub-list a {
   font-weight: 600;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.tax-hub-note {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.tax-hub-empty {
+  margin: 0.35rem 0 0;
 }
 
 .tax-period-context {
