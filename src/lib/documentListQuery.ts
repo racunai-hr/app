@@ -98,3 +98,22 @@ export function patchDirectionTab(
 ): DocumentListQuery {
   return { ...current, direction, page: 1 };
 }
+
+export function dokumentiRedirectUrl(
+  slug: string,
+  searchParams: Record<string, string | string[] | undefined>,
+): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value === undefined) continue;
+    if (typeof value === 'string') {
+      params.append(key, value);
+      continue;
+    }
+    for (const entry of value) {
+      params.append(key, entry);
+    }
+  }
+  const qs = params.toString();
+  return qs ? `/t/${slug}/dokumenti?${qs}` : `/t/${slug}/dokumenti`;
+}

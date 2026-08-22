@@ -1,19 +1,14 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { Suspense } from 'react';
-import { useParams } from 'next/navigation';
+import { dokumentiRedirectUrl } from '@/lib/documentListQuery';
 
-import { DocumentList } from '@/components/documents/DocumentList';
-
-function SaldakontiPageInner() {
-  const params = useParams<{ slug: string }>();
-  return <DocumentList slug={params.slug} />;
-}
-
-export default function SaldakontiPage() {
-  return (
-    <Suspense fallback={<div className="loading">Učitavanje…</div>}>
-      <SaldakontiPageInner />
-    </Suspense>
-  );
+export default async function SaldakontiRedirectPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { slug } = await params;
+  redirect(dokumentiRedirectUrl(slug, await searchParams));
 }

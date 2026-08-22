@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   documentListUrl,
+  dokumentiRedirectUrl,
   isDocumentsSubnavActive,
   parseDocumentListQuery,
   patchDirectionTab,
@@ -93,5 +94,36 @@ describe('documentListQuery', () => {
     expect(isDocumentsSubnavActive(deposit, 'all')).toBe(false);
     expect(isDocumentsSubnavActive(deposit, 'incoming')).toBe(false);
     expect(isDocumentsSubnavActive(deposit, 'attention')).toBe(true);
+  });
+
+  describe('dokumentiRedirectUrl', () => {
+    it('redirects bare saldakonti path to dokumenti', () => {
+      expect(dokumentiRedirectUrl('finestar', {})).toBe('/t/finestar/dokumenti');
+    });
+
+    it('preserves full query string on redirect', () => {
+      expect(
+        dokumentiRedirectUrl('finestar', {
+          direction: 'incoming',
+          view: 'attention',
+          search: 'acme',
+        }),
+      ).toBe('/t/finestar/dokumenti?direction=incoming&view=attention&search=acme');
+    });
+
+    it('preserves pagination query on redirect', () => {
+      expect(dokumentiRedirectUrl('finestar', { page: '2' })).toBe(
+        '/t/finestar/dokumenti?page=2',
+      );
+    });
+
+    it('preserves multi-value query params on redirect', () => {
+      const url = dokumentiRedirectUrl('finestar', { status: ['open', 'overdue'] });
+      expect(url).toBe('/t/finestar/dokumenti?status=open&status=overdue');
+      expect(new URLSearchParams(url.split('?')[1]!).getAll('status')).toEqual([
+        'open',
+        'overdue',
+      ]);
+    });
   });
 });
