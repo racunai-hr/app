@@ -175,6 +175,10 @@ describe('IncomingExpenseDetail', () => {
     expect(screen.getAllByText('Evidentiran').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Djelomično').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Neusklađeno').length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: 'Zatvori bankom' })).toHaveAttribute(
+      'href',
+      '/t/finestar/bankarstvo/uskladivanje?match_status=unmatched&subledger_item=3',
+    );
     expect(screen.getByText('4000')).toBeInTheDocument();
     expect(screen.getByText('2026-05')).toBeInTheDocument();
     expect(screen.queryByText('Zatvoreno')).toBeNull();
@@ -472,5 +476,63 @@ describe('IncomingExpenseDetail', () => {
     render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
     await screen.findByRole('heading', { name: '26210-H120-5154' });
     expect(screen.queryByRole('button', { name: 'Odbij' })).not.toBeInTheDocument();
+  });
+
+  it('shows banking close CTA when subledger is open with item_id', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        subledger: {
+          state: { value: 'open', reason: null, source: 'subledger_item' },
+          open_amount: { value: '372.20', reason: null, source: 'subledger_item' },
+          original_amount: { value: '372.20', reason: null, source: 'subledger_item' },
+          aging_bucket: { value: 'current', reason: null, source: 'subledger_item' },
+          days: { value: 0, reason: null, source: 'subledger_item' },
+        },
+        subledger_context: {
+          item_id: 55,
+          state: 'open',
+          original_amount: '372.20',
+          allocated_amount: '0.00',
+          open_amount: '372.20',
+          due_date: '2026-08-06',
+          allocations: [],
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Zatvori bankom' })).toHaveAttribute(
+        'href',
+        '/t/finestar/bankarstvo/uskladivanje?match_status=unmatched&subledger_item=55',
+      );
+    });
+  });
+
+  it('hides banking close CTA when subledger is closed', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        subledger: {
+          state: { value: 'closed', reason: null, source: 'subledger_item' },
+          open_amount: { value: '0.00', reason: null, source: 'subledger_item' },
+          original_amount: { value: '372.20', reason: null, source: 'subledger_item' },
+          aging_bucket: { value: null, reason: 'not_applicable', source: null },
+          days: { value: null, reason: 'not_applicable', source: null },
+        },
+        subledger_context: {
+          item_id: 55,
+          state: 'closed',
+          original_amount: '372.20',
+          allocated_amount: '372.20',
+          open_amount: '0.00',
+          due_date: '2026-08-06',
+          allocations: [],
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: '26210-H120-5154' })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('link', { name: 'Zatvori bankom' })).toBeNull();
   });
 });

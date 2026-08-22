@@ -16,6 +16,10 @@ import {
   type DocumentDetail,
 } from '@/lib/documents';
 import { DOCUMENTS_OPERATIVE_HREFS } from '@/lib/documentListQuery';
+import {
+  documentBankCloseHref,
+  shouldShowBankCloseCta,
+} from '@/lib/bankingReconcile';
 import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 
 type Props = {
@@ -284,6 +288,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
             >
               Odbij
             </button>
+          ) : null}
+          {detail && shouldShowBankCloseCta(detail) ? (
+            <Link className="btn btn-primary" href={documentBankCloseHref(slug, detail)}>
+              Zatvori bankom
+            </Link>
           ) : null}
           <Link className="btn btn-secondary" href={DOCUMENTS_OPERATIVE_HREFS.incoming(slug)}>
             Natrag
