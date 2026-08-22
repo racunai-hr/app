@@ -2030,6 +2030,8 @@ export interface components {
             rows: components["schemas"]["PdvSRow"][];
             /** Format: uuid */
             event_uuid: string | null;
+            current_submission: components["schemas"]["PdvSSubmission"] | null;
+            submissions: components["schemas"]["PdvSSubmission"][];
         };
         PdvSRow: {
             country_code: string;
@@ -2038,6 +2040,17 @@ export interface components {
             goods_value: string;
             /** @description Decimal as string, e.g. "1100.00" */
             services_value: string;
+        };
+        PdvSSubmission: {
+            /** Format: uuid */
+            event_uuid: string;
+            submission_no: number;
+            submission_type: string;
+            /** Format: uuid */
+            external_identifier: string;
+            submitted_at: string | null;
+            has_confirmation: boolean;
+            payload_hash: string;
         };
         PdvSSubmitRequestRequest: {
             /** Format: uuid */

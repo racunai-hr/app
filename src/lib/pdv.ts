@@ -80,6 +80,40 @@ export function pdvSListHref(slug: string): string {
   return `/t/${slug}/porezi/pdv-s`;
 }
 
+function moneyCents(value: string | null | undefined): number | null {
+  if (value == null || value === '') return null;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 100);
+}
+
+export function sumPdvSTotals(
+  rows: Array<{ total_goods: string | null; total_services: string | null }>,
+): { total_goods: string; total_services: string } {
+  let goods = 0;
+  let services = 0;
+  for (const row of rows) {
+    const g = moneyCents(row.total_goods);
+    const s = moneyCents(row.total_services);
+    if (g != null) goods += g;
+    if (s != null) services += s;
+  }
+  return {
+    total_goods: (goods / 100).toFixed(2),
+    total_services: (services / 100).toFixed(2),
+  };
+}
+
+export function pdvSSubmissionLabel(
+  submission: { submission_no: number; submission_type: string } | null | undefined,
+): string {
+  if (!submission) return '—';
+  if (submission.submission_type === 'correction' || submission.submission_no > 1) {
+    return `Ispravak #${submission.submission_no}`;
+  }
+  return `Predaja #${submission.submission_no}`;
+}
+
 export function razdobljaHref(slug: string): string {
   return `/t/${slug}/porezi/pdv`;
 }
