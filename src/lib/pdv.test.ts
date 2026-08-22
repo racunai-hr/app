@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatPdvPeriodLabel, parsePdvPeriod, pdvBoxRows, pdvPrijavaHref, pdvSHref } from './pdv';
+import { formatPdvPeriodLabel, parsePdvPeriod, pdvBoxRows, pdvPrijavaHref, pdvSHref, pdvSListHref } from './pdv';
 
 describe('formatPdvPeriodLabel', () => {
   it('rearranges YYYY-MM without Date parsing', () => {
@@ -44,5 +44,6 @@ describe('period hrefs', () => {
       '/t/finestar/porezi/pdv/prijava?period=2026-07',
     );
     expect(pdvSHref('finestar', '2026-08')).toBe('/t/finestar/porezi/pdv-s?period=2026-08');
+    expect(pdvSListHref('finestar')).toBe('/t/finestar/porezi/pdv-s');
   });
 });

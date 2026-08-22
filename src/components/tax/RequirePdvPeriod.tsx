@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { parsePdvPeriod, razdobljaHref } from '@/lib/pdv';
 
+/** Fail-closed period gate for PDV Prijava / Kontrolni pregledi. Missing period → PDV Razdoblja. */
 export function RequirePdvPeriod({
   slug,
   children,

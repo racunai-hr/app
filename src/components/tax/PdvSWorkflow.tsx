@@ -13,7 +13,7 @@ import {
   fetchPdvSPeriod,
   postPdvSSubmit,
   postSubmissionConfirmation,
-  razdobljaHref,
+  pdvSListHref,
   type PdvSPeriod,
 } from '@/lib/pdv';
 
@@ -43,7 +43,7 @@ export function PdvSWorkflow({ slug, period, origin, token, role }: Props) {
         return;
       }
       if (err instanceof ApiError && err.status === 404) {
-        router.replace(razdobljaHref(slug));
+        router.replace(pdvSListHref(slug));
         return;
       }
       setError(err instanceof Error ? err.message : 'PDV-S se nije učitao.');
@@ -73,7 +73,7 @@ export function PdvSWorkflow({ slug, period, origin, token, role }: Props) {
     <div className="tax-workflow">
       {error ? <div className="error">{error}</div> : null}
       <p>
-        <Link href={razdobljaHref(slug)}>← Razdoblja</Link>
+        <Link href={pdvSListHref(slug)}>← PDV-S razdoblja</Link>
       </p>
       <dl className="tax-status-grid">
         <div>

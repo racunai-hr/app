@@ -12,7 +12,6 @@ import {
   fetchPdvWorkspace,
   pdvPeriodStatusLabel,
   pdvPrijavaHref,
-  pdvSHref,
   pdvXmlIntegrityLabel,
   postPdvLedger,
   razdobljaHref,
@@ -121,9 +120,6 @@ export function PdvKontrolniPregledi({ slug, period, origin, token, role }: Prop
         )}
         <Link className="btn" href={pdvPrijavaHref(slug, period)}>
           Prijava
-        </Link>
-        <Link className="btn" href={pdvSHref(slug, period)}>
-          PDV-S
         </Link>
       </div>
     </div>

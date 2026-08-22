@@ -76,6 +76,10 @@ export function pdvSHref(slug: string, period: string): string {
   return `/t/${slug}/porezi/pdv-s?period=${period}`;
 }
 
+export function pdvSListHref(slug: string): string {
+  return `/t/${slug}/porezi/pdv-s`;
+}
+
 export function razdobljaHref(slug: string): string {
   return `/t/${slug}/porezi/pdv`;
 }

@@ -30,18 +30,14 @@ describe('TAX_HUB_GROUPS', () => {
     expect(vat?.forms.find((form) => form.id === 'oss')?.label).toBe('OSS (EU poslovanje)');
   });
 
-  it('makes only PDV and PDV-S live, both via Razdoblja', () => {
+  it('sends PDV and PDV-S to separate form screens', () => {
     const ready = taxHubReadyForms();
     expect(ready.map((form) => form.id)).toEqual(['pdv', 'pdv-s']);
-    expect(ready.every((form) => form.href?.('finestar') === '/t/finestar/porezi/pdv')).toBe(true);
-    expect(ready.some((form) => form.href?.('finestar').includes('/pdv-s'))).toBe(false);
+    expect(ready.find((form) => form.id === 'pdv')?.href?.('finestar')).toBe('/t/finestar/porezi/pdv');
+    expect(ready.find((form) => form.id === 'pdv-s')?.href?.('finestar')).toBe('/t/finestar/porezi/pdv-s');
+    expect(ready.find((form) => form.id === 'pdv-s')?.note).toBeUndefined();
     expect(TAX_HUB_GROUPS.flatMap((group) => group.forms).some((form) => form.href?.('x')?.includes('/zp'))).toBe(
       false,
     );
-  });
-
-  it('asks PDV-S users to pick a period on Razdoblja', () => {
-    const pdvS = TAX_HUB_GROUPS.flatMap((group) => group.forms).find((form) => form.id === 'pdv-s');
-    expect(pdvS?.note).toBe('Odaberite razdoblje');
   });
 });
