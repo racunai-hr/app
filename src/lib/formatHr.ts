@@ -3,15 +3,19 @@ const amountFormat = new Intl.NumberFormat('hr-HR', {
   maximumFractionDigits: 2,
 });
 
-const dateFormat = new Intl.DateTimeFormat('hr-HR', {
-  timeZone: 'Europe/Zagreb',
-  day: 'numeric',
-  month: 'numeric',
+const ZAGREB = 'Europe/Zagreb';
+const DISPLAY_EMPTY = '—';
+
+/** Zero-padded day/month/year in Europe/Zagreb (presentation only). */
+const zagrebDateFormat = new Intl.DateTimeFormat('en-GB', {
+  timeZone: ZAGREB,
+  day: '2-digit',
+  month: '2-digit',
   year: 'numeric',
 });
 
-const timeFormat = new Intl.DateTimeFormat('hr-HR', {
-  timeZone: 'Europe/Zagreb',
+const zagrebTimeFormat = new Intl.DateTimeFormat('en-GB', {
+  timeZone: ZAGREB,
   hour: '2-digit',
   minute: '2-digit',
   hour12: false,
@@ -41,19 +45,61 @@ export function formatHrMoney(value: string | number | null | undefined, currenc
   return `${formatHrAmount(value)} ${currency}`;
 }
 
-export function formatHrSnapshot(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  const parts = Object.fromEntries(dateFormat.formatToParts(date).map((part) => [part.type, part.value]));
-  const day = String(Number(parts.day));
-  const month = String(Number(parts.month));
-  return `${day}. ${month}. ${parts.year}. u ${timeFormat.format(date)}`;
+function isValidCalendarYmd(year: number, month: number, day: number): boolean {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  return (
+    probe.getUTCFullYear() === year && probe.getUTCMonth() === month - 1 && probe.getUTCDate() === day
+  );
 }
 
-export function formatHrInputDate(iso: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!match) return '';
+function toInstant(value: string | Date | null | undefined): Date | null {
+  if (value == null || value === '') return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function zagrebYmd(date: Date): { day: string; month: string; year: string } | null {
+  const parts = Object.fromEntries(
+    zagrebDateFormat.formatToParts(date).map((part) => [part.type, part.value]),
+  );
+  if (!parts.day || !parts.month || !parts.year) return null;
+  return { day: parts.day, month: parts.month, year: parts.year };
+}
+
+/**
+ * Business calendar date: YYYY-MM-DD → dd.mm.yyyy.
+ * No timezone conversion — never use new Date('YYYY-MM-DD').
+ */
+export function formatHrInputDate(value: string | null | undefined): string {
+  if (value == null || value === '') return DISPLAY_EMPTY;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return DISPLAY_EMPTY;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!isValidCalendarYmd(year, month, day)) return DISPLAY_EMPTY;
   return `${match[3]}.${match[2]}.${match[1]}.`;
+}
+
+/** User-facing date from Date / ISO timestamp → dd.mm.yyyy. (Europe/Zagreb). */
+export function formatHrDate(value: string | Date | null | undefined): string {
+  const date = toInstant(value);
+  if (!date) return DISPLAY_EMPTY;
+  const ymd = zagrebYmd(date);
+  if (!ymd) return DISPLAY_EMPTY;
+  return `${ymd.day}.${ymd.month}.${ymd.year}.`;
+}
+
+/** User-facing timestamp → dd.mm.yyyy. HH:mm (Europe/Zagreb). */
+export function formatHrDateTime(value: string | Date | null | undefined): string {
+  const date = toInstant(value);
+  if (!date) return DISPLAY_EMPTY;
+  const ymd = zagrebYmd(date);
+  if (!ymd) return DISPLAY_EMPTY;
+  const time = zagrebTimeFormat.format(date);
+  return `${ymd.day}.${ymd.month}.${ymd.year}. ${time}`;
 }
 
 export function parseHrInputDate(raw: string): string | null {

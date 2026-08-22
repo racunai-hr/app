@@ -22,6 +22,7 @@ import {
   type PartnerDto,
   type PartnerFinancialSummary,
 } from '@/lib/partners';
+import { formatHrInputDate } from '@/lib/formatHr';
 
 type Props = {
   origin: string;
@@ -97,6 +98,18 @@ function formatMoney(value: string, currency: string) {
   return `${value} ${currency}`;
 }
 
+function netBalanceVerdict(summary: PartnerFinancialSummary): string {
+  const net = Number(summary.net_balance);
+  if (!Number.isFinite(net) || net === 0) {
+    return `Nema neto duga (${formatMoney('0.00', summary.currency)}).`;
+  }
+  const amount = formatMoney(Math.abs(net).toFixed(2), summary.currency);
+  if (net > 0) {
+    return `Partner nam duguje ${amount}.`;
+  }
+  return `Dugujemo partneru ${amount}.`;
+}
+
 function mapPartnerSaveError(err: unknown): { field?: string; message: string } {
   const conflict = getPartnerConflict(err);
   if (conflict?.code === 'partner_tax_number_conflict') {
@@ -161,6 +174,10 @@ export function PartnerOverview({ origin, token, role, partner, onSaved }: Props
       {summaryError && <div className="error">{summaryError}</div>}
       {summary && (
         <div className="table-wrap" style={{ marginBottom: '1.5rem' }}>
+          <p className="banking-role-note" role="status" style={{ marginTop: 0 }}>
+            <strong>{netBalanceVerdict(summary)}</strong> Financijski sažetak je projekcija Finance
+            domene (stanje na dan {formatHrInputDate(summary.as_of_date)}).
+          </p>
           <table className="docs-table">
             <thead>
               <tr>
@@ -181,10 +198,6 @@ export function PartnerOverview({ origin, token, role, partner, onSaved }: Props
               </tr>
             </tbody>
           </table>
-          <p className="banking-role-note">
-            Financijski sažetak je projekcija Finance domene (as of {summary.as_of_date}). Pozitivan
-            saldo = partner duguje nama.
-          </p>
         </div>
       )}
 

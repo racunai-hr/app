@@ -14,6 +14,7 @@ import {
   type IncomingInvoiceImport,
 } from '@/lib/purchasing';
 import { pollInvoiceImport } from '@/lib/purchasingImport';
+import { formatHrInputDate } from '@/lib/formatHr';
 
 import { usePurchasingSession } from './usePurchasingSession';
 
@@ -184,8 +185,8 @@ export function InvoiceReview({ slug, importId }: Props) {
             <h2>Račun</h2>
             <FieldRow label="Dobavljač" value={supplier?.name || ''} />
             <FieldRow label="Broj računa" value={extracted.invoice_number} />
-            <FieldRow label="Datum" value={extracted.issue_date} />
-            <FieldRow label="Dospijeće" value={extracted.due_date || ''} />
+            <FieldRow label="Datum" value={formatHrInputDate(extracted.issue_date)} />
+            <FieldRow label="Dospijeće" value={formatHrInputDate(extracted.due_date)} />
             <FieldRow label="Osnovica" value={`${extracted.net_amount} ${extracted.currency}`} />
             <FieldRow label="PDV" value={`${extracted.tax_amount} ${extracted.currency}`} />
             <FieldRow label="Ukupno" value={`${extracted.total_amount} ${extracted.currency}`} />

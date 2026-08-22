@@ -20,7 +20,7 @@ import {
   TRANSACTION_TYPE_LABELS,
   labelOrRaw,
 } from '@/lib/bankingLabels';
-import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { DateField } from '@/components/documents/DateField';
 
 import { BankingPager } from './BankingPager';
@@ -293,7 +293,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
 
       {data && (
         <p className="as-of">
-          Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time> · {data.count}{' '}
+          Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time> · {data.count}{' '}
           transakcija
         </p>
       )}
@@ -327,7 +327,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
                       : undefined
                   }
                 >
-                  <td>{row.transaction_date}</td>
+                  <td>{formatHrInputDate(row.transaction_date)}</td>
                   <td>{labelOrRaw(TRANSACTION_TYPE_LABELS, row.transaction_type)}</td>
                   <td>{formatHrMoney(row.amount, row.currency)}</td>
                   <td>

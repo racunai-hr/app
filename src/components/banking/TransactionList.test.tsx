@@ -100,11 +100,14 @@ describe('TransactionList GL deep-link', () => {
         basePath="/t/finestar/bankarstvo/transakcije"
       />,
     );
-    await waitFor(() => expect(screen.getByText('Usklađeno')).toBeInTheDocument());
-    expect(screen.getByRole('link', { name: 'Temeljnica' })).toHaveAttribute(
-      'href',
-      '/t/finestar/glavna-knjiga/123',
-    );
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Temeljnica' })).toBeInTheDocument());
+    const link = screen.getByRole('link', { name: 'Temeljnica' });
+    expect(link).toHaveAttribute('href', '/t/finestar/glavna-knjiga/123');
+    expect(link.getAttribute('href')).not.toMatch(/entry|JE-/i);
+    const statusStack = link.closest('.cell-stack');
+    expect(statusStack).not.toBeNull();
+    expect(statusStack).toHaveTextContent('Usklađeno');
+    expect(statusStack?.querySelector('.badge')).toHaveTextContent('Usklađeno');
   });
 
   it('does not show Temeljnica when unmatched', async () => {

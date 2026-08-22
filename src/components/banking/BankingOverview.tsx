@@ -8,7 +8,7 @@ import {
   formatIban,
   type BankingOverviewResponse,
 } from '@/lib/banking';
-import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrMoney, formatHrDateTime } from '@/lib/formatHr';
 
 import { BalanceCell } from './BalanceCell';
 
@@ -48,7 +48,7 @@ export function BankingOverview({ origin, token }: Props) {
   return (
     <div className="dash banking-overview">
       <p className="as-of">
-        Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time>
+        Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time>
       </p>
 
       <section className="dash-section" aria-labelledby="bank-kpi-heading">

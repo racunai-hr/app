@@ -69,6 +69,33 @@ describe('PartnerOverview', () => {
     });
   });
 
+  it('states who owes whom from net_balance', async () => {
+    fetchPartnerFinancialSummary.mockResolvedValue({
+      as_of_date: '2026-08-21',
+      currency: 'EUR',
+      receivables_open: '0.00',
+      payables_open: '9900.00',
+      receivables_overdue: '0.00',
+      payables_overdue: '0.00',
+      net_balance: '-9900.00',
+      partner_id: 24,
+    });
+    render(
+      <PartnerOverview
+        origin="https://api.test"
+        token="t"
+        role="viewer"
+        partner={samplePartner({ id: 24, name: 'Ante Vrcan' })}
+        onSaved={onSaved}
+      />,
+    );
+    await waitFor(() =>
+      expect(screen.getByText(/Dugujemo partneru 9900\.00 EUR/)).toBeInTheDocument(),
+    );
+    expect(screen.getByText(/stanje na dan 2026-08-21/)).toBeInTheDocument();
+    expect(screen.queryByText(/Pozitivan saldo/)).toBeNull();
+  });
+
   it('hides edit/save controls for viewer', async () => {
     render(
       <PartnerOverview

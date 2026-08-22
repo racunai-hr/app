@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ApiError } from '@/lib/api';
 import { fetchPaymentOrders, formatIban, type Paginated, type PaymentOrderDto } from '@/lib/banking';
 import { PAYMENT_ORDER_STATUS_LABELS, labelOrRaw } from '@/lib/bankingLabels';
-import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrMoney, formatHrDateTime } from '@/lib/formatHr';
 import { DateField } from '@/components/documents/DateField';
 
 import { BankingPager } from './BankingPager';
@@ -95,7 +95,7 @@ export function PaymentOrderList({ slug, origin, token }: Props) {
 
       {data && (
         <p className="as-of">
-          Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time> · {data.count}{' '}
+          Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time> · {data.count}{' '}
           naloga
         </p>
       )}
@@ -138,7 +138,7 @@ export function PaymentOrderList({ slug, origin, token }: Props) {
                   <td>{row.reference || '—'}</td>
                   <td>
                     {row.created_at ? (
-                      <time dateTime={row.created_at}>{formatHrSnapshot(row.created_at)}</time>
+                      <time dateTime={row.created_at}>{formatHrDateTime(row.created_at)}</time>
                     ) : (
                       '—'
                     )}

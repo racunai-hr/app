@@ -7,7 +7,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { ApiError, fetchMe, type TenantInfo } from '@/lib/api';
 import { clearTokens, getAccessToken } from '@/lib/auth';
 import { SYSTEM_VIEWS } from '@/lib/documentLabels';
-import { formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrDateTime } from '@/lib/formatHr';
 import {
   exportDocuments,
   fetchDocuments,
@@ -248,7 +248,7 @@ export function DocumentList({ slug }: { slug: string }) {
 
         {data && (
           <p className="as-of">
-            Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time> · {data.count}{' '}
+            Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time> · {data.count}{' '}
             dokumenata
           </p>
         )}

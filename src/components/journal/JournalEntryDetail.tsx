@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { usePartnerSession } from '@/components/partners/usePartnerSession';
 import { ApiError } from '@/lib/api';
-import { formatHrAmount, formatHrInputDate, formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrAmount, formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
 import {
   fetchJournalEntry,
   journalSourceLabel,
@@ -64,7 +64,7 @@ export function JournalEntryDetailView({ slug, entryId }: Props) {
       {data && (
         <>
           <p className="as-of">
-            Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time>
+            Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time>
           </p>
           <dl className="incoming-dl incoming-dl-inline">
             <div>

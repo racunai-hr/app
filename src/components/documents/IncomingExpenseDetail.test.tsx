@@ -170,6 +170,7 @@ describe('IncomingExpenseDetail', () => {
       'href',
       '/t/finestar/glavna-knjiga/9',
     );
+    expect(screen.getByRole('link', { name: 'JE-9' }).getAttribute('href')).not.toContain('JE-9');
     expect(screen.getAllByText('Proknjiženo').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Evidentiran').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Djelomično').length).toBeGreaterThan(0);
@@ -314,6 +315,7 @@ describe('IncomingExpenseDetail', () => {
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) {
       expect(link).toHaveAttribute('href', '/t/finestar/glavna-knjiga/123');
+      expect(link.getAttribute('href')).not.toContain('JE-123');
     }
   });
 
@@ -378,6 +380,31 @@ describe('IncomingExpenseDetail', () => {
       expect(screen.getByText('JE-ORPHAN')).toBeInTheDocument();
     });
     expect(screen.queryByRole('link', { name: 'JE-ORPHAN' })).toBeNull();
+    expect(screen.queryByText(/Temeljnica nije dostupna/i)).toBeNull();
+  });
+
+  it('links accounting temeljnica when journal_entry_id exists without entry_number', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        accounting: {
+          journal_entry_id: 42,
+          entry_number: '',
+          entry_date: '2026-05-15',
+          status: 'posted',
+          debit_total: '50.00',
+          credit_total: '50.00',
+          lines: [],
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Knjiženje' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('link', { name: '#42' })).toHaveAttribute(
+      'href',
+      '/t/finestar/glavna-knjiga/42',
+    );
   });
 
   it('hides SUPER action when external_view_url is null', async () => {

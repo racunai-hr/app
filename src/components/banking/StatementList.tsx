@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ApiError } from '@/lib/api';
 import { fetchStatements, type Paginated, type StatementDto } from '@/lib/banking';
 import { STATEMENT_STATUS_LABELS, labelOrRaw } from '@/lib/bankingLabels';
-import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { DateField } from '@/components/documents/DateField';
 
 import { BankingPager } from './BankingPager';
@@ -114,7 +114,7 @@ export function StatementList({ slug, origin, token, role }: Props) {
 
       {data && (
         <p className="as-of">
-          Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time> · {data.count}{' '}
+          Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time> · {data.count}{' '}
           izvoda
         </p>
       )}
@@ -139,7 +139,7 @@ export function StatementList({ slug, origin, token, role }: Props) {
               {data.results.map((row) => (
                 <tr key={row.id}>
                   <td>{row.statement_number}</td>
-                  <td>{row.statement_date}</td>
+                  <td>{formatHrInputDate(row.statement_date)}</td>
                   <td>{row.bank_account_id}</td>
                   <td>{formatHrMoney(row.opening_balance, row.currency || 'EUR')}</td>
                   <td>{formatHrMoney(row.closing_balance, row.currency || 'EUR')}</td>

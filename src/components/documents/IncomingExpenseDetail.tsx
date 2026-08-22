@@ -13,33 +13,12 @@ import {
   tenantApiOrigin,
   type DocumentDetail,
 } from '@/lib/documents';
-import { formatHrMoney } from '@/lib/formatHr';
+import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 
 type Props = {
   slug: string;
   expenseId: number;
 };
-
-function formatDate(value: string | null | undefined): string {
-  if (!value) return '—';
-  const datePart = value.slice(0, 10);
-  const [year, month, day] = datePart.split('-');
-  if (!year || !month || !day) return value;
-  return `${day}.${month}.${year}.`;
-}
-
-function formatDateTime(value: string | null | undefined): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return formatDate(value);
-  return new Intl.DateTimeFormat('hr-HR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
 
 function money(value: string | null | undefined, currency = 'EUR'): string {
   if (value == null || value === '') return '—';
@@ -333,19 +312,19 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </div>
                 <div>
                   <dt>Datum izdavanja</dt>
-                  <dd>{formatDate(meta?.issue_date || detail.document_date)}</dd>
+                  <dd>{formatHrInputDate(meta?.issue_date || detail.document_date)}</dd>
                 </div>
                 <div>
                   <dt>Datum isporuke</dt>
-                  <dd>{formatDate(meta?.delivery_date)}</dd>
+                  <dd>{formatHrInputDate(meta?.delivery_date)}</dd>
                 </div>
                 <div>
                   <dt>Datum dospijeća</dt>
-                  <dd>{formatDate(meta?.due_date || detail.due_date)}</dd>
+                  <dd>{formatHrInputDate(meta?.due_date || detail.due_date)}</dd>
                 </div>
                 <div>
                   <dt>Datum zaprimanja</dt>
-                  <dd>{formatDateTime(meta?.received_at)}</dd>
+                  <dd>{formatHrDateTime(meta?.received_at)}</dd>
                 </div>
                 <div>
                   <dt>Valuta</dt>
@@ -544,7 +523,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </div>
                 <div>
                   <dt>Zaprimljeno</dt>
-                  <dd>{formatDateTime(integration.received_at)}</dd>
+                  <dd>{formatHrDateTime(integration.received_at)}</dd>
                 </div>
               </dl>
               {externalUrl ? (
@@ -563,9 +542,10 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               <div>
                 <dt>Temeljnica</dt>
                 <dd>
-                  {detail.accounting?.journal_entry_id && detail.accounting.entry_number ? (
+                  {detail.accounting?.journal_entry_id != null ? (
                     <Link href={`/t/${slug}/glavna-knjiga/${detail.accounting.journal_entry_id}`}>
-                      {detail.accounting.entry_number}
+                      {detail.accounting.entry_number ||
+                        `#${detail.accounting.journal_entry_id}`}
                     </Link>
                   ) : (
                     detail.accounting?.entry_number || '—'
@@ -574,7 +554,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Datum</dt>
-                <dd>{formatDate(detail.accounting?.entry_date)}</dd>
+                <dd>{formatHrInputDate(detail.accounting?.entry_date)}</dd>
               </div>
               <div>
                 <dt>Status</dt>
@@ -702,7 +682,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Dospijeće</dt>
-                <dd>{formatDate(detail.subledger_context?.due_date)}</dd>
+                <dd>{formatHrInputDate(detail.subledger_context?.due_date)}</dd>
               </div>
               <div>
                 <dt>Partner</dt>
@@ -732,7 +712,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                         <td>{alloc.id}</td>
                         <td className="cell-amount">{money(alloc.amount, currency)}</td>
                         <td>{alloc.journal_entry_id ?? '—'}</td>
-                        <td>{formatDateTime(alloc.created_at)}</td>
+                        <td>{formatHrDateTime(alloc.created_at)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -758,7 +738,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Datum</dt>
-                <dd>{formatDate(detail.payment?.date)}</dd>
+                <dd>{formatHrInputDate(detail.payment?.date)}</dd>
               </div>
               <div>
                 <dt>Iznos</dt>
@@ -1008,7 +988,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </div>
                 <div>
                   <dt>Imported at</dt>
-                  <dd>{formatDateTime(detail.technical.imported_at)}</dd>
+                  <dd>{formatHrDateTime(detail.technical.imported_at)}</dd>
                 </div>
               </dl>
             </details>

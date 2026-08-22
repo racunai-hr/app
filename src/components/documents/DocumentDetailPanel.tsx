@@ -13,7 +13,7 @@ import {
   type DocumentDetail,
   type DocumentDirection,
 } from '@/lib/documents';
-import { formatHrMoney } from '@/lib/formatHr';
+import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { provenanceText } from '@/lib/provenance';
 import { ProvenanceBadge } from './ProvenanceBadge';
 
@@ -30,13 +30,6 @@ type Props = {
   mode?: 'drawer' | 'page';
   slug?: string;
 };
-
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  const [year, month, day] = value.split('-');
-  if (!year || !month || !day) return value;
-  return `${day}.${month}.${year}.`;
-}
 
 function DetailBody({
   detail,
@@ -72,11 +65,11 @@ function DetailBody({
         </div>
         <div>
           <dt>Datum</dt>
-          <dd>{formatDate(detail.document_date)}</dd>
+          <dd>{formatHrInputDate(detail.document_date)}</dd>
         </div>
         <div>
           <dt>Dospijeće</dt>
-          <dd>{formatDate(detail.due_date)}</dd>
+          <dd>{formatHrInputDate(detail.due_date)}</dd>
         </div>
         <div>
           <dt>Izvorni broj</dt>
@@ -234,7 +227,7 @@ function DetailBody({
                 </span>
                 <span className="muted-inline">
                   {formatHrMoney(pay.amount, currency)}
-                  {pay.payment_date ? ` · ${formatDate(pay.payment_date)}` : ''}
+                  {pay.payment_date ? ` · ${formatHrInputDate(pay.payment_date)}` : ''}
                 </span>
               </li>
             ))}
@@ -251,7 +244,7 @@ function DetailBody({
                 <span>#{alloc.id}</span>
                 <span className="muted-inline">
                   {formatHrMoney(alloc.amount, currency)}
-                  {alloc.created_at ? ` · ${alloc.created_at}` : ''}
+                  {alloc.created_at ? ` · ${formatHrDateTime(alloc.created_at)}` : ''}
                 </span>
               </li>
             ))}

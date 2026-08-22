@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { ApiError } from '@/lib/api';
+import { formatHrInputDate } from '@/lib/formatHr';
 import { fetchPartnerSubledger, type PartnerSubledgerList } from '@/lib/partners';
 
 type Props = {
@@ -10,6 +11,18 @@ type Props = {
   token: string;
   partnerId: number;
 };
+
+function sortSubledgerByDueDateDesc(rows: PartnerSubledgerList['results']) {
+  return [...rows].sort((a, b) => {
+    const aDue = a.due_date || '';
+    const bDue = b.due_date || '';
+    if (!aDue && !bDue) return b.item_id - a.item_id;
+    if (!aDue) return 1;
+    if (!bDue) return -1;
+    if (aDue !== bDue) return bDue.localeCompare(aDue);
+    return b.item_id - a.item_id;
+  });
+}
 
 export function PartnerSubledgerPanel({ origin, token, partnerId }: Props) {
   const [data, setData] = useState<PartnerSubledgerList | null>(null);
@@ -36,6 +49,8 @@ export function PartnerSubledgerPanel({ origin, token, partnerId }: Props) {
     };
   }, [origin, token, partnerId]);
 
+  const rows = data ? sortSubledgerByDueDateDesc(data.results) : [];
+
   return (
     <div>
       <p className="banking-role-note">Izvor: Finance API `/api/finance/partners/…/subledger/`.</p>
@@ -54,18 +69,18 @@ export function PartnerSubledgerPanel({ origin, token, partnerId }: Props) {
             </tr>
           </thead>
           <tbody>
-            {!data?.results.length && !loading ? (
+            {!rows.length && !loading ? (
               <tr>
                 <td colSpan={6} className="table-empty">
                   Nema otvorenih stavki.
                 </td>
               </tr>
             ) : (
-              data?.results.map((row) => (
+              rows.map((row) => (
                 <tr key={row.item_id}>
                   <td>{row.direction_label}</td>
                   <td>{row.source_label}</td>
-                  <td>{row.due_date || '—'}</td>
+                  <td>{formatHrInputDate(row.due_date)}</td>
                   <td>{row.open_amount}</td>
                   <td>{row.aging_bucket}</td>
                   <td>{row.status}</td>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { controlLabel, noticeLabel, DIRECTION_LABELS, statusLabel } from '@/lib/documentLabels';
 import type { DocumentDirection, DocumentSummary } from '@/lib/documents';
-import { formatHrAmount, formatHrMoney } from '@/lib/formatHr';
+import { formatHrAmount, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { provenanceText } from '@/lib/provenance';
 import { ProvenanceBadge } from './ProvenanceBadge';
 
@@ -11,13 +11,6 @@ type Props = {
   slug?: string;
   onOpenDocument?: (selection: { direction: DocumentDirection; id: number }) => void;
 };
-
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  const [year, month, day] = value.split('-');
-  if (!year || !month || !day) return value;
-  return `${day}.${month}.${year}.`;
-}
 
 export function DocumentTable({ rows, slug, onOpenDocument }: Props) {
   if (rows.length === 0) {
@@ -85,8 +78,8 @@ export function DocumentTable({ rows, slug, onOpenDocument }: Props) {
                 <td>{row.partner_name || '—'}</td>
                 <td>
                   <div className="cell-stack">
-                    <span>{formatDate(row.document_date)}</span>
-                    <span className="muted-inline">Dospijeće: {formatDate(row.due_date)}</span>
+                    <span>{formatHrInputDate(row.document_date)}</span>
+                    <span className="muted-inline">Dospijeće: {formatHrInputDate(row.due_date)}</span>
                   </div>
                 </td>
                 <td className="cell-amount">

@@ -1,4 +1,4 @@
-import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrMoney, formatHrDateTime } from '@/lib/formatHr';
 import type { BalanceDto } from '@/lib/banking';
 import { BALANCE_SOURCE_LABELS, BALANCE_TYPE_LABELS, labelOrRaw } from '@/lib/bankingLabels';
 
@@ -14,9 +14,7 @@ export function BalanceCell({ balances }: { balances: BalanceDto[] }) {
           <span className="banking-balance-meta">
             {labelOrRaw(BALANCE_TYPE_LABELS, balance.balance_type)} · izvor{' '}
             {labelOrRaw(BALANCE_SOURCE_LABELS, balance.source)} ·{' '}
-            <time dateTime={balance.as_of ?? undefined}>
-              {balance.as_of ? formatHrSnapshot(balance.as_of) : '—'}
-            </time>
+            <time dateTime={balance.as_of ?? undefined}>{formatHrDateTime(balance.as_of)}</time>
             {balance.is_stale ? (
               <span className="badge badge-warning banking-stale">Zastarjelo</span>
             ) : (

@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { DateField } from '@/components/documents/DateField';
 import { usePartnerSession } from '@/components/partners/usePartnerSession';
 import { ApiError } from '@/lib/api';
-import { formatHrAmount, formatHrInputDate, formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrAmount, formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
 import {
   fetchJournalEntries,
   journalSourceLabel,
@@ -116,7 +116,7 @@ export function JournalEntryList({ slug }: Props) {
 
       {data && (
         <p className="as-of">
-          Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time> · {data.count}{' '}
+          Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time> · {data.count}{' '}
           temeljnica
         </p>
       )}
