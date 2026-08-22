@@ -21,6 +21,11 @@ import {
   labelOrRaw,
 } from '@/lib/bankingLabels';
 import { formatHrAmount, formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import {
+  parseSubledgerItemParam,
+  reconcileCandidateDocumentLink,
+  type ReconcileDocumentLink,
+} from '@/lib/bankingReconcile';
 import { DateField } from '@/components/documents/DateField';
 
 import { BankingPager } from './BankingPager';
@@ -113,6 +118,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
     [searchKey, searchParams, reconcileMode],
   );
   const highlightTxId = Number(searchParams.get('tx') || '') || null;
+  const highlightSubledgerItemId = parseSubledgerItemParam(searchParams);
   const [data, setData] = useState<Paginated<TransactionDto> | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -120,6 +126,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
   const [candidates, setCandidates] = useState<OpenItemCandidate[]>([]);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [reconcileSuccess, setReconcileSuccess] = useState<ReconcileDocumentLink | null>(null);
 
   function reload() {
     return fetchTransactions(origin, token, query).then((list) => setData(list));
@@ -135,6 +142,8 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
     if (merged.date_from) params.set('date_from', merged.date_from);
     if (merged.date_to) params.set('date_to', merged.date_to);
     if (merged.page > 1) params.set('page', String(merged.page));
+    const subledgerItem = searchParams.get('subledger_item');
+    if (subledgerItem) params.set('subledger_item', subledgerItem);
     const qs = params.toString();
     router.replace(qs ? `${basePath}?${qs}` : basePath);
   }
@@ -169,6 +178,23 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
       node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [data, highlightTxId]);
+
+  useEffect(() => {
+    if (highlightSubledgerItemId == null || candidates.length === 0) {
+      return;
+    }
+    const node = document.getElementById(`subledger-item-${highlightSubledgerItemId}`);
+    if (node && typeof node.scrollIntoView === 'function') {
+      node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [candidates, highlightSubledgerItemId]);
+
+  function clearSubledgerItemParam() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('subledger_item');
+    const qs = params.toString();
+    router.replace(qs ? `${basePath}?${qs}` : basePath);
+  }
 
   function handleFilter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -216,6 +242,8 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
       );
       setActiveTxId(null);
       setCandidates([]);
+      setReconcileSuccess(reconcileCandidateDocumentLink(slug, item));
+      clearSubledgerItemParam();
       await reload();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Usklađivanje nije uspjelo.');
@@ -298,6 +326,23 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
         </p>
       )}
       {error && <div className="error">{error}</div>}
+      {reconcileSuccess && (
+        <div className="banking-reconcile-success" role="status">
+          <p>Transakcija je uspješno usklađena.</p>
+          <div className="export-actions">
+            <Link className="btn btn-secondary" href={reconcileSuccess.href}>
+              Povratak na dokument: {reconcileSuccess.label}
+            </Link>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setReconcileSuccess(null)}
+            >
+              Zatvori
+            </button>
+          </div>
+        </div>
+      )}
       {loading && !data && <div className="loading">Učitavanje…</div>}
       {data && data.results.length === 0 && (
         <p className="table-empty">Nema transakcija za odabrani filter.</p>
@@ -425,8 +470,16 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
                   </tr>
                 </thead>
                 <tbody>
-                  {candidates.map((item) => (
-                    <tr key={item.item_id}>
+                  {candidates.map((item) => {
+                    const highlighted =
+                      highlightSubledgerItemId != null &&
+                      item.item_id === highlightSubledgerItemId;
+                    return (
+                    <tr
+                      key={item.item_id}
+                      id={highlighted ? `subledger-item-${item.item_id}` : undefined}
+                      className={highlighted ? 'banking-row-active' : undefined}
+                    >
                       <td>{item.partner_name || '—'}</td>
                       <td>
                         {item.source_type} · {item.source_label}
@@ -445,7 +498,8 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

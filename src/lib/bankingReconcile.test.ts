@@ -5,6 +5,8 @@ import { sampleDocumentDetail } from '@/test/documentFixtures';
 import {
   bankingReconcileHref,
   documentBankCloseHref,
+  parseSubledgerItemParam,
+  reconcileCandidateDocumentLink,
   shouldShowBankCloseCta,
   subledgerItemIdForBanking,
   subledgerStateForBankClose,
@@ -83,5 +85,41 @@ describe('bankingReconcile', () => {
         },
       } as never),
     ).toBe('/t/finestar/bankarstvo/uskladivanje?match_status=unmatched&subledger_item=7');
+  });
+
+  it('builds post-reconcile document links from candidate source', () => {
+    expect(
+      reconcileCandidateDocumentLink('finestar', {
+        source_type: 'expense',
+        source_id: 30,
+        source_label: '26210-H120-5154',
+      }),
+    ).toEqual({
+      href: '/t/finestar/dokumenti/ulazni/30',
+      label: '26210-H120-5154',
+    });
+    expect(
+      reconcileCandidateDocumentLink('finestar', {
+        source_type: 'invoice',
+        source_id: 4,
+        source_label: '2026-0001',
+      }),
+    ).toEqual({
+      href: '/t/finestar/dokumenti/izlazni/4',
+      label: '2026-0001',
+    });
+    expect(
+      reconcileCandidateDocumentLink('finestar', {
+        source_type: 'deposit',
+        source_id: 9,
+        source_label: 'Kaucija',
+      }),
+    ).toBeNull();
+  });
+
+  it('parses subledger_item query param', () => {
+    expect(parseSubledgerItemParam(new URLSearchParams('subledger_item=42'))).toBe(42);
+    expect(parseSubledgerItemParam(new URLSearchParams('subledger_item=0'))).toBeNull();
+    expect(parseSubledgerItemParam(new URLSearchParams())).toBeNull();
   });
 });

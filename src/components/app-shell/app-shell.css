@@ -1026,6 +1026,21 @@
   font-size: 1rem;
 }
 
+.banking-reconcile-success {
+  margin: 0.75rem 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--success) 8%, var(--surface));
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.banking-reconcile-success p {
+  margin: 0;
+}
+
 .banking-import {
   display: flex;
   flex-wrap: wrap;

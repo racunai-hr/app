@@ -1,9 +1,13 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const replace = vi.fn();
-const searchParams = new URLSearchParams();
+const { replace, searchParams } = vi.hoisted(() => ({
+  replace: vi.fn(),
+  searchParams: new URLSearchParams(),
+}));
 const fetchTransactions = vi.fn();
+const fetchOpenItemCandidates = vi.fn();
+const reconcileOpenItem = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace }),
@@ -15,6 +19,8 @@ vi.mock('@/lib/banking', async () => {
   return {
     ...actual,
     fetchTransactions: (...args: unknown[]) => fetchTransactions(...args),
+    fetchOpenItemCandidates: (...args: unknown[]) => fetchOpenItemCandidates(...args),
+    reconcileOpenItem: (...args: unknown[]) => reconcileOpenItem(...args),
   };
 });
 
@@ -42,14 +48,31 @@ function tx(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function candidate(overrides: Record<string, unknown> = {}) {
+  return {
+    item_id: 42,
+    partner_id: 1,
+    partner_name: 'Partner d.o.o.',
+    direction: 'incoming',
+    source_type: 'expense',
+    source_id: 30,
+    source_label: '26210-H120-5154',
+    open_amount: '100.00',
+    due_date: '2026-08-06',
+    action_label: 'Zatvori ulazni',
+    ...overrides,
+  };
+}
+
 describe('TransactionList GL deep-link', () => {
   beforeEach(() => {
     replace.mockReset();
     fetchTransactions.mockReset();
-    searchParams.delete('match_status');
-    searchParams.delete('page');
-    searchParams.delete('tx');
-    searchParams.delete('statement');
+    fetchOpenItemCandidates.mockReset();
+    reconcileOpenItem.mockReset();
+    for (const key of [...searchParams.keys()]) {
+      searchParams.delete(key);
+    }
   });
 
   it('highlights row when ?tx= matches transaction id', async () => {
@@ -148,5 +171,78 @@ describe('TransactionList GL deep-link', () => {
     );
     await waitFor(() => expect(screen.getByText('Usklađeno')).toBeInTheDocument());
     expect(screen.queryByRole('link', { name: 'Temeljnica' })).toBeNull();
+  });
+});
+
+describe('TransactionList reconcile deep-link', () => {
+  beforeEach(() => {
+    replace.mockReset();
+    fetchTransactions.mockReset();
+    fetchOpenItemCandidates.mockReset();
+    reconcileOpenItem.mockReset();
+    for (const key of [...searchParams.keys()]) {
+      searchParams.delete(key);
+    }
+    fetchTransactions.mockResolvedValue({
+      as_of: '2026-08-19T10:00:00Z',
+      count: 1,
+      page: 1,
+      page_size: 20,
+      results: [tx({ id: 5, match_status: 'unmatched' })],
+    });
+  });
+
+  it('highlights candidate row when subledger_item matches URL param', async () => {
+    searchParams.set('subledger_item', '42');
+    fetchOpenItemCandidates.mockResolvedValue({
+      count: 2,
+      results: [candidate({ item_id: 7 }), candidate({ item_id: 42 })],
+    });
+    const { container } = render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/uskladivanje"
+        reconcileMode
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('Uplata')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Poveži transakciju 5' }));
+    await waitFor(() => {
+      expect(container.querySelector('#subledger-item-42')).not.toBeNull();
+    });
+    const row = container.querySelector('#subledger-item-42');
+    expect(row).toHaveClass('banking-row-active');
+  });
+
+  it('shows post-reconcile document link and clears subledger_item from URL', async () => {
+    searchParams.set('match_status', 'unmatched');
+    searchParams.set('subledger_item', '42');
+    fetchOpenItemCandidates.mockResolvedValue({
+      count: 1,
+      results: [candidate()],
+    });
+    reconcileOpenItem.mockResolvedValue(tx({ id: 5, match_status: 'matched' }));
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/uskladivanje"
+        reconcileMode
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('Uplata')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Poveži transakciju 5' }));
+    await waitFor(() => screen.getByRole('button', { name: 'Zatvori ulazni' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Zatvori ulazni' }));
+    await waitFor(() => {
+      expect(reconcileOpenItem).toHaveBeenCalled();
+    });
+    expect(
+      screen.getByRole('link', { name: 'Povratak na dokument: 26210-H120-5154' }),
+    ).toHaveAttribute('href', '/t/finestar/dokumenti/ulazni/30');
+    expect(replace).toHaveBeenCalledWith('/t/finestar/bankarstvo/uskladivanje?match_status=unmatched');
   });
 });

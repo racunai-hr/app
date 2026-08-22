@@ -40,3 +40,41 @@ export function documentBankCloseHref(
 ): string {
   return bankingReconcileHref(slug, subledgerItemIdForBanking(detail));
 }
+
+export type ReconcileCandidateSource = {
+  source_type: string;
+  source_id: number;
+  source_label: string;
+};
+
+export type ReconcileDocumentLink = {
+  href: string;
+  label: string;
+};
+
+/** Post-reconcile navigation back to source document (Faza 3a slice 4). */
+export function reconcileCandidateDocumentLink(
+  slug: string,
+  candidate: ReconcileCandidateSource,
+): ReconcileDocumentLink | null {
+  if (!candidate.source_id) return null;
+  switch (candidate.source_type) {
+    case 'expense':
+      return {
+        href: `/t/${slug}/dokumenti/ulazni/${candidate.source_id}`,
+        label: candidate.source_label || 'Ulazni dokument',
+      };
+    case 'invoice':
+      return {
+        href: `/t/${slug}/dokumenti/izlazni/${candidate.source_id}`,
+        label: candidate.source_label || 'Izlazni dokument',
+      };
+    default:
+      return null;
+  }
+}
+
+export function parseSubledgerItemParam(params: URLSearchParams): number | null {
+  const raw = Number(params.get('subledger_item') || '');
+  return Number.isFinite(raw) && raw > 0 ? raw : null;
+}
