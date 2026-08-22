@@ -26,5 +26,9 @@ describe('APP_NAV', () => {
     expect(isNavActive('/t/finestar/bankarstvo/uskladivanje', docs!, 'finestar')).toBe(false);
     expect(isNavActive('/t/finestar/dokumenti', docs!, 'finestar')).toBe(true);
     expect(isNavActive('/t/finestar/dokumenti/ulazni/20', docs!, 'finestar')).toBe(true);
+    const porezi = APP_NAV.find((item) => item.id === 'porezi');
+    expect(porezi).toBeTruthy();
+    expect(isNavActive('/t/finestar/porezi', porezi!, 'finestar')).toBe(true);
+    expect(isNavActive('/t/finestar/porezi/pdv', porezi!, 'finestar')).toBe(true);
   });
 });

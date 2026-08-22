@@ -860,6 +860,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tax/pdv/periods/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_pdv_periods_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1784,6 +1800,21 @@ export interface components {
         PaymentOrderBlock: {
             status: components["schemas"]["Provenanced"];
             creditor_iban: components["schemas"]["Provenanced"];
+        };
+        PdvPeriod: {
+            /** @description Canonical period YYYY-MM */
+            period: string;
+            period_status: string;
+            has_ledger: boolean;
+            return_version: number | null;
+            return_status: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            vat_due: string;
+            submitted_at: string | null;
+        };
+        PdvPeriodList: {
+            count: number;
+            results: components["schemas"]["PdvPeriod"][];
         };
         PeriodReturn: {
             id: number;
@@ -5029,6 +5060,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    tax_pdv_periods_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvPeriodList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
         };

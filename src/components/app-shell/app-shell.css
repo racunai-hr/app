@@ -310,6 +310,18 @@
   font-size: 0.9rem;
 }
 
+.tax-hub-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.tax-hub-list a {
+  font-weight: 600;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
