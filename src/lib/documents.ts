@@ -6,7 +6,25 @@ export type DocumentDirection = 'incoming' | 'outgoing' | 'deposit';
 export type DocumentKind = 'invoice' | 'expense' | 'deposit';
 
 /** Incoming/outgoing detail payload — OpenAPI SSOT (PR A fields included). */
-export type DocumentDetail = components['schemas']['DocumentDetail'];
+export type DocumentDetail = components['schemas']['DocumentDetail'] & {
+  actions?: {
+    reject?: {
+      available: boolean;
+      reason_codes?: string[];
+      unavailable_code?: string | null;
+    };
+  };
+  status?: components['schemas']['DocumentDetail']['status'] & {
+    workflow?: string | null;
+  };
+};
+
+export type EracunRejectionResponse = {
+  id: number;
+  status: string;
+  e_reporting: { status: string; attempt_id: string | null };
+  lifecycle: { document: string | null; workflow: string | null };
+};
 
 export type DocumentAmounts = {
   currency: string;
@@ -215,6 +233,36 @@ export async function downloadDocumentUbl(
     accept: 'application/xml',
     fallbackFilename: `document-${id}.xml`,
   });
+}
+
+export function newIdempotencyKey(): string {
+  return crypto.randomUUID();
+}
+
+export async function rejectIncomingEracun(
+  origin: string,
+  token: string,
+  expenseId: number,
+  body: { reason_code: string; reason_text?: string },
+  idempotencyKey: string,
+): Promise<EracunRejectionResponse> {
+  const response = await authorized(
+    origin,
+    `/api/purchasing/expenses/${expenseId}/eracun-rejection/`,
+    token,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!response.ok) {
+    throw new ApiError(await parseApiError(response), response.status);
+  }
+  return response.json();
 }
 
 export async function exportDocuments(

@@ -732,6 +732,22 @@ export interface paths {
         patch: operations["partners_contacts_partial_update"];
         trace?: never;
     };
+    "/api/purchasing/expenses/{id}/eracun-rejection/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_expenses_eracun_rejection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/invoices/import/": {
         parameters: {
             query?: never;
@@ -1088,6 +1104,9 @@ export interface components {
          * @enum {string}
          */
         DirectionEnum: "incoming" | "outgoing" | "deposit";
+        DocumentActions: {
+            reject: components["schemas"]["DocumentRejectAction"];
+        };
         DocumentDetail: {
             id: number;
             kind: components["schemas"]["KindEnum"];
@@ -1138,6 +1157,7 @@ export interface components {
             references?: components["schemas"]["DocumentReference"][];
             integration?: components["schemas"]["IntegrationBlock"];
             technical?: components["schemas"]["TechnicalBlock"];
+            actions?: components["schemas"]["DocumentActions"];
             accounting?: components["schemas"]["AccountingBlock"];
             vat_context?: components["schemas"]["VatContext"];
             subledger_context?: components["schemas"]["SubledgerContext"];
@@ -1169,6 +1189,11 @@ export interface components {
         DocumentReference: {
             type: string;
             value: string;
+        };
+        DocumentRejectAction: {
+            available: boolean;
+            reason_codes?: string[];
+            unavailable_code?: string | null;
         };
         DocumentSummary: {
             id: number;
@@ -1206,6 +1231,24 @@ export interface components {
             as4_status: components["schemas"]["Provenanced"];
             message_id: components["schemas"]["Provenanced"];
             source: components["schemas"]["Provenanced"];
+        };
+        EracunRejectionEReporting: {
+            status: string;
+            attempt_id: string | null;
+        };
+        EracunRejectionLifecycle: {
+            document: string | null;
+            workflow: string | null;
+        };
+        EracunRejectionRequestRequest: {
+            reason_code: components["schemas"]["ReasonCodeEnum"];
+            reason_text?: string;
+        };
+        EracunRejectionResponse: {
+            id: number;
+            status: string;
+            e_reporting: components["schemas"]["EracunRejectionEReporting"];
+            lifecycle: components["schemas"]["EracunRejectionLifecycle"];
         };
         /** @description DRF-style error body: ``{"detail": ...}`` where detail may be str or object. */
         ErrorDetail: {
@@ -1786,6 +1829,14 @@ export interface components {
             code: string;
             detail: string;
         };
+        /**
+         * @description * `REJECTED_BY_RECIPIENT` - REJECTED_BY_RECIPIENT
+         *     * `TAX_NEUTRAL_MISMATCH` - TAX_NEUTRAL_MISMATCH
+         *     * `TAX_AFFECTING_MISMATCH` - TAX_AFFECTING_MISMATCH
+         *     * `OTHER` - OTHER
+         * @enum {string}
+         */
+        ReasonCodeEnum: "REJECTED_BY_RECIPIENT" | "TAX_NEUTRAL_MISMATCH" | "TAX_AFFECTING_MISMATCH" | "OTHER";
         /**
          * @description * `not_recorded` - not_recorded
          *     * `not_provable` - not_provable
@@ -4530,6 +4581,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    purchasing_expenses_eracun_rejection: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EracunRejectionRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EracunRejectionRequestRequest"];
+                "multipart/form-data": components["schemas"]["EracunRejectionRequestRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EracunRejectionResponse"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
                 };
             };
         };
