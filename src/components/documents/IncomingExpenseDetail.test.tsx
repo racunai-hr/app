@@ -450,4 +450,27 @@ describe('IncomingExpenseDetail', () => {
       expect(downloadDocumentUbl).toHaveBeenCalled();
     });
   });
+
+  it('shows Odbij when actions.reject.available is true', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        actions: {
+          reject: {
+            available: true,
+            reason_codes: ['REJECTED_BY_RECIPIENT', 'OTHER'],
+            unavailable_code: null,
+          },
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    expect(await screen.findByRole('button', { name: 'Odbij' })).toBeInTheDocument();
+  });
+
+  it('hides Odbij when reject is unavailable', async () => {
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await screen.findByRole('heading', { name: '26210-H120-5154' });
+    expect(screen.queryByRole('button', { name: 'Odbij' })).not.toBeInTheDocument();
+  });
 });

@@ -10,6 +10,8 @@ import {
   downloadDocumentPdf,
   downloadDocumentUbl,
   fetchDocument,
+  newIdempotencyKey,
+  rejectIncomingEracun,
   tenantApiOrigin,
   type DocumentDetail,
 } from '@/lib/documents';
@@ -36,6 +38,7 @@ const WORKFLOW_STATUS_LABEL: Record<string, string> = {
   approved: 'Odobren',
   cancelled: 'Storniran',
   rejected: 'Odbijen',
+  rejection_pending: 'Odbijanje u tijeku',
 };
 
 const INTEGRATION_STATUS_LABEL: Record<string, string> = {
@@ -94,6 +97,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [downloading, setDownloading] = useState<'pdf' | 'ubl' | null>(null);
   const [technicalOpen, setTechnicalOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReasonText, setRejectReasonText] = useState('');
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectError, setRejectError] = useState('');
+  const [idempotencyKey, setIdempotencyKey] = useState(() => newIdempotencyKey());
 
   useEffect(() => {
     const access = getAccessToken();
@@ -164,6 +172,38 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     }
   }
 
+  async function handleReject() {
+    if (!detail || !origin || !token) return;
+    setRejecting(true);
+    setRejectError('');
+    const key = idempotencyKey || newIdempotencyKey();
+    try {
+      await rejectIncomingEracun(
+        origin,
+        token,
+        detail.id,
+        {
+          reason_code: 'REJECTED_BY_RECIPIENT',
+          reason_text: rejectReasonText.trim() || undefined,
+        },
+        key,
+      );
+      const refreshed = await fetchDocument(origin, token, 'incoming', detail.id);
+      setDetail(refreshed);
+      setRejectOpen(false);
+      setRejectReasonText('');
+      setIdempotencyKey(newIdempotencyKey());
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Odbijanje nije uspjelo.';
+      setRejectError(message);
+      if (!(err instanceof ApiError && err.status === 409)) {
+        setIdempotencyKey(newIdempotencyKey());
+      }
+    } finally {
+      setRejecting(false);
+    }
+  }
+
   const title =
     detail?.number ||
     detail?.source_number ||
@@ -184,6 +224,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     supplier?.id != null ? `/t/${slug}/partneri/${supplier.id}` : null;
   const partnerSaldakontoHref =
     supplier?.id != null ? `/t/${slug}/partneri/${supplier.id}/saldakonto` : null;
+  const canReject = detail?.actions?.reject?.available === true;
 
   return (
     <div className="docs-shell incoming-detail">
@@ -230,11 +271,65 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               {integration?.source === 'super' ? 'Otvori u SUPER-u ↗' : 'Otvori izvorni dokument ↗'}
             </a>
           ) : null}
+          {canReject ? (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={rejecting}
+              onClick={() => {
+                setRejectError('');
+                setRejectOpen(true);
+              }}
+            >
+              Odbij
+            </button>
+          ) : null}
           <Link className="btn btn-secondary" href={`/t/${slug}/saldakonti?direction=incoming`}>
             Natrag
           </Link>
         </div>
       </header>
+
+      {rejectOpen ? (
+        <div className="incoming-reject-dialog" role="dialog" aria-modal="true" aria-labelledby="incoming-reject-title">
+          <div className="incoming-reject-panel">
+            <h2 id="incoming-reject-title">Odbij ulazni eRačun</h2>
+            <p>Zahtjev za zakonsko odbijanje šalje se u obradu. Status dokumenta ostaje nepromijenjen dok gateway ne potvrdi rezultat.</p>
+            <label className="incoming-reject-label" htmlFor="incoming-reject-reason">
+              Razlog (opcionalno)
+            </label>
+            <textarea
+              id="incoming-reject-reason"
+              className="incoming-reject-textarea"
+              rows={3}
+              value={rejectReasonText}
+              onChange={(e) => setRejectReasonText(e.target.value)}
+              disabled={rejecting}
+            />
+            {rejectError ? (
+              <p className="error" role="alert">
+                {rejectError}
+              </p>
+            ) : null}
+            <div className="incoming-reject-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={rejecting}
+                onClick={() => {
+                  setRejectOpen(false);
+                  setRejectError('');
+                }}
+              >
+                Odustani
+              </button>
+              <button type="button" className="btn btn-primary" disabled={rejecting} onClick={() => void handleReject()}>
+                {rejecting ? 'Šaljem…' : 'Potvrdi odbijanje'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {loading && (
         <div className="incoming-detail-skeleton" aria-busy="true" aria-label="Učitavanje detalja">

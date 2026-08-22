@@ -150,6 +150,13 @@ export function sampleIncomingDetail(overrides: Partial<DocumentDetail> = {}): D
       subledger: null,
       payment: null,
     },
+    actions: {
+      reject: {
+        available: false,
+        reason_codes: [],
+        unavailable_code: 'not_on_gateway',
+      },
+    },
     accounting: {
       journal_entry_id: null,
       entry_number: null,
