@@ -77,6 +77,10 @@ export function PdvSWorkflow({ slug, period, origin, token, role }: Props) {
       </p>
       <dl className="tax-status-grid">
         <div>
+          <dt>Status</dt>
+          <dd>{eventUuid ? 'Predano' : 'Nije predano'}</dd>
+        </div>
+        <div>
           <dt>Stavke</dt>
           <dd>{data.row_count}</dd>
         </div>
