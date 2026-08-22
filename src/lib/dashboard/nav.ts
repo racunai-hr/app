@@ -3,7 +3,6 @@ export const MOCK_TOAST_MESSAGE = 'Mock funkcija — backend još nije povezan.'
 export type AppNavId =
   | 'pregled'
   | 'dokumenti'
-  | 'saldakonti'
   | 'glavna-knjiga'
   | 'partneri'
   | 'bankarstvo'
@@ -20,7 +19,6 @@ export type AppNavItem = {
 export const APP_NAV: AppNavItem[] = [
   { id: 'pregled', label: 'Pregled', href: () => '/dashboard' },
   { id: 'dokumenti', label: 'Dokumenti', href: (slug) => `/t/${slug}/dokumenti` },
-  { id: 'saldakonti', label: 'Saldakonti', href: (slug) => `/t/${slug}/saldakonti` },
   { id: 'glavna-knjiga', label: 'Glavna knjiga', href: (slug) => `/t/${slug}/glavna-knjiga` },
   { id: 'partneri', label: 'Partneri', href: (slug) => `/t/${slug}/partneri` },
   { id: 'bankarstvo', label: 'Bankarstvo', href: (slug) => `/t/${slug}/bankarstvo` },
@@ -36,7 +34,7 @@ export function isNavActive(pathname: string, item: AppNavItem, slug: string): b
 }
 
 export const MODULE_PLACEHOLDERS: Record<
-  Exclude<AppNavId, 'pregled' | 'saldakonti' | 'bankarstvo' | 'glavna-knjiga' | 'dokumenti'>,
+  Exclude<AppNavId, 'pregled' | 'bankarstvo' | 'glavna-knjiga' | 'dokumenti'>,
   { title: string; description: string }
 > = {
   partneri: {

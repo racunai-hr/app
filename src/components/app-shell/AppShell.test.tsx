@@ -60,12 +60,9 @@ describe('AppShell', () => {
 
     const nav = screen.getByRole('navigation', { name: 'Glavna navigacija' });
     expect(nav).toHaveTextContent('Pregled');
-    expect(nav).toHaveTextContent('Saldakonti');
+    expect(nav).not.toHaveTextContent('Saldakonti');
     expect(nav).not.toHaveTextContent('Admin');
-    expect(screen.getByRole('link', { name: 'Saldakonti' })).toHaveAttribute(
-      'href',
-      '/t/finestar/saldakonti',
-    );
+    expect(screen.queryByRole('link', { name: 'Saldakonti' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Dokumenti' })).toHaveAttribute(
       'href',
       '/t/finestar/dokumenti',
