@@ -156,4 +156,72 @@ describe('DocumentDetailPanel', () => {
     expect(screen.getByRole('heading', { name: 'Plaćanja' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Zatvori' })).toBeNull();
   });
+
+  it('shows banking close CTA when subledger is open and item_id is available', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleDocumentDetail({
+        direction: 'outgoing',
+        id: 4,
+        internal_number: '2026-0001',
+        subledger: {
+          state: { value: 'open', reason: null, source: 'subledger_item' },
+          open_amount: { value: '1000.00', reason: null, source: 'subledger_item' },
+          original_amount: { value: '1000.00', reason: null, source: 'subledger_item' },
+          aging_bucket: { value: 'current', reason: null, source: 'subledger_item' },
+          days: { value: 5, reason: null, source: 'subledger_item' },
+        },
+        subledger_context: {
+          item_id: 42,
+          state: 'open',
+          original_amount: '1000.00',
+          allocated_amount: '0.00',
+          open_amount: '1000.00',
+          due_date: '2026-07-10',
+          allocations: [],
+        },
+      }),
+    );
+    render(
+      <DocumentDetailPanel
+        mode="page"
+        slug="finestar"
+        selection={{ direction: 'outgoing', id: 4 }}
+        origin="https://example.test"
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Zatvori bankom' })).toHaveAttribute(
+        'href',
+        '/t/finestar/bankarstvo/uskladivanje?match_status=unmatched&subledger_item=42',
+      );
+    });
+  });
+
+  it('hides banking close CTA when subledger is closed', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleDocumentDetail({
+        direction: 'outgoing',
+        id: 4,
+        subledger: {
+          state: { value: 'closed', reason: null, source: 'subledger_item' },
+          open_amount: { value: '0.00', reason: null, source: 'subledger_item' },
+          original_amount: { value: '1000.00', reason: null, source: 'subledger_item' },
+          aging_bucket: { value: null, reason: 'not_applicable', source: null },
+          days: { value: null, reason: 'not_applicable', source: null },
+        },
+      }),
+    );
+    render(
+      <DocumentDetailPanel
+        mode="page"
+        slug="finestar"
+        selection={{ direction: 'outgoing', id: 4 }}
+        origin="https://example.test"
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Natrag na dokumente' })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('link', { name: 'Zatvori bankom' })).toBeNull();
+  });
 });

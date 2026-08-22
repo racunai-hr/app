@@ -8,6 +8,10 @@ import { getAccessToken } from '@/lib/auth';
 import { documentsListHref } from '@/lib/documentListQuery';
 import { controlLabel, DIRECTION_LABELS, noticeLabel, statusLabel } from '@/lib/documentLabels';
 import {
+  documentBankCloseHref,
+  shouldShowBankCloseCta,
+} from '@/lib/bankingReconcile';
+import {
   downloadDocumentPdf,
   downloadDocumentUbl,
   fetchDocument,
@@ -411,18 +415,25 @@ export function DocumentDetailPanel({
         <p className="docs-detail-kicker">{DIRECTION_LABELS[selection.direction]}</p>
         <h2 id={titleId}>{title}</h2>
       </div>
-      {isPage && slug ? (
-        <Link
-          className="btn btn-secondary"
-          href={documentsListHref(slug, { direction: selection.direction })}
-        >
-          Natrag na dokumente
-        </Link>
-      ) : (
-        <button type="button" className="btn btn-secondary" onClick={onClose}>
-          Zatvori
-        </button>
-      )}
+      <div className="export-actions">
+        {detail && slug && shouldShowBankCloseCta(detail) ? (
+          <Link className="btn btn-primary" href={documentBankCloseHref(slug, detail)}>
+            Zatvori bankom
+          </Link>
+        ) : null}
+        {isPage && slug ? (
+          <Link
+            className="btn btn-secondary"
+            href={documentsListHref(slug, { direction: selection.direction })}
+          >
+            Natrag na dokumente
+          </Link>
+        ) : (
+          <button type="button" className="btn btn-secondary" onClick={onClose}>
+            Zatvori
+          </button>
+        )}
+      </div>
     </header>
   );
 
