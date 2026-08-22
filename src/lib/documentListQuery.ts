@@ -117,7 +117,8 @@ const OPERATIVE_SYSTEM_VIEWS = new Set(
   DOCUMENTS_OPERATIVE_PRESETS.map((preset) => preset.query.view).filter(Boolean),
 );
 
-function withoutOperativeView(view: string): string {
+function withoutOperativeView(view: string | undefined): string {
+  if (!view) return '';
   return OPERATIVE_SYSTEM_VIEWS.has(view) ? '' : view;
 }
 
