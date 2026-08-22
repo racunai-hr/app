@@ -30,5 +30,7 @@ describe('APP_NAV', () => {
     expect(porezi).toBeTruthy();
     expect(isNavActive('/t/finestar/porezi', porezi!, 'finestar')).toBe(true);
     expect(isNavActive('/t/finestar/porezi/pdv', porezi!, 'finestar')).toBe(true);
+    expect(isNavActive('/t/finestar/porezi/pdv/prijava', porezi!, 'finestar')).toBe(true);
+    expect(isNavActive('/t/finestar/porezi/pdv-s', porezi!, 'finestar')).toBe(true);
   });
 });
