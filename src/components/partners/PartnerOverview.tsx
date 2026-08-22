@@ -22,7 +22,7 @@ import {
   type PartnerDto,
   type PartnerFinancialSummary,
 } from '@/lib/partners';
-import { formatHrInputDate } from '@/lib/formatHr';
+import { formatHrAmount, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 
 type Props = {
   origin: string;
@@ -94,16 +94,12 @@ function draftFromPartner(partner: PartnerDto): OverviewDraft {
   };
 }
 
-function formatMoney(value: string, currency: string) {
-  return `${value} ${currency}`;
-}
-
 function netBalanceVerdict(summary: PartnerFinancialSummary): string {
   const net = Number(summary.net_balance);
   if (!Number.isFinite(net) || net === 0) {
-    return `Nema neto duga (${formatMoney('0.00', summary.currency)}).`;
+    return `Nema neto duga (${formatHrMoney('0.00', summary.currency)}).`;
   }
-  const amount = formatMoney(Math.abs(net).toFixed(2), summary.currency);
+  const amount = formatHrMoney(Math.abs(net), summary.currency);
   if (net > 0) {
     return `Partner nam duguje ${amount}.`;
   }
@@ -190,11 +186,11 @@ export function PartnerOverview({ origin, token, role, partner, onSaved }: Props
             </thead>
             <tbody>
               <tr>
-                <td>{formatMoney(summary.receivables_open, summary.currency)}</td>
-                <td>{formatMoney(summary.payables_open, summary.currency)}</td>
-                <td>{formatMoney(summary.receivables_overdue, summary.currency)}</td>
-                <td>{formatMoney(summary.payables_overdue, summary.currency)}</td>
-                <td>{formatMoney(summary.net_balance, summary.currency)}</td>
+                <td>{formatHrMoney(summary.receivables_open, summary.currency)}</td>
+                <td>{formatHrMoney(summary.payables_open, summary.currency)}</td>
+                <td>{formatHrMoney(summary.receivables_overdue, summary.currency)}</td>
+                <td>{formatHrMoney(summary.payables_overdue, summary.currency)}</td>
+                <td>{formatHrMoney(summary.net_balance, summary.currency)}</td>
               </tr>
             </tbody>
           </table>
@@ -254,7 +250,7 @@ export function PartnerOverview({ origin, token, role, partner, onSaved }: Props
               </tr>
               <tr>
                 <th>Kreditni limit</th>
-                <td>{partner.credit_limit}</td>
+                <td>{formatHrAmount(partner.credit_limit)}</td>
               </tr>
             </tbody>
           </table>

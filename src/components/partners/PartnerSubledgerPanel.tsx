@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { ApiError } from '@/lib/api';
-import { formatHrInputDate } from '@/lib/formatHr';
+import { formatHrAmount, formatHrInputDate } from '@/lib/formatHr';
 import { fetchPartnerSubledger, type PartnerSubledgerList } from '@/lib/partners';
 
 type Props = {
@@ -81,7 +81,7 @@ export function PartnerSubledgerPanel({ origin, token, partnerId }: Props) {
                   <td>{row.direction_label}</td>
                   <td>{row.source_label}</td>
                   <td>{formatHrInputDate(row.due_date)}</td>
-                  <td>{row.open_amount}</td>
+                  <td>{formatHrAmount(row.open_amount)}</td>
                   <td>{row.aging_bucket}</td>
                   <td>{row.status}</td>
                 </tr>

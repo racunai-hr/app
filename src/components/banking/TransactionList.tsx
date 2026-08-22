@@ -20,7 +20,7 @@ import {
   TRANSACTION_TYPE_LABELS,
   labelOrRaw,
 } from '@/lib/bankingLabels';
-import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { formatHrAmount, formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { DateField } from '@/components/documents/DateField';
 
 import { BankingPager } from './BankingPager';
@@ -431,7 +431,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
                       <td>
                         {item.source_type} · {item.source_label}
                       </td>
-                      <td>{item.open_amount}</td>
+                      <td>{formatHrAmount(item.open_amount)}</td>
                       <td className="banking-col-action">
                         <button
                           type="button"

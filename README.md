@@ -34,3 +34,20 @@ Ne oslanjati se na browser/system timezone za ERP prikaz.
 Poslovna semantika `DateField` / `DateTimeField` ostaje u
 `docs/architecture/DATA_ARCHITECTURE.md`; ovo je samo presentation-layer pravilo.
 Novi ADR nije potreban.
+
+## User-facing amount display
+
+Svi iznosi prikazani korisniku u App UI-u koriste centralne HR formatere iz
+`src/lib/formatHr.ts`. Nema lokalnih `formatMoney` helpera niti feature-specific
+aliasa za prikaz decimalnih iznosa.
+
+| Vrijednost | Helper | Prikaz |
+|---|---|---|
+| Iznos bez valute | `formatHrAmount` | `32.144,76` |
+| Iznos s valutom | `formatHrMoney` | `32.144,76 EUR` |
+
+Invalid / null / empty → `—` (ili `— EUR` kod `formatHrMoney`).
+
+Decimalni string s API-ja (`32144.76`) ostaje za API, bazu, input `value`,
+računanje, sortiranje i ostale machine-readable vrijednosti.
+Lokalizacija je presentation concern.

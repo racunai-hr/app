@@ -90,9 +90,9 @@ describe('PartnerOverview', () => {
       />,
     );
     await waitFor(() =>
-      expect(screen.getByText(/Dugujemo partneru 9900\.00 EUR/)).toBeInTheDocument(),
+      expect(screen.getByText(/Dugujemo partneru 9\.900,00 EUR/)).toBeInTheDocument(),
     );
-    expect(screen.getByText(/stanje na dan 2026-08-21/)).toBeInTheDocument();
+    expect(screen.getByText(/stanje na dan 21\.08\.2026\./)).toBeInTheDocument();
     expect(screen.queryByText(/Pozitivan saldo/)).toBeNull();
   });
 
