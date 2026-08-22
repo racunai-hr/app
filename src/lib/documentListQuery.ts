@@ -51,6 +51,13 @@ export const DOCUMENTS_OPERATIVE_HREFS = {
     documentsListHref(slug, { direction: 'incoming', view: 'incoming_ready_to_pay' }),
   outgoing: (slug: string) => documentsListHref(slug, { direction: 'outgoing' }),
   deposit: (slug: string) => documentsListHref(slug, { direction: 'deposit' }),
+  unpaidReceivables: (slug: string) =>
+    documentsListHref(slug, { direction: 'outgoing', view: 'unpaid_outgoing' }),
+  openPayables: (slug: string) =>
+    documentsListHref(slug, { direction: 'incoming', view: 'incoming_ready_to_pay' }),
+  partiallyPaid: (slug: string) => documentsListHref(slug, { view: 'partially_paid' }),
+  overdueReceivables: (slug: string) =>
+    documentsListHref(slug, { direction: 'outgoing', view: 'overdue_outgoing' }),
 } as const;
 
 export function documentListUrl(
@@ -72,6 +79,48 @@ export function mergeDocumentListQuery(
 
 export type DocumentsSubnavPreset = 'all' | 'incoming' | 'outgoing' | 'attention';
 
+export type DocumentsOperativePreset =
+  | 'unpaid_receivables'
+  | 'open_payables'
+  | 'partially_paid'
+  | 'overdue_receivables';
+
+/** SYSTEM_VIEWS finance presets surfaced in Documents subnav (Faza 3a slice 2). */
+export const DOCUMENTS_OPERATIVE_PRESETS: ReadonlyArray<{
+  id: DocumentsOperativePreset;
+  label: string;
+  query: Pick<DocumentListQuery, 'direction' | 'view'>;
+}> = [
+  {
+    id: 'unpaid_receivables',
+    label: 'Otvorena potraživanja',
+    query: { direction: 'outgoing', view: 'unpaid_outgoing' },
+  },
+  {
+    id: 'open_payables',
+    label: 'Otvorene obveze',
+    query: { direction: 'incoming', view: 'incoming_ready_to_pay' },
+  },
+  {
+    id: 'partially_paid',
+    label: 'Djelomično plaćeno',
+    query: { direction: '', view: 'partially_paid' },
+  },
+  {
+    id: 'overdue_receivables',
+    label: 'Dospjelo',
+    query: { direction: 'outgoing', view: 'overdue_outgoing' },
+  },
+];
+
+const OPERATIVE_SYSTEM_VIEWS = new Set(
+  DOCUMENTS_OPERATIVE_PRESETS.map((preset) => preset.query.view).filter(Boolean),
+);
+
+function withoutOperativeView(view: string): string {
+  return OPERATIVE_SYSTEM_VIEWS.has(view) ? '' : view;
+}
+
 export const DOCUMENTS_SUBNAV = [
   { id: 'all' as const, label: 'Svi dokumenti' },
   { id: 'incoming' as const, label: 'Ulazni' },
@@ -86,20 +135,34 @@ export function patchForDocumentsSubnav(
   const base = { ...current, page: 1 };
   switch (preset) {
     case 'incoming':
-      return { ...base, direction: 'incoming' };
+      return { ...base, direction: 'incoming', view: withoutOperativeView(base.view) };
     case 'outgoing':
-      return { ...base, direction: 'outgoing' };
+      return { ...base, direction: 'outgoing', view: withoutOperativeView(base.view) };
     case 'attention':
       return { ...base, view: 'attention' };
     case 'all':
       if (base.direction) {
-        return { ...base, direction: '' };
+        return { ...base, direction: '', page: 1 };
       }
       if (base.view) {
-        return { ...base, view: '' };
+        return { ...base, view: '', page: 1 };
       }
       return base;
   }
+}
+
+export function patchForOperativeSubnav(
+  current: DocumentListQuery,
+  preset: DocumentsOperativePreset,
+): DocumentListQuery {
+  const def = DOCUMENTS_OPERATIVE_PRESETS.find((row) => row.id === preset);
+  if (!def) return { ...current, page: 1 };
+  return {
+    ...current,
+    direction: def.query.direction,
+    view: def.query.view,
+    page: 1,
+  };
 }
 
 export function isDocumentsSubnavActive(
@@ -108,7 +171,7 @@ export function isDocumentsSubnavActive(
 ): boolean {
   switch (preset) {
     case 'all':
-      return !query.direction;
+      return !query.direction && !query.view;
     case 'incoming':
       return query.direction === 'incoming';
     case 'outgoing':
@@ -116,6 +179,19 @@ export function isDocumentsSubnavActive(
     case 'attention':
       return query.view === 'attention';
   }
+}
+
+export function isOperativeSubnavActive(
+  query: DocumentListQuery,
+  preset: DocumentsOperativePreset,
+): boolean {
+  const def = DOCUMENTS_OPERATIVE_PRESETS.find((row) => row.id === preset);
+  if (!def) return false;
+  if (query.view !== def.query.view) return false;
+  if (def.query.direction) {
+    return query.direction === def.query.direction;
+  }
+  return !query.direction;
 }
 
 export function patchDirectionTab(

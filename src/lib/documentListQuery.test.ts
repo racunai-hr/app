@@ -6,11 +6,13 @@ import {
   dokumentiRedirectUrl,
   DOCUMENTS_OPERATIVE_HREFS,
   isDocumentsSubnavActive,
+  isOperativeSubnavActive,
   parseDocumentListQuery,
   patchDirectionTab,
   patchForDocumentsSubnav,
+  patchForOperativeSubnav,
   saldakontiToDokumentiUrl,
-} from './documentListQuery';
+} from '@/lib/documentListQuery';
 
 describe('documentListQuery', () => {
   it('parses direction and view independently', () => {
@@ -97,6 +99,36 @@ describe('documentListQuery', () => {
     expect(isDocumentsSubnavActive(deposit, 'all')).toBe(false);
     expect(isDocumentsSubnavActive(deposit, 'incoming')).toBe(false);
     expect(isDocumentsSubnavActive(deposit, 'attention')).toBe(true);
+
+    const partiallyPaid = parseDocumentListQuery(new URLSearchParams('view=partially_paid'));
+    expect(isDocumentsSubnavActive(partiallyPaid, 'all')).toBe(false);
+    expect(isOperativeSubnavActive(partiallyPaid, 'partially_paid')).toBe(true);
+  });
+
+  it('applies operative subnav patches from SYSTEM_VIEWS', () => {
+    const current = parseDocumentListQuery(new URLSearchParams('search=acme&page=3'));
+    expect(patchForOperativeSubnav(current, 'unpaid_receivables')).toEqual({
+      ...current,
+      direction: 'outgoing',
+      view: 'unpaid_outgoing',
+      page: 1,
+    });
+    expect(patchForOperativeSubnav(current, 'partially_paid')).toEqual({
+      ...current,
+      direction: '',
+      view: 'partially_paid',
+      page: 1,
+    });
+  });
+
+  it('clears operative view when browse direction changes', () => {
+    const current = parseDocumentListQuery(
+      new URLSearchParams('direction=outgoing&view=unpaid_outgoing&search=acme'),
+    );
+    const next = patchForDocumentsSubnav(current, 'incoming');
+    expect(next.direction).toBe('incoming');
+    expect(next.view).toBe('');
+    expect(next.search).toBe('acme');
   });
 
   describe('saldakontiToDokumentiUrl', () => {
