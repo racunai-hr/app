@@ -63,6 +63,15 @@ export const SUBLEDGER_LABELS: Record<string, string> = {
   cancelled: 'Otkazan',
 };
 
+/** Aging buckets from Finance partner subledger (matches API aging_bucket keys). */
+export const AGING_BUCKET_LABELS: Record<string, string> = {
+  current: 'Nedospjelo',
+  '1_30': '1–30 dana',
+  '31_60': '31–60 dana',
+  '61_90': '61–90 dana',
+  '90_plus': '90+ dana',
+};
+
 export const VAT_LIFECYCLE_LABELS: Record<string, string> = {
   not_tax_active: 'Nije porezno aktivan',
   awaiting_ledger: 'Čeka evidenciju',

@@ -337,8 +337,15 @@ export async function fetchPartnerSubledger(
   origin: string,
   token: string,
   partnerId: number,
+  options?: { includeClosed?: boolean },
 ): Promise<PartnerSubledgerList> {
-  const response = await authorized(origin, `/api/finance/partners/${partnerId}/subledger/`, token);
+  const params = new URLSearchParams();
+  if (options?.includeClosed) {
+    params.set('include_closed', 'true');
+  }
+  const qs = params.toString();
+  const path = `/api/finance/partners/${partnerId}/subledger/${qs ? `?${qs}` : ''}`;
+  const response = await authorized(origin, path, token);
   if (!response.ok) await raise(response);
   return response.json();
 }

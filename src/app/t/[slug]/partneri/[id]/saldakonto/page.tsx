@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 
 import { PartnerCardShell } from '@/components/partners/PartnerCardShell';
 import { PartnerDepositsPanel } from '@/components/partners/PartnerDepositsPanel';
+import { PartnerFinancialSummaryStrip } from '@/components/partners/PartnerFinancialSummaryStrip';
 import { PartnerSubledgerPanel } from '@/components/partners/PartnerSubledgerPanel';
 
 export default function PartnerSaldakontoPage() {
@@ -13,13 +14,14 @@ export default function PartnerSaldakontoPage() {
     <PartnerCardShell slug={params.slug} partnerId={partnerId}>
       {({ origin, token, role }) => (
         <>
-          <PartnerDepositsPanel origin={origin} token={token} partnerId={partnerId} role={role} />
+          <PartnerFinancialSummaryStrip origin={origin} token={token} partnerId={partnerId} />
           <PartnerSubledgerPanel
             slug={params.slug}
             origin={origin}
             token={token}
             partnerId={partnerId}
           />
+          <PartnerDepositsPanel origin={origin} token={token} partnerId={partnerId} role={role} />
         </>
       )}
     </PartnerCardShell>

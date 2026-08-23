@@ -6,9 +6,9 @@ import {
   jurisdictionFromCountryCode,
   PARTNER_COUNTRY_OPTIONS,
 } from '@/lib/partnerCountries';
+import { PartnerFinancialSummaryStrip } from '@/components/partners/PartnerFinancialSummaryStrip';
 import {
   canWritePartners,
-  fetchPartnerFinancialSummary,
   getPartnerConflict,
   getPartnerFieldError,
   partnerErrorMessage,
@@ -20,9 +20,8 @@ import {
   patchPartner,
   pickDirtyFields,
   type PartnerDto,
-  type PartnerFinancialSummary,
 } from '@/lib/partners';
-import { formatHrAmount, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { formatHrAmount } from '@/lib/formatHr';
 
 type Props = {
   origin: string;
@@ -94,17 +93,6 @@ function draftFromPartner(partner: PartnerDto): OverviewDraft {
   };
 }
 
-function netBalanceVerdict(summary: PartnerFinancialSummary): string {
-  const net = Number(summary.net_balance);
-  if (!Number.isFinite(net) || net === 0) {
-    return `Nema neto duga (${formatHrMoney('0.00', summary.currency)}).`;
-  }
-  const amount = formatHrMoney(Math.abs(net), summary.currency);
-  if (net > 0) {
-    return `Partner nam duguje ${amount}.`;
-  }
-  return `Dugujemo partneru ${amount}.`;
-}
 
 function mapPartnerSaveError(err: unknown): { field?: string; message: string } {
   const conflict = getPartnerConflict(err);
@@ -122,8 +110,6 @@ function mapPartnerSaveError(err: unknown): { field?: string; message: string } 
 }
 
 export function PartnerOverview({ origin, token, role, partner, onSaved }: Props) {
-  const [summary, setSummary] = useState<PartnerFinancialSummary | null>(null);
-  const [summaryError, setSummaryError] = useState('');
   const [draft, setDraft] = useState<OverviewDraft>(() => draftFromPartner(partner));
   const [baseline, setBaseline] = useState<OverviewDraft>(() => draftFromPartner(partner));
   const [saving, setSaving] = useState(false);
@@ -145,57 +131,13 @@ export function PartnerOverview({ origin, token, role, partner, onSaved }: Props
     setMessage('');
   }, [partner]);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchPartnerFinancialSummary(origin, token, partner.id)
-      .then((data) => {
-        if (!cancelled) setSummary(data);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setSummaryError(err instanceof Error ? err.message : 'Sažetak nije dostupan.');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [origin, token, partner.id]);
-
   const setField = <K extends keyof OverviewDraft>(key: K, value: OverviewDraft[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
     <div>
-      {summaryError && <div className="error">{summaryError}</div>}
-      {summary && (
-        <div className="table-wrap" style={{ marginBottom: '1.5rem' }}>
-          <p className="banking-role-note" role="status" style={{ marginTop: 0 }}>
-            <strong>{netBalanceVerdict(summary)}</strong> Financijski sažetak je projekcija Finance
-            domene (stanje na dan {formatHrInputDate(summary.as_of_date)}).
-          </p>
-          <table className="docs-table">
-            <thead>
-              <tr>
-                <th>Potraživanja</th>
-                <th>Obveze</th>
-                <th>Dospjelo (AR)</th>
-                <th>Dospjelo (AP)</th>
-                <th>Saldo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{formatHrMoney(summary.receivables_open, summary.currency)}</td>
-                <td>{formatHrMoney(summary.payables_open, summary.currency)}</td>
-                <td>{formatHrMoney(summary.receivables_overdue, summary.currency)}</td>
-                <td>{formatHrMoney(summary.payables_overdue, summary.currency)}</td>
-                <td>{formatHrMoney(summary.net_balance, summary.currency)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+      <PartnerFinancialSummaryStrip origin={origin} token={token} partnerId={partner.id} />
 
       {!writable && (
         <div className="table-wrap" style={{ marginBottom: '1.5rem' }}>

@@ -1871,6 +1871,10 @@ export interface components {
             partner_id: number;
             count: number;
             results: components["schemas"]["PartnerSubledgerItem"][];
+            /** @description Count of closed SubledgerItem rows for this partner (always computed) */
+            closed_count: number;
+            /** @description Closed rows; empty unless include_closed=true */
+            closed_results: components["schemas"]["PartnerSubledgerItem"][];
         };
         PartnerWriteRequest: {
             name?: string;
@@ -4069,7 +4073,10 @@ export interface operations {
     };
     finance_partner_subledger: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description When true, populate closed_results with closed SubledgerItem rows. closed_count is always returned. */
+                include_closed?: boolean;
+            };
             header?: never;
             path: {
                 id: number;

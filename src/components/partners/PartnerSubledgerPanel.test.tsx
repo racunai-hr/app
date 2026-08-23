@@ -60,6 +60,8 @@ describe('PartnerSubledgerPanel', () => {
       partner_id: 3,
       count: 1,
       results: [subledgerRow()],
+      closed_count: 0,
+      closed_results: [],
     });
     render(
       <PartnerSubledgerPanel
@@ -72,6 +74,9 @@ describe('PartnerSubledgerPanel', () => {
     await waitFor(() => {
       expect(screen.getByRole('link', { name: '26210-H120-5154' })).toBeInTheDocument();
     });
+    expect(fetchPartnerSubledger).toHaveBeenCalledWith('https://x', 't', 3, {
+      includeClosed: true,
+    });
     expect(screen.getByRole('link', { name: '26210-H120-5154' })).toHaveAttribute(
       'href',
       '/t/finestar/dokumenti/ulazni/30',
@@ -80,14 +85,18 @@ describe('PartnerSubledgerPanel', () => {
       'href',
       '/t/finestar/bankarstvo/uskladivanje?match_status=unmatched&subledger_item=42',
     );
+    expect(screen.getByText('Djelomičan')).toBeInTheDocument();
+    expect(screen.getByText('Nedospjelo')).toBeInTheDocument();
   });
 
-  it('hides banking CTA when subledger row is closed', async () => {
+  it('shows empty open message and closed history without bank CTA', async () => {
     fetchPartnerSubledger.mockResolvedValue({
       as_of_date: '2026-08-19',
       partner_id: 3,
-      count: 1,
-      results: [subledgerRow({ status: 'closed' })],
+      count: 0,
+      results: [],
+      closed_count: 1,
+      closed_results: [subledgerRow({ status: 'closed', open_amount: '0.00' })],
     });
     render(
       <PartnerSubledgerPanel
@@ -98,8 +107,10 @@ describe('PartnerSubledgerPanel', () => {
       />,
     );
     await waitFor(() => {
-      expect(screen.getByText('closed')).toBeInTheDocument();
+      expect(screen.getByText(/Nema otvorenih potraživanja ni obveza/)).toBeInTheDocument();
     });
+    expect(screen.getByText('Zatvorene stavke (1)')).toBeInTheDocument();
+    expect(screen.getByText('Zatvoren')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Zatvori bankom' })).toBeNull();
   });
 });
