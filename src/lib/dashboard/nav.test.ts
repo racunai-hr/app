@@ -7,10 +7,14 @@ describe('APP_NAV', () => {
     const byId = Object.fromEntries(APP_NAV.map((item) => [item.id, item]));
     expect(byId.pregled.href('finestar')).toBe('/dashboard');
     expect(byId.bankarstvo.href('finestar')).toBe('/t/finestar/bankarstvo');
+    expect(byId.imovina.href('finestar')).toBe('/t/finestar/imovina');
     expect(byId['glavna-knjiga'].href('finestar')).toBe('/t/finestar/glavna-knjiga');
     expect(byId.dokumenti.href('finestar')).toBe('/t/finestar/dokumenti');
     expect(byId.porezi.href('finestar')).toBe('/t/finestar/porezi');
     expect(APP_NAV.map((item) => item.id)).not.toContain('saldakonti');
+    const ids = APP_NAV.map((item) => item.id);
+    expect(ids.indexOf('imovina')).toBe(ids.indexOf('bankarstvo') + 1);
+    expect(ids.indexOf('porezi')).toBe(ids.indexOf('imovina') + 1);
   });
 
   it('marks the current module as active', () => {

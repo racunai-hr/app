@@ -6,6 +6,7 @@ export type AppNavId =
   | 'glavna-knjiga'
   | 'partneri'
   | 'bankarstvo'
+  | 'imovina'
   | 'porezi'
   | 'izvjestaji'
   | 'postavke';
@@ -22,6 +23,7 @@ export const APP_NAV: AppNavItem[] = [
   { id: 'glavna-knjiga', label: 'Glavna knjiga', href: (slug) => `/t/${slug}/glavna-knjiga` },
   { id: 'partneri', label: 'Partneri', href: (slug) => `/t/${slug}/partneri` },
   { id: 'bankarstvo', label: 'Bankarstvo', href: (slug) => `/t/${slug}/bankarstvo` },
+  { id: 'imovina', label: 'Imovina', href: (slug) => `/t/${slug}/imovina` },
   { id: 'porezi', label: 'Porezi i obrasci', href: (slug) => `/t/${slug}/porezi` },
   { id: 'izvjestaji', label: 'Izvještaji', href: (slug) => `/t/${slug}/izvjestaji` },
   { id: 'postavke', label: 'Postavke tvrtke', href: (slug) => `/t/${slug}/postavke` },
@@ -34,7 +36,7 @@ export function isNavActive(pathname: string, item: AppNavItem, slug: string): b
 }
 
 export const MODULE_PLACEHOLDERS: Record<
-  Exclude<AppNavId, 'pregled' | 'bankarstvo' | 'glavna-knjiga' | 'dokumenti' | 'postavke'>,
+  Exclude<AppNavId, 'pregled' | 'bankarstvo' | 'glavna-knjiga' | 'dokumenti' | 'postavke' | 'imovina'>,
   { title: string; description: string }
 > = {
   partneri: {

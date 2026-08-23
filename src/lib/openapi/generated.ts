@@ -4,6 +4,54 @@
  */
 
 export interface paths {
+    "/api/assets/fixed-assets/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets_fixed_assets_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/fixed-assets/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets_fixed_assets_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/fixed-assets/{id}/depreciation-schedule/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets_fixed_assets_depreciation_schedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me/": {
         parameters: {
             query?: never;
@@ -1407,6 +1455,22 @@ export interface components {
             count: number;
             results: components["schemas"]["Deposit"][];
         };
+        DepreciationScheduleItem: {
+            id: number;
+            year: number;
+            month: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            depreciation_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            accumulated_depreciation: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            book_value_after: string;
+            posted: boolean;
+            journal_entry_id: number | null;
+        };
+        DepreciationScheduleList: {
+            results: components["schemas"]["DepreciationScheduleItem"][];
+        };
         /**
          * @description * `incoming` - incoming
          *     * `outgoing` - outgoing
@@ -1633,6 +1697,44 @@ export interface components {
         FiscalBlock: {
             jir: components["schemas"]["Provenanced"];
             zki: components["schemas"]["Provenanced"];
+        };
+        FixedAssetDetail: {
+            id: number;
+            inventory_number: string;
+            name: string;
+            status: string;
+            origin: string;
+            /** Format: date */
+            purchase_date: string | null;
+            /** Format: date */
+            activation_date: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            acquisition_cost: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            accumulated_depreciation: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            current_book_value: string;
+            vin: string;
+            useful_life_months: number | null;
+            depreciation_method: string;
+            activation_journal_entry_id: number | null;
+        };
+        FixedAssetListItem: {
+            id: number;
+            inventory_number: string;
+            name: string;
+            status: string;
+            origin: string;
+            /** Format: date */
+            purchase_date: string | null;
+            /** Format: date */
+            activation_date: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            acquisition_cost: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            accumulated_depreciation: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            current_book_value: string;
         };
         ImportRunCreateResponse: {
             id: number;
@@ -1867,6 +1969,12 @@ export interface components {
             page_size: number;
             results: components["schemas"]["DocumentSummary"][];
             summary: components["schemas"]["DocumentListSummary"];
+        };
+        PaginatedFixedAssets: {
+            count: number;
+            page: number;
+            page_size: number;
+            results: components["schemas"]["FixedAssetListItem"][];
         };
         PaginatedJournalEntries: {
             as_of: string;
@@ -2639,6 +2747,137 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    assets_fixed_assets_list: {
+        parameters: {
+            query?: {
+                origin?: "opening_balance" | "purchase";
+                /** @description Page number (min 1, default 1) */
+                page?: number;
+                /** @description Filter by name, VIN, or inventory number */
+                search?: string;
+                status?: "active" | "disposed" | "in_preparation";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedFixedAssets"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    assets_fixed_assets_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FixedAssetDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    assets_fixed_assets_depreciation_schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepreciationScheduleList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     auth_me_retrieve: {
         parameters: {
             query?: never;
