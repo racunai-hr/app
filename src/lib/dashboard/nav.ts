@@ -34,7 +34,7 @@ export function isNavActive(pathname: string, item: AppNavItem, slug: string): b
 }
 
 export const MODULE_PLACEHOLDERS: Record<
-  Exclude<AppNavId, 'pregled' | 'bankarstvo' | 'glavna-knjiga' | 'dokumenti'>,
+  Exclude<AppNavId, 'pregled' | 'bankarstvo' | 'glavna-knjiga' | 'dokumenti' | 'postavke'>,
   { title: string; description: string }
 > = {
   partneri: {
@@ -48,9 +48,5 @@ export const MODULE_PLACEHOLDERS: Record<
   izvjestaji: {
     title: 'Izvještaji',
     description: 'Financijski izvještaji nisu izloženi u ovom sučelju.',
-  },
-  postavke: {
-    title: 'Postavke tvrtke',
-    description: 'Postavke tenanta ostaju u postojećem backend konfiguracijskom sloju.',
   },
 };

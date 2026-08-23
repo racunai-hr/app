@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { fetchMe } from '@/lib/api';
 import { sampleIncomingDetail } from '@/test/documentFixtures';
+import { samplePostingPreview } from '@/test/expensePostingFixtures';
 
 const replace = vi.fn();
 const refresh = vi.fn();
@@ -65,15 +67,68 @@ vi.mock('@/lib/documents', async () => {
   };
 });
 
+const fetchExpensePostingPreview = vi.fn();
+const patchDraftExpense = vi.fn();
+const approveExpense = vi.fn();
+const fetchExpenseCategories = vi.fn();
+const fetchChartOfAccounts = vi.fn();
+
+vi.mock('@/lib/expensePosting', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/expensePosting')>('@/lib/expensePosting');
+  return {
+    ...actual,
+    fetchExpensePostingPreview: (...args: unknown[]) => fetchExpensePostingPreview(...args),
+    patchDraftExpense: (...args: unknown[]) => patchDraftExpense(...args),
+    approveExpense: (...args: unknown[]) => approveExpense(...args),
+    fetchExpenseCategories: (...args: unknown[]) => fetchExpenseCategories(...args),
+    fetchChartOfAccounts: (...args: unknown[]) => fetchChartOfAccounts(...args),
+  };
+});
+
 import { IncomingExpenseDetail } from './IncomingExpenseDetail';
+
+const viewerMe = {
+  user: { id: 1, username: 'viewer', email: '', is_superuser: false },
+  tenants: [
+    {
+      slug: 'finestar',
+      name: 'FineStar',
+      role: 'viewer',
+      is_default: true,
+      admin_url: 'https://finestar-stage.racunai.hr/admin/',
+    },
+  ],
+  platform_admin_url: 'https://admin.racunai.hr/admin/',
+};
+
+const ownerMe = {
+  ...viewerMe,
+  user: { ...viewerMe.user, username: 'owner' },
+  tenants: [{ ...viewerMe.tenants[0], role: 'owner' }],
+};
 
 describe('IncomingExpenseDetail', () => {
   beforeEach(() => {
     fetchDocument.mockReset();
     downloadDocumentPdf.mockReset();
     downloadDocumentUbl.mockReset();
+    fetchExpensePostingPreview.mockReset();
+    patchDraftExpense.mockReset();
+    approveExpense.mockReset();
+    fetchExpenseCategories.mockReset();
+    fetchChartOfAccounts.mockReset();
     replace.mockReset();
     refresh.mockReset();
+    vi.mocked(fetchMe).mockResolvedValue(viewerMe as never);
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview());
+    fetchExpenseCategories.mockResolvedValue({
+      count: 1,
+      results: [{ id: 1, name: 'Ostalo', is_active: true, default_account: null }],
+    });
+    fetchChartOfAccounts.mockResolvedValue({
+      count: 1,
+      results: [{ id: 10, code: '4120', name: 'Ostali nespomenuti rashodi', active: true }],
+    });
   });
 
   it('renders PR A blocks and capability-driven actions', async () => {
@@ -534,5 +589,224 @@ describe('IncomingExpenseDetail', () => {
       expect(screen.getByRole('heading', { name: '26210-H120-5154' })).toBeInTheDocument();
     });
     expect(screen.queryByRole('link', { name: 'Zatvori bankom' })).toBeNull();
+  });
+
+  it('renders posting preview lines from the API without inventing accounts', async () => {
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        expense_account: { id: 88, code: '4100', name: 'Najam', active: true },
+        account_source: 'category_default',
+        lines: [
+          {
+            amount_field: 'net_amount',
+            description: 'Rashod',
+            amount: '100.00',
+            debit: { id: 88, code: '4100', name: 'Najam', active: true },
+            credit: { id: 20, code: '2200', name: 'Dobavljači', active: true },
+          },
+        ],
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    expect(await screen.findByRole('cell', { name: '4100 · Najam' })).toBeInTheDocument();
+    expect(screen.getByText('Prijedlog knjiženja')).toBeInTheDocument();
+  });
+
+  it('refetches preview after a successful draft PATCH', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchExpenseCategories.mockResolvedValue({
+      count: 2,
+      results: [
+        { id: 1, name: 'Ostalo', is_active: true, default_account: null },
+        {
+          id: 2,
+          name: 'Telekomunikacije',
+          is_active: true,
+          default_account: { id: 11, code: '4100', name: 'Najam', active: true },
+        },
+      ],
+    });
+    patchDraftExpense.mockResolvedValue({ id: 30, status: 'draft' });
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview());
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    const select = await screen.findByLabelText('Vrsta troška');
+    await screen.findByRole('option', { name: 'Telekomunikacije' });
+    const previewCallsBeforePatch = fetchExpensePostingPreview.mock.calls.length;
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        category: { id: 2, name: 'Telekomunikacije' },
+        expense_account: { id: 11, code: '4100', name: 'Najam', active: true },
+        account_source: 'category_default',
+        lines: [
+          {
+            amount_field: 'net_amount',
+            description: 'Rashod',
+            amount: '100.00',
+            debit: { id: 11, code: '4100', name: 'Najam', active: true },
+            credit: { id: 20, code: '2200', name: 'Dobavljači', active: true },
+          },
+        ],
+      }),
+    );
+    fireEvent.change(select, { target: { value: '2' } });
+    await waitFor(() => {
+      expect(patchDraftExpense).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        30,
+        { category_id: 2 },
+      );
+    });
+    await waitFor(() => {
+      expect(fetchExpensePostingPreview.mock.calls.length).toBeGreaterThan(previewCallsBeforePatch);
+    });
+    expect(await screen.findByRole('cell', { name: '4100 · Najam' })).toBeInTheDocument();
+  });
+
+  it('shows a read-only lock message on 409 not_draft instead of a generic error', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchExpenseCategories.mockResolvedValue({
+      count: 2,
+      results: [
+        { id: 1, name: 'Ostalo', is_active: true, default_account: null },
+        { id: 2, name: 'Telekomunikacije', is_active: true, default_account: null },
+      ],
+    });
+    const { FinanceApiError } = await import('@/lib/expensePosting');
+    patchDraftExpense.mockRejectedValue(
+      new FinanceApiError('Vrsta troška i konto mogu se mijenjati samo dok je nalog u nacrtu.', 409, 'not_draft'),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    const select = await screen.findByLabelText('Vrsta troška');
+    await screen.findByRole('option', { name: 'Telekomunikacije' });
+    fireEvent.change(select, { target: { value: '2' } });
+    expect(
+      await screen.findByText(/zaključani jer je nalog već odobren/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Detalje dokumenta trenutno nije moguće učitati.')).toBeNull();
+    expect(screen.queryByLabelText('Vrsta troška')).toBeNull();
+  });
+
+  it('hides Odobri for viewers even when preview.can_approve is true', async () => {
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview({ can_approve: true }));
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await screen.findByRole('heading', { name: '26210-H120-5154' });
+    expect(screen.queryByRole('button', { name: 'Odobri' })).not.toBeInTheDocument();
+  });
+
+  it('hides Odobri on posted expenses', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        status: {
+          document: 'received',
+          workflow: 'approved',
+          integration: 'received',
+          posting: 'posted',
+          vat: 'recorded',
+          subledger: 'open',
+          payment: 'unmatched',
+        },
+        accounting: {
+          journal_entry_id: 182,
+          entry_number: '202608-0020',
+          entry_date: '2026-08-23',
+          status: 'posted',
+          debit_total: '125.00',
+          credit_total: '125.00',
+          lines: [],
+        },
+      }),
+    );
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview({ can_approve: false }));
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await screen.findByRole('link', { name: '202608-0020' });
+    expect(screen.queryByRole('button', { name: 'Odobri' })).not.toBeInTheDocument();
+  });
+
+  it('hides Odobri when preview.can_approve is false', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview({ can_approve: false }));
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await screen.findByRole('heading', { name: 'Vrsta troška' });
+    expect(screen.queryByRole('button', { name: 'Odobri' })).not.toBeInTheDocument();
+  });
+
+  it('approves a draft via the existing endpoint then refreshes expense and JE', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview({ can_approve: true }));
+    approveExpense.mockResolvedValue({ id: 30, status: 'approved' });
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    const approveButtons = await screen.findAllByRole('button', { name: 'Odobri' });
+    expect(approveButtons.length).toBeGreaterThan(0);
+
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        status: {
+          document: 'received',
+          workflow: 'approved',
+          integration: 'received',
+          posting: 'posted',
+          vat: 'recorded',
+          subledger: 'open',
+          payment: 'unmatched',
+        },
+        accounting: {
+          journal_entry_id: 182,
+          entry_number: '202608-0020',
+          entry_date: '2026-08-23',
+          status: 'posted',
+          debit_total: '125.00',
+          credit_total: '125.00',
+          lines: [
+            {
+              account_code: '4100',
+              account_name: 'Troškovi telefona, interneta i sl.',
+              partner_name: null,
+              debit: '100.00',
+              credit: '0.00',
+              description: 'Rashod',
+            },
+          ],
+        },
+      }),
+    );
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview({ can_approve: false }));
+
+    fireEvent.click(approveButtons[0]);
+    await waitFor(() => {
+      expect(approveExpense).toHaveBeenCalledWith(expect.any(String), 'token', 30);
+    });
+    await waitFor(() => {
+      expect(fetchDocument.mock.calls.length).toBeGreaterThan(1);
+    });
+    expect(await screen.findByRole('link', { name: '202608-0020' })).toHaveAttribute(
+      'href',
+      '/t/finestar/glavna-knjiga/182',
+    );
+    expect(screen.getByText('4100')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Odobri' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Vrsta troška')).toBeNull();
+    expect(screen.queryByText('Prijedlog knjiženja')).toBeNull();
+  });
+
+  it('shows a readable approve conflict instead of a page error', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview({ can_approve: true }));
+    const { FinanceApiError } = await import('@/lib/expensePosting');
+    approveExpense.mockRejectedValue(
+      new FinanceApiError('Trošak nije u statusu koji se može odobriti.', 409, 'invalid_status'),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Odobri' }))[0]);
+    expect(await screen.findByText('Trošak nije u statusu koji se može odobriti.')).toBeInTheDocument();
+    expect(screen.queryByText('Detalje dokumenta trenutno nije moguće učitati.')).toBeNull();
   });
 });

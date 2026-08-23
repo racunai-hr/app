@@ -3,7 +3,17 @@
 import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 
+import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
+import { PostingPreviewLines } from '@/components/finance/PostingPreviewLines';
 import { ApiError } from '@/lib/api';
+import {
+  fetchChartOfAccounts,
+  fetchExpenseCategories,
+  fetchExpensePostingPreview,
+  type AccountRef,
+  type ExpenseCategory,
+  type ExpensePostingPreview,
+} from '@/lib/expensePosting';
 import {
   applyPartnerUpdates,
   confirmInvoiceImport,
@@ -46,6 +56,12 @@ export function InvoiceReview({ slug, importId }: Props) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [override, setOverride] = useState(false);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [accounts, setAccounts] = useState<AccountRef[]>([]);
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [expenseAccountId, setExpenseAccountId] = useState<number | null>(null);
+  const [remember, setRemember] = useState(false);
+  const [preview, setPreview] = useState<ExpensePostingPreview | null>(null);
 
   useEffect(() => {
     if (!session) return;
@@ -75,6 +91,55 @@ export function InvoiceReview({ slug, importId }: Props) {
       abort.abort();
     };
   }, [session, importId]);
+
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    const abort = new AbortController();
+    Promise.all([
+      fetchExpenseCategories(session.origin, session.token, abort.signal),
+      fetchChartOfAccounts(session.origin, session.token, '', abort.signal),
+    ])
+      .then(([catList, coa]) => {
+        if (cancelled) return;
+        setCategories(catList.results);
+        setAccounts(coa.results);
+      })
+      .catch((err) => {
+        if (cancelled || abort.signal.aborted) return;
+        setError(err instanceof ApiError ? err.message : 'Vrste troška nisu učitane.');
+      });
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
+  }, [session]);
+
+  useEffect(() => {
+    if (!session || !run?.confirmed_expense_id) {
+      setPreview(null);
+      return;
+    }
+    let cancelled = false;
+    const abort = new AbortController();
+    fetchExpensePostingPreview(
+      session.origin,
+      session.token,
+      run.confirmed_expense_id,
+      abort.signal,
+    )
+      .then((next) => {
+        if (!cancelled) setPreview(next);
+      })
+      .catch((err) => {
+        if (cancelled || abort.signal.aborted) return;
+        setError(err instanceof ApiError ? err.message : 'Prijedlog knjiženja nije učitan.');
+      });
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
+  }, [session, run?.confirmed_expense_id]);
 
   async function refresh() {
     if (!session) return;
@@ -135,6 +200,9 @@ export function InvoiceReview({ slug, importId }: Props) {
     try {
       const next = await confirmInvoiceImport(session.origin, session.token, run.id, {
         duplicate_override: override,
+        category_id: categoryId,
+        expense_account_id: expenseAccountId,
+        remember_category_for_partner: remember,
       });
       setRun(next);
     } catch (err) {
@@ -199,7 +267,19 @@ export function InvoiceReview({ slug, importId }: Props) {
               value={extracted.iban}
               tone={hasDiff && run.partner.diff.some((row) => row.field === 'iban') ? 'warn' : 'ok'}
             />
-            <FieldRow label="Kontiranje" value="nije potvrđeno" tone="warn" />
+            <ExpensePostingInputs
+              categories={categories}
+              accounts={accounts}
+              categoryId={categoryId}
+              expenseAccountId={expenseAccountId}
+              disabled={!canAct}
+              allowEmptyCategory
+              remember={remember}
+              showRemember
+              onCategoryChange={setCategoryId}
+              onAccountChange={setExpenseAccountId}
+              onRememberChange={setRemember}
+            />
             {run.warnings.length > 0 && (
               <ul className="ocr-warnings">
                 {run.warnings.map((item) => (
@@ -351,7 +431,25 @@ export function InvoiceReview({ slug, importId }: Props) {
                 Ulazni račun je potvrđen kao nacrt (#{run.confirmed_expense_id}). Nije knjižen ni
                 ušao u saldakonto.
               </p>
-              <Link className="btn btn-primary" href={DOCUMENTS_OPERATIVE_HREFS.incomingReadyToPay(slug)}>
+              {preview ? (
+                <div>
+                  <h2>Prijedlog knjiženja</h2>
+                  <p className="muted-inline">Linije dolaze s poslužitelja; sučelje ih ne računa.</p>
+                  <PostingPreviewLines
+                    preview={preview}
+                    currency={extracted.currency}
+                  />
+                </div>
+              ) : null}
+              {run.confirmed_expense_id ? (
+                <Link
+                  className="btn btn-primary"
+                  href={`/t/${slug}/dokumenti/ulazni/${run.confirmed_expense_id}`}
+                >
+                  Otvori nalog
+                </Link>
+              ) : null}
+              <Link className="btn btn-secondary" href={DOCUMENTS_OPERATIVE_HREFS.incomingReadyToPay(slug)}>
                 Otvori ulazne račune
               </Link>
             </div>

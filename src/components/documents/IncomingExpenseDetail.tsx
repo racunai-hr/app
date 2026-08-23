@@ -20,7 +20,22 @@ import {
   documentBankCloseHref,
   shouldShowBankCloseCta,
 } from '@/lib/bankingReconcile';
+import { canWriteFinance } from '@/lib/finance';
+import {
+  approveExpense,
+  fetchChartOfAccounts,
+  fetchExpenseCategories,
+  fetchExpensePostingPreview,
+  isNotDraftConflict,
+  NOT_DRAFT_USER_MESSAGE,
+  patchDraftExpense,
+  type AccountRef,
+  type ExpenseCategory,
+  type ExpensePostingPreview,
+} from '@/lib/expensePosting';
 import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
+import { PostingPreviewLines } from '@/components/finance/PostingPreviewLines';
 
 type Props = {
   slug: string;
@@ -92,6 +107,14 @@ function statusLabel(map: Record<string, string>, value: string | null | undefin
   return map[value] || value;
 }
 
+function isExpensePosted(detail: DocumentDetail): boolean {
+  return (
+    detail.status?.posting === 'posted' ||
+    detail.accounting?.status === 'posted' ||
+    detail.status?.workflow === 'approved'
+  );
+}
+
 export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const router = useRouter();
   const [detail, setDetail] = useState<DocumentDetail | null>(null);
@@ -107,6 +130,17 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const [rejecting, setRejecting] = useState(false);
   const [rejectError, setRejectError] = useState('');
   const [idempotencyKey, setIdempotencyKey] = useState(() => newIdempotencyKey());
+  const [role, setRole] = useState('');
+  const [preview, setPreview] = useState<ExpensePostingPreview | null>(null);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [accounts, setAccounts] = useState<AccountRef[]>([]);
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [expenseAccountId, setExpenseAccountId] = useState<number | null>(null);
+  const [postingLocked, setPostingLocked] = useState(false);
+  const [lockedNotice, setLockedNotice] = useState<string | null>(null);
+  const [postingError, setPostingError] = useState('');
+  const [postingBusy, setPostingBusy] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   useEffect(() => {
     const access = getAccessToken();
@@ -128,6 +162,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
         if (cancelled) return null;
         setOrigin(apiOrigin);
         setToken(access);
+        setRole(found.role);
         return fetchDocument(apiOrigin, access, 'incoming', expenseId);
       })
       .then((body) => {
@@ -158,7 +193,131 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [slug, expenseId, router]);
+  }, [slug, expenseId]);
+
+  useEffect(() => {
+    if (!origin || !token || !detail) return;
+    let cancelled = false;
+    const abort = new AbortController();
+    fetchExpensePostingPreview(origin, token, expenseId, abort.signal)
+      .then((next) => {
+        if (cancelled) return;
+        setPreview(next);
+        setCategoryId(next.category?.id ?? null);
+        setExpenseAccountId(
+          next.account_source === 'manual_override' ? next.expense_account?.id ?? null : null,
+        );
+      })
+      .catch((err) => {
+        if (cancelled || abort.signal.aborted) return;
+        setPostingError(err instanceof ApiError ? err.message : 'Prijedlog knjiženja nije učitan.');
+      });
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
+  }, [origin, token, expenseId, detail?.id]);
+
+  useEffect(() => {
+    if (!origin || !token || !detail || !canWriteFinance(role) || isExpensePosted(detail) || postingLocked) {
+      return;
+    }
+    let cancelled = false;
+    const abort = new AbortController();
+    Promise.all([
+      fetchExpenseCategories(origin, token, abort.signal),
+      fetchChartOfAccounts(origin, token, '', abort.signal),
+    ])
+      .then(([catList, coa]) => {
+        if (cancelled) return;
+        setCategories(catList.results);
+        setAccounts(coa.results);
+      })
+      .catch((err) => {
+        if (cancelled || abort.signal.aborted) return;
+        setPostingError(err instanceof ApiError ? err.message : 'Vrste troška nisu učitane.');
+      });
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
+  }, [origin, token, detail, role, postingLocked]);
+
+  async function persistPosting(patch: { category_id?: number; expense_account_id?: number | null }) {
+    if (!origin || !token) return;
+    setPostingBusy(true);
+    setPostingError('');
+    try {
+      await patchDraftExpense(origin, token, expenseId, patch);
+      const next = await fetchExpensePostingPreview(origin, token, expenseId);
+      setPreview(next);
+      setCategoryId(next.category?.id ?? null);
+      setExpenseAccountId(
+        next.account_source === 'manual_override' ? next.expense_account?.id ?? null : null,
+      );
+      setLockedNotice(null);
+    } catch (err) {
+      if (isNotDraftConflict(err)) {
+        setPostingLocked(true);
+        setLockedNotice(NOT_DRAFT_USER_MESSAGE);
+        return;
+      }
+      setPostingError(err instanceof ApiError ? err.message : 'Spremanje vrste troška nije uspjelo.');
+    } finally {
+      setPostingBusy(false);
+    }
+  }
+
+  async function refreshExpenseAndPreview() {
+    const [refreshed, nextPreview] = await Promise.all([
+      fetchDocument(origin, token, 'incoming', expenseId),
+      fetchExpensePostingPreview(origin, token, expenseId),
+    ]);
+    setDetail(refreshed);
+    setPreview(nextPreview);
+    setCategoryId(nextPreview.category?.id ?? null);
+    setExpenseAccountId(
+      nextPreview.account_source === 'manual_override' ? nextPreview.expense_account?.id ?? null : null,
+    );
+    return refreshed;
+  }
+
+  async function handleApprove() {
+    if (!origin || !token || !preview?.can_approve) return;
+    setApproving(true);
+    setPostingError('');
+    try {
+      try {
+        await approveExpense(origin, token, expenseId);
+      } catch (err) {
+        if (isNotDraftConflict(err)) {
+          setPostingLocked(true);
+          setLockedNotice(NOT_DRAFT_USER_MESSAGE);
+        } else {
+          setPostingError(err instanceof ApiError ? err.message : 'Odobravanje nije uspjelo.');
+        }
+        try {
+          await refreshExpenseAndPreview();
+        } catch {
+          /* keep approve error / lock notice */
+        }
+        return;
+      }
+      try {
+        await refreshExpenseAndPreview();
+        setLockedNotice(null);
+        setPostingLocked(false);
+      } catch (err) {
+        setPostingError(
+          err instanceof ApiError
+            ? err.message
+            : 'Nalog je odobren, ali se stanje nije osvježilo. Osvježite stranicu.',
+        );
+      }
+    } finally {
+      setApproving(false);
+    }
+  }
 
   async function handleDownload(kind: 'pdf' | 'ubl') {
     if (!detail || !origin || !token) return;
@@ -230,6 +389,10 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const partnerSaldakontoHref =
     supplier?.id != null ? `/t/${slug}/partneri/${supplier.id}/saldakonto` : null;
   const canReject = detail?.actions?.reject?.available === true;
+  const posted = detail ? isExpensePosted(detail) : false;
+  const canEditPosting = canWriteFinance(role) && !posted && !postingLocked && !approving;
+  const canApprove =
+    canWriteFinance(role) && !posted && !postingLocked && preview?.can_approve === true;
 
   return (
     <div className="docs-shell incoming-detail">
@@ -275,6 +438,16 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
             >
               {integration?.source === 'super' ? 'Otvori u SUPER-u ↗' : 'Otvori izvorni dokument ↗'}
             </a>
+          ) : null}
+          {canApprove ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={approving || postingBusy}
+              onClick={() => void handleApprove()}
+            >
+              {approving ? 'Odobravam…' : 'Odobri'}
+            </button>
           ) : null}
           {canReject ? (
             <button
@@ -642,6 +815,75 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
           ) : null}
 
           <section className="incoming-card">
+            <h2>Vrsta troška</h2>
+            {postingError ? (
+              <p className="error" role="alert">
+                {postingError}
+              </p>
+            ) : null}
+            {canEditPosting ? (
+              <ExpensePostingInputs
+                categories={categories}
+                accounts={accounts}
+                categoryId={categoryId}
+                expenseAccountId={expenseAccountId}
+                disabled={postingBusy || approving}
+                accountSource={preview?.account_source}
+                lockedMessage={lockedNotice}
+                onCategoryChange={(next) => {
+                  setCategoryId(next);
+                  if (next != null) void persistPosting({ category_id: next });
+                }}
+                onAccountChange={(next) => {
+                  setExpenseAccountId(next);
+                  void persistPosting({ expense_account_id: next });
+                }}
+              />
+            ) : (
+              <>
+                {lockedNotice ? (
+                  <p className="posting-locked-note" role="status">
+                    {lockedNotice}
+                  </p>
+                ) : null}
+                <dl className="incoming-dl incoming-dl-inline">
+                  <div>
+                    <dt>Vrsta</dt>
+                    <dd>{preview?.category?.name || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Konto</dt>
+                    <dd>
+                      {preview?.expense_account
+                        ? `${preview.expense_account.code} · ${preview.expense_account.name}`
+                        : '—'}
+                    </dd>
+                  </div>
+                </dl>
+              </>
+            )}
+            {!posted ? (
+              <div className="posting-preview-block">
+                <h3>Prijedlog knjiženja</h3>
+                <p className="muted-inline">Linije dolaze s poslužitelja; sučelje ih ne računa.</p>
+                <PostingPreviewLines preview={preview} currency={currency} />
+                {canApprove ? (
+                  <div className="posting-approve-row">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={approving || postingBusy}
+                      onClick={() => void handleApprove()}
+                    >
+                      {approving ? 'Odobravam…' : 'Odobri'}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+
+          <section className="incoming-card">
             <h2>Knjiženje</h2>
             <dl className="incoming-dl incoming-dl-inline">
               <div>
@@ -699,8 +941,10 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : posted ? (
               <p className="muted-inline">Nema stavki temeljnice.</p>
+            ) : (
+              <p className="muted-inline">Nalog još nije proknjižen. Prijedlog je iznad.</p>
             )}
           </section>
 

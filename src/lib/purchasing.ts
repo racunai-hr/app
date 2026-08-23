@@ -1,5 +1,6 @@
 import { ApiError, parseError as parseApiError } from './api';
 import { tenantApiOrigin } from './documents';
+import type { ConfirmInvoiceImportRequest } from './expensePosting';
 
 export { tenantApiOrigin };
 
@@ -195,7 +196,7 @@ export async function confirmInvoiceImport(
   origin: string,
   token: string,
   id: number,
-  payload: Record<string, unknown>,
+  payload: ConfirmInvoiceImportRequest,
 ): Promise<IncomingInvoiceImport> {
   const response = await authorized(origin, `/api/purchasing/invoices/import/${id}/confirm/`, token, {
     method: 'POST',

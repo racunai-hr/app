@@ -1,5 +1,10 @@
-import { PlaceholderPage } from '@/components/app-shell/PlaceholderPage';
+'use client';
+
+import { useParams } from 'next/navigation';
+
+import { ExpenseCategorySettings } from '@/components/settings/ExpenseCategorySettings';
 
 export default function PostavkePage() {
-  return <PlaceholderPage id="postavke" />;
+  const params = useParams<{ slug: string }>();
+  return <ExpenseCategorySettings slug={params.slug} />;
 }

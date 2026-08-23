@@ -1100,6 +1100,55 @@ input {
   height: 12rem;
 }
 
+.expense-posting-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.expense-posting-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.expense-posting-fields select,
+.incoming-card select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  max-width: 28rem;
+}
+
+.posting-locked-note {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface-hover);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.posting-preview-block {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.posting-preview-block h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.posting-approve-row {
+  margin-top: 0.5rem;
+}
+
 @keyframes incoming-skel {
   0% {
     background-position: 100% 0;
