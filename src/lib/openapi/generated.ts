@@ -1582,6 +1582,7 @@ export interface components {
         ExpenseCategory: {
             id: number;
             name: string;
+            code: string | null;
             is_active: boolean;
             default_account: components["schemas"]["ExpenseCategoryAccountRef"] | null;
         };

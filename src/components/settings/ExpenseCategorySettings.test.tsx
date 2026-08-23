@@ -55,7 +55,7 @@ describe('ExpenseCategorySettings', () => {
     patchExpenseCategoryDefaultAccount.mockReset();
     fetchExpenseCategories.mockResolvedValue({
       count: 1,
-      results: [{ id: 1, name: 'Ostalo', is_active: true, default_account: null }],
+      results: [{ id: 1, name: 'Ostalo', code: null, is_active: true, default_account: null }],
     });
     fetchChartOfAccounts.mockResolvedValue({
       count: 1,
@@ -67,6 +67,7 @@ describe('ExpenseCategorySettings', () => {
     patchExpenseCategoryDefaultAccount.mockResolvedValue({
       id: 1,
       name: 'Ostalo',
+      code: null,
       is_active: true,
       default_account: { id: 11, code: '4100', name: 'Najam', active: true },
     });
