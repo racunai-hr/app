@@ -72,6 +72,20 @@ export const AGING_BUCKET_LABELS: Record<string, string> = {
   '90_plus': '90+ dana',
 };
 
+/** Partner statement closing kinds (Finance statement API). */
+export const CLOSING_KIND_LABELS: Record<string, string> = {
+  bank: 'Bankovno plaćanje',
+  private_funds: 'Privatna sredstva',
+  prepaid: 'Predujam (prepaid)',
+  other: 'Ostalo zatvaranje',
+};
+
+export const STATEMENT_DIRECTION_TABS = [
+  { value: 'all', label: 'Sve' },
+  { value: 'receivable', label: 'Potraživanja' },
+  { value: 'payable', label: 'Obveze' },
+] as const;
+
 export const VAT_LIFECYCLE_LABELS: Record<string, string> = {
   not_tax_active: 'Nije porezno aktivan',
   awaiting_ledger: 'Čeka evidenciju',

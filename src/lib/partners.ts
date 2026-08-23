@@ -10,6 +10,8 @@ export type PartnerContact = components['schemas']['Contact'];
 export type PartnerBankAccount = components['schemas']['PartnerBankAccount'];
 export type PartnerFinancialSummary = components['schemas']['PartnerFinancialSummary'];
 export type PartnerSubledgerList = components['schemas']['PartnerSubledgerList'];
+export type PartnerStatement = components['schemas']['PartnerStatement'];
+export type PartnerStatementRow = components['schemas']['PartnerStatementRow'];
 
 export type PaginatedPartners = components['schemas']['PaginatedPartners'];
 export type ContactList = components['schemas']['ContactList'];
@@ -345,6 +347,23 @@ export async function fetchPartnerSubledger(
   }
   const qs = params.toString();
   const path = `/api/finance/partners/${partnerId}/subledger/${qs ? `?${qs}` : ''}`;
+  const response = await authorized(origin, path, token);
+  if (!response.ok) await raise(response);
+  return response.json();
+}
+
+export async function fetchPartnerStatement(
+  origin: string,
+  token: string,
+  partnerId: number,
+  options?: { year?: number; direction?: 'all' | 'receivable' | 'payable' },
+): Promise<PartnerStatement> {
+  const params = buildParams({
+    year: options?.year,
+    direction: options?.direction && options.direction !== 'all' ? options.direction : undefined,
+  });
+  const qs = params.toString();
+  const path = `/api/finance/partners/${partnerId}/statement/${qs ? `?${qs}` : ''}`;
   const response = await authorized(origin, path, token);
   if (!response.ok) await raise(response);
   return response.json();

@@ -564,6 +564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/partners/{id}/statement/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_partner_statement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/partners/{id}/subledger/": {
         parameters: {
             query?: never;
@@ -950,6 +966,22 @@ export interface paths {
         get: operations["tax_pdv_period_boxes"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/correction/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_pdv_period_correction"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1848,6 +1880,45 @@ export interface components {
             tax_number: string;
             diff: components["schemas"]["PartnerDiff"][];
         };
+        PartnerStatement: {
+            partner_id: number;
+            year: number;
+            available_years: number[];
+            currency: string;
+            direction: string;
+            opening_balance: components["schemas"]["PartnerStatementAmounts"];
+            rows: components["schemas"]["PartnerStatementRow"][];
+            closing_balance: components["schemas"]["PartnerStatementAmounts"];
+        };
+        PartnerStatementAmounts: {
+            /** @description Decimal as string, e.g. "1100.00" */
+            debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            credit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            balance: string;
+        };
+        PartnerStatementRow: {
+            kind: string;
+            date: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            credit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            balance: string;
+            label?: string;
+            direction?: string;
+            source_type?: string;
+            source_id?: number;
+            source_label?: string;
+            document_type_label?: string;
+            closing_kind?: string;
+            subledger_item_id?: number;
+            allocation_id?: number;
+            journal_entry_id?: number;
+            entry_number?: string;
+        };
         PartnerSubledgerItem: {
             item_id: number;
             partner_id: number;
@@ -1871,9 +1942,7 @@ export interface components {
             partner_id: number;
             count: number;
             results: components["schemas"]["PartnerSubledgerItem"][];
-            /** @description Count of closed SubledgerItem rows for this partner (always computed) */
             closed_count: number;
-            /** @description Closed rows; empty unless include_closed=true */
             closed_results: components["schemas"]["PartnerSubledgerItem"][];
         };
         PartnerWriteRequest: {
@@ -2001,6 +2070,9 @@ export interface components {
             has_ledger: boolean;
             return_version: number | null;
             return_status: string | null;
+            latest_return_version: number | null;
+            latest_return_status: string | null;
+            correction_in_progress: boolean;
             /** @description Decimal as string, e.g. "1100.00" */
             vat_due: string;
             submitted_at: string | null;
@@ -2016,12 +2088,16 @@ export interface components {
             has_ledger: boolean;
             return_version: number | null;
             return_status: string | null;
+            latest_return_version: number | null;
+            latest_return_status: string | null;
+            correction_in_progress: boolean;
             /** @description Decimal as string, e.g. "1100.00" */
             vat_due: string;
             submitted_at: string | null;
             xml_integrity: string | null;
             /** Format: uuid */
             event_uuid: string | null;
+            has_confirmation: boolean;
         };
         PdvSPeriod: {
             period: string;
@@ -2063,11 +2139,22 @@ export interface components {
             submitted_at: string;
         };
         PdvSubmitRequestRequest: {
-            /** Format: uuid */
-            eporezna_identifier: string;
-            /** Format: date-time */
-            submitted_at: string;
+            /**
+             * Format: uuid
+             * @description Opcionalno. Portalni identifikator zaprimanja. Nikad XML Metapodaci/Identifikator.
+             */
+            eporezna_identifier?: string;
+            /**
+             * Format: date-time
+             * @description Opcionalno. Vrijeme zaprimanja s portala. Uvoz XML-a koristi vrijeme importa.
+             */
+            submitted_at?: string;
             return_version: number;
+            /**
+             * Format: binary
+             * @description Predani (potpisani) Obrazac PDV XML. Arhiva obrasca, nije potvrda zaprimanja.
+             */
+            submitted_xml?: string;
         };
         PeriodReturn: {
             id: number;
@@ -2936,6 +3023,7 @@ export interface operations {
                 page?: number;
                 /** @description Page size (default 20, max 100) */
                 page_size?: number;
+                search?: string;
                 statement?: number;
                 transaction_type?: "credit" | "debit";
             };
@@ -4049,6 +4137,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PartnerFinancialSummary"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_partner_statement: {
+        parameters: {
+            query?: {
+                /** @description Filter rows by AR/AP direction (default all). */
+                direction?: "all" | "payable" | "receivable";
+                /** @description Calendar year. Defaults to current year if available, else latest. */
+                year?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerStatement"];
                 };
             };
             /** @description Nedostaje ili je nevaljan Bearer token */
@@ -5612,6 +5744,63 @@ export interface operations {
             };
         };
     };
+    tax_pdv_period_correction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvDraft"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     tax_pdv_period_draft: {
         parameters: {
             query?: never;
@@ -5651,6 +5840,15 @@ export interface operations {
             };
             /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5719,9 +5917,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PdvSubmitRequestRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["PdvSubmitRequestRequest"];
                 "multipart/form-data": components["schemas"]["PdvSubmitRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PdvSubmitRequestRequest"];
+                "application/json": components["schemas"]["PdvSubmitRequestRequest"];
             };
         };
         responses: {

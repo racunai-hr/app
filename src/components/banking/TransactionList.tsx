@@ -104,6 +104,7 @@ function queryFromSearch(params: URLSearchParams, reconcileMode?: boolean) {
     transaction_type: params.get('transaction_type') || '',
     date_from: params.get('date_from') || '',
     date_to: params.get('date_to') || '',
+    search: params.get('search') || '',
     page: Number(params.get('page') || '1') || 1,
     page_size: 20,
   };
@@ -141,6 +142,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
     if (merged.transaction_type) params.set('transaction_type', merged.transaction_type);
     if (merged.date_from) params.set('date_from', merged.date_from);
     if (merged.date_to) params.set('date_to', merged.date_to);
+    if (merged.search) params.set('search', merged.search);
     if (merged.page > 1) params.set('page', String(merged.page));
     const subledgerItem = searchParams.get('subledger_item');
     if (subledgerItem) params.set('subledger_item', subledgerItem);
@@ -208,6 +210,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
       transaction_type: String(form.get('transaction_type') || ''),
       date_from: String(form.get('date_from') || ''),
       date_to: String(form.get('date_to') || ''),
+      search: String(form.get('search') || ''),
       page: 1,
     });
   }
@@ -277,6 +280,14 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
       )}
 
       <form className="filter-bar banking-filter-bar" onSubmit={handleFilter} key={searchKey}>
+        <label className="filter-field">
+          <span>Pretraži</span>
+          <input
+            name="search"
+            defaultValue={query.search}
+            placeholder="Opis, protustrana, PNB…"
+          />
+        </label>
         <label className="filter-field">
           <span>ID računa</span>
           <input name="bank_account" defaultValue={query.bank_account} inputMode="numeric" />

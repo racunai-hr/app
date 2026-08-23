@@ -1,7 +1,34 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { formatIban } from './banking';
+import { fetchTransactions, formatIban } from './banking';
 import { bankingRoleCapabilityNote, labelOrRaw, MATCH_STATUS_LABELS } from './bankingLabels';
+
+describe('fetchTransactions search param', () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ as_of: '', count: 0, page: 1, page_size: 20, results: [] }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('includes search in the API query string when set', async () => {
+    await fetchTransactions('https://x', 'tok', { search: 'Telecom26' });
+    expect(fetchMock.mock.calls[0][0]).toContain('search=Telecom26');
+  });
+
+  it('omits search from the API query string when empty', async () => {
+    await fetchTransactions('https://x', 'tok', { search: '' });
+    expect(fetchMock.mock.calls[0][0]).not.toMatch(/search=/);
+  });
+});
 
 describe('formatIban', () => {
   it('returns the full IBAN without masking', () => {

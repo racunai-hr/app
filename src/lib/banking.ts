@@ -38,6 +38,7 @@ export type TransactionListQuery = {
   transaction_type?: string;
   date_from?: string;
   date_to?: string;
+  search?: string;
   page?: number;
   page_size?: number;
 };
@@ -141,6 +142,7 @@ export async function fetchTransactions(
     transaction_type: query.transaction_type,
     date_from: query.date_from,
     date_to: query.date_to,
+    search: query.search,
     page: query.page || 1,
     page_size: query.page_size || 20,
   });

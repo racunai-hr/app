@@ -246,3 +246,99 @@ describe('TransactionList reconcile deep-link', () => {
     expect(replace).toHaveBeenCalledWith('/t/finestar/bankarstvo/uskladivanje?match_status=unmatched');
   });
 });
+
+describe('TransactionList search filter', () => {
+  beforeEach(() => {
+    replace.mockReset();
+    fetchTransactions.mockReset();
+    fetchOpenItemCandidates.mockReset();
+    reconcileOpenItem.mockReset();
+    for (const key of [...searchParams.keys()]) {
+      searchParams.delete(key);
+    }
+    fetchTransactions.mockResolvedValue({
+      as_of: '2026-08-19T10:00:00Z',
+      count: 0,
+      page: 1,
+      page_size: 20,
+      results: [],
+    });
+  });
+
+  it('reads search from URL and passes it to fetchTransactions on transakcije', async () => {
+    searchParams.set('search', 'Telecom26');
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/transakcije"
+      />,
+    );
+    await waitFor(() =>
+      expect(fetchTransactions).toHaveBeenCalledWith(
+        'https://x',
+        't',
+        expect.objectContaining({ search: 'Telecom26' }),
+      ),
+    );
+  });
+
+  it('reads search from URL on uskladivanje reconcile mode', async () => {
+    searchParams.set('match_status', 'unmatched');
+    searchParams.set('search', 'Telecom26');
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/uskladivanje"
+        reconcileMode
+      />,
+    );
+    await waitFor(() =>
+      expect(fetchTransactions).toHaveBeenCalledWith(
+        'https://x',
+        't',
+        expect.objectContaining({ match_status: 'unmatched', search: 'Telecom26' }),
+      ),
+    );
+  });
+
+  it('submits search into URL and fetch query', async () => {
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/transakcije"
+      />,
+    );
+    await waitFor(() => expect(fetchTransactions).toHaveBeenCalled());
+    fireEvent.change(screen.getByPlaceholderText('Opis, protustrana, PNB…'), {
+      target: { value: 'Telecom26' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Primijeni' }));
+    expect(replace).toHaveBeenCalledWith(
+      '/t/finestar/bankarstvo/transakcije?search=Telecom26',
+    );
+  });
+
+  it('omits empty search from URL and fetch query', async () => {
+    searchParams.set('search', 'Telecom26');
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/transakcije"
+      />,
+    );
+    await waitFor(() => expect(fetchTransactions).toHaveBeenCalled());
+    fireEvent.change(screen.getByPlaceholderText('Opis, protustrana, PNB…'), {
+      target: { value: '' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Primijeni' }));
+    expect(replace).toHaveBeenCalledWith('/t/finestar/bankarstvo/transakcije');
+  });
+});
