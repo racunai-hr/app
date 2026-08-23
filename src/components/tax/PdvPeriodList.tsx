@@ -76,7 +76,11 @@ export function PdvPeriodList({ slug, origin, token }: Props) {
               <td>
                 <Link href={pdvPrijavaHref(slug, row.period)}>{formatPdvPeriodLabel(row.period)}</Link>
               </td>
-              <td>{pdvPeriodStatusLabel(row.period_status)}</td>
+              <td>
+                {row.correction_in_progress
+                  ? 'Predano + ispravak u pripremi'
+                  : pdvPeriodStatusLabel(row.period_status)}
+              </td>
               <td>{row.has_ledger ? 'Da' : 'Ne'}</td>
               <td>
                 {row.return_version != null

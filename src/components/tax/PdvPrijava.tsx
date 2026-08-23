@@ -14,6 +14,7 @@ import {
   pdvBoxRows,
   pdvReturnStatusLabel,
   pdvXmlIntegrityLabel,
+  postPdvCorrection,
   postPdvDraft,
   postPdvSubmit,
   postSubmissionConfirmation,
@@ -22,7 +23,7 @@ import {
   type PdvPeriodWorkspace,
 } from '@/lib/pdv';
 
-import { TaxSubmitEvidenceForm } from './TaxSubmitEvidenceForm';
+import { PdvSubmitEvidenceForm } from './PdvSubmitEvidenceForm';
 
 type Props = { slug: string; period: string; origin: string; token: string; role: string };
 
@@ -44,6 +45,7 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
       ]);
       setWorkspace(nextWorkspace);
       setBoxes(nextBoxes);
+      setHasConfirmation(Boolean(nextWorkspace.has_confirmation));
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         clearTokens();
@@ -80,9 +82,18 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
   const boxRows = pdvBoxRows(boxes.fields).filter(
     (row) => row.value !== '' && row.value !== '0.00' && row.value !== 'Ne',
   );
-  const canDownload = workspace.xml_integrity === 'SYNC' && workspace.return_version != null;
-  const canSubmit = writable && workspace.return_status === 'generated' && workspace.return_version != null;
+  const workingVersion = workspace.latest_return_version ?? workspace.return_version;
+  const workingStatus = workspace.latest_return_status ?? workspace.return_status;
+  const correctionInProgress = Boolean(workspace.correction_in_progress);
+  const canDownload = workspace.xml_integrity === 'SYNC' && workingVersion != null;
+  const canSubmit = writable && workingStatus === 'generated' && workingVersion != null;
+  const canPrepareCorrection =
+    writable &&
+    workspace.period_status === 'submitted' &&
+    workspace.return_status === 'submitted' &&
+    !correctionInProgress;
   const eventUuid = workspace.event_uuid;
+  const hasAttachedXml = hasConfirmation || Boolean(workspace.has_confirmation);
 
   return (
     <div className="tax-workflow">
@@ -94,6 +105,9 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
             {workspace.return_version != null
               ? `v${workspace.return_version} · ${pdvReturnStatusLabel(workspace.return_status)}`
               : '—'}
+            {correctionInProgress
+              ? ` · ispravak v${workspace.latest_return_version} u pripremi`
+              : ''}
           </dd>
         </div>
         <div>
@@ -136,7 +150,7 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
       </div>
 
       <div className="tax-action-row">
-        {writable ? (
+        {writable && workspace.period_status !== 'submitted' ? (
           <button
             type="button"
             className="btn"
@@ -147,6 +161,19 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
             })}
           >
             {busy === 'draft' ? 'Generiranje…' : 'Generiraj / otvori draft'}
+          </button>
+        ) : null}
+        {canPrepareCorrection ? (
+          <button
+            type="button"
+            className="btn"
+            disabled={Boolean(busy)}
+            onClick={() => void run('correction', async () => {
+              await postPdvCorrection(origin, token, period);
+              await load();
+            })}
+          >
+            {busy === 'correction' ? 'Priprema…' : 'Pripremi ispravak'}
           </button>
         ) : null}
         <button
@@ -163,17 +190,24 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
           XML se preuzima samo iz usklađenog drafta. Nema zamjenskog iznosa ni statusa.
         </p>
       ) : null}
+      {correctionInProgress ? (
+        <p className="app-placeholder-note">
+          Na ePoreznoj u Napomeni upišite razlog ponovnog slanja. racunAI ne šalje obrazac na portal.
+        </p>
+      ) : null}
 
       {canSubmit ? (
-        <TaxSubmitEvidenceForm
+        <PdvSubmitEvidenceForm
           busy={busy === 'submit'}
-          onSubmit={(eporezna, submittedAt) =>
+          onSubmit={(submittedXml) =>
             void run('submit', async () => {
-              const result = await postPdvSubmit(origin, token, period, {
-                eporezna_identifier: eporezna,
-                submitted_at: submittedAt,
-                return_version: workspace.return_version as number,
-              });
+              const result = await postPdvSubmit(
+                origin,
+                token,
+                period,
+                { return_version: workingVersion as number },
+                submittedXml,
+              );
               setHasConfirmation(result.has_confirmation);
               await load();
             })
@@ -181,10 +215,10 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
         />
       ) : null}
 
-      {eventUuid && writable ? (
+      {eventUuid && writable && !hasAttachedXml ? (
         <ConfirmationUpload
           busy={busy === 'confirm'}
-          disabled={hasConfirmation}
+          disabled={hasAttachedXml}
           onUpload={(file) =>
             void run('confirm', async () => {
               const result = await postSubmissionConfirmation(origin, token, eventUuid, file);
@@ -216,13 +250,16 @@ function ConfirmationUpload({
         if (file) onUpload(file);
       }}
     >
-      <h2>Potvrda predaje</h2>
+      <h2>Potvrda zaprimanja</h2>
+      <p className="app-placeholder-note">
+        PDF ili ispis s portala. Predani XML obrazac nije potvrda zaprimanja.
+      </p>
       <label>
-        Datoteka potvrde
+        Datoteka potvrde zaprimanja
         <input name="confirmation" type="file" required disabled={disabled || busy} />
       </label>
       <button type="submit" className="btn" disabled={disabled || busy}>
-        {busy ? 'Spremanje…' : disabled ? 'Potvrda je već priložena' : 'Priloži potvrdu'}
+        {busy ? 'Spremanje…' : disabled ? 'Prilog je već arhiviran' : 'Priloži potvrdu zaprimanja'}
       </button>
     </form>
   );

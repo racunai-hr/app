@@ -199,17 +199,30 @@ export async function postPdvDraft(
   );
 }
 
+export async function postPdvCorrection(
+  origin: string,
+  token: string,
+  period: string,
+): Promise<PdvDraft> {
+  return readJson(
+    await authorized(origin, `/api/tax/pdv/periods/${period}/correction/`, token, { method: 'POST' }),
+  );
+}
+
 export async function postPdvSubmit(
   origin: string,
   token: string,
   period: string,
-  body: components['schemas']['PdvSubmitRequestRequest'],
+  body: { return_version: number },
+  submittedXml: File,
 ): Promise<SubmissionResult> {
+  const data = new FormData();
+  data.append('return_version', String(body.return_version));
+  data.append('submitted_xml', submittedXml);
   return readJson(
     await authorized(origin, `/api/tax/pdv/periods/${period}/submit/`, token, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: data,
     }),
   );
 }
