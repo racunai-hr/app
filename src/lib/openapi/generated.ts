@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/fixed-assets/{id}/journal-entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets_fixed_assets_journal_entries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me/": {
         parameters: {
             query?: never;
@@ -1236,6 +1252,24 @@ export interface components {
             gross: string | null;
             fx_rate: components["schemas"]["Provenanced"];
         };
+        AssetJournalEntry: {
+            journal_entry_id: number;
+            entry_number: string;
+            /** Format: date */
+            entry_date: string | null;
+            description: string;
+            status: string;
+            audit_kind: string;
+            role: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            capitalized_amount: string | null;
+        };
+        AssetJournalEntryList: {
+            results: components["schemas"]["AssetJournalEntry"][];
+            reconciliation: components["schemas"]["CapitalizationReconciliation"];
+        };
         Attachment: {
             id: number;
             original_filename: string;
@@ -1297,6 +1331,15 @@ export interface components {
             unmatched_transaction_count: number;
             suggested_transaction_count: number;
             statement_count: number;
+        };
+        CapitalizationReconciliation: {
+            /** @description Decimal as string, e.g. "1100.00" */
+            capitalized_net: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            acquisition_cost: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            difference: string;
+            balanced: boolean;
         };
         ChartOfAccountsList: {
             count: number;
@@ -2856,6 +2899,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DepreciationScheduleList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    assets_fixed_assets_journal_entries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetJournalEntryList"];
                 };
             };
             /** @description Nedostaje ili je nevaljan Bearer token */

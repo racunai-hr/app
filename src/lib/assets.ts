@@ -9,6 +9,9 @@ export type FixedAssetDetail = components['schemas']['FixedAssetDetail'];
 export type PaginatedFixedAssets = components['schemas']['PaginatedFixedAssets'];
 export type DepreciationScheduleItem = components['schemas']['DepreciationScheduleItem'];
 export type DepreciationScheduleList = components['schemas']['DepreciationScheduleList'];
+export type AssetJournalEntry = components['schemas']['AssetJournalEntry'];
+export type AssetJournalEntryList = components['schemas']['AssetJournalEntryList'];
+export type CapitalizationReconciliation = components['schemas']['CapitalizationReconciliation'];
 
 export type FixedAssetListQuery = {
   status?: string;
@@ -32,6 +35,16 @@ export const DEPRECIATION_METHOD_LABELS: Record<string, string> = {
   linear: 'Linearna',
 };
 
+export const ASSET_JOURNAL_ROLE_LABELS: Record<string, string> = {
+  purchase: 'Nabava',
+  dependent_cost: 'Ovisni trošak',
+  payment: 'Plaćanje',
+  activation: 'Aktivacija',
+  depreciation: 'Amortizacija',
+  disposal: 'Otpis',
+  other: 'Ostalo',
+};
+
 function labelOrRaw(map: Record<string, string>, value: string | null | undefined): string {
   if (!value) return '—';
   return map[value] || value;
@@ -51,6 +64,21 @@ export function depreciationMethodLabel(method: string | null | undefined): stri
 
 export function formatDepreciationPeriod(year: number, month: number): string {
   return `${String(month).padStart(2, '0')}.${year}.`;
+}
+
+export function assetJournalRoleLabel(role: string | null | undefined): string {
+  return labelOrRaw(ASSET_JOURNAL_ROLE_LABELS, role);
+}
+
+export function journalAuditStatusLabel(
+  auditKind: string | null | undefined,
+  status: string | null | undefined,
+): string {
+  if (auditKind === 'reversed') return 'Stornirana';
+  if (auditKind === 'storno') return 'Storno';
+  if (status === 'posted') return 'Knjižena';
+  if (status === 'reversed') return 'Stornirana';
+  return status || '—';
 }
 
 async function authorized(origin: string, path: string, token: string): Promise<Response> {
@@ -105,6 +133,20 @@ export async function fetchDepreciationSchedule(
   const response = await authorized(
     origin,
     `/api/assets/fixed-assets/${id}/depreciation-schedule/`,
+    token,
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function fetchAssetJournalEntries(
+  origin: string,
+  token: string,
+  id: number,
+): Promise<AssetJournalEntryList> {
+  const response = await authorized(
+    origin,
+    `/api/assets/fixed-assets/${id}/journal-entries/`,
     token,
   );
   if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
