@@ -25,11 +25,10 @@ import {
   setOfficialDocumentPostingProfile,
   type OfficialDocumentPostingProfileDto,
 } from '@/lib/finance';
-import { provenanceText } from '@/lib/provenance';
-import { OPERATIONAL_STATUS_LABELS, DOCUMENT_STATUS_LABELS, SUBLEDGER_LABELS } from '@/lib/documentLabels';
 import { documentBankCloseHref, shouldShowBankCloseCta } from '@/lib/bankingReconcile';
 
 import { DocumentPdfPreview } from './DocumentPdfPreview';
+import { ProvenanceBadge } from './ProvenanceBadge';
 
 type Props = {
   slug: string;
@@ -212,57 +211,100 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
         <p className="muted-inline">Učitavam…</p>
       ) : (
         <>
-          <section className="incoming-card">
-            <h2>Podaci</h2>
-            <dl className="docs-detail-list">
-              <div>
-                <dt>Status</dt>
-                <dd>{DOCUMENT_STATUS_LABELS[status] || provenanceText(detail.document_status)}</dd>
-              </div>
-              <div>
-                <dt>Operativno</dt>
-                <dd>{OPERATIONAL_STATUS_LABELS[operational] || provenanceText(detail.operational_status)}</dd>
-              </div>
-              <div>
-                <dt>Datum</dt>
-                <dd>{formatHrInputDate(detail.document_date)}</dd>
-              </div>
-              <div>
-                <dt>Dospijeće</dt>
-                <dd>{formatHrInputDate(detail.due_date)}</dd>
-              </div>
-              <div>
-                <dt>Iznos</dt>
-                <dd>{formatHrMoney(detail.amounts.gross, detail.amounts.currency)}</dd>
-              </div>
-              <div>
-                <dt>Profil</dt>
-                <dd>{detail.posting_profile_name || '—'}</dd>
-              </div>
-              <div>
-                <dt>Saldakonto</dt>
-                <dd>
-                  {detail.subledger.state.value
-                    ? SUBLEDGER_LABELS[String(detail.subledger.state.value)] ||
-                      provenanceText(detail.subledger.state)
-                    : '—'}
-                </dd>
-              </div>
-              <div>
-                <dt>Temeljnica</dt>
-                <dd>{detail.posting.entry_number.value || '—'}</dd>
-              </div>
-              <div>
-                <dt>Imovina</dt>
-                <dd>
-                  {detail.related_fixed_asset_id
-                    ? `Kartica #${detail.related_fixed_asset_id}`
-                    : '—'}
-                </dd>
-              </div>
-            </dl>
-            {detail.notes ? <p>{detail.notes}</p> : null}
-          </section>
+          <div className="incoming-mid-grid">
+            <section className="incoming-card">
+              <h2>Dokument</h2>
+              <dl className="incoming-dl">
+                <div>
+                  <dt>Datum</dt>
+                  <dd>{formatHrInputDate(detail.document_date)}</dd>
+                </div>
+                <div>
+                  <dt>Dospijeće</dt>
+                  <dd>{formatHrInputDate(detail.due_date)}</dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>{formatHrMoney(detail.amounts.gross, detail.amounts.currency)}</dd>
+                </div>
+                <div>
+                  <dt>Referenca</dt>
+                  <dd>{detail.description || '—'}</dd>
+                </div>
+                <div>
+                  <dt>Imovina</dt>
+                  <dd>
+                    {detail.related_fixed_asset_id ? (
+                      <Link href={`/t/${slug}/imovina/${detail.related_fixed_asset_id}`}>
+                        Kartica #{detail.related_fixed_asset_id}
+                      </Link>
+                    ) : (
+                      '—'
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+            <section className="incoming-card">
+              <h2>Knjiženje</h2>
+              <dl className="incoming-dl">
+                <div>
+                  <dt>Status</dt>
+                  <dd>
+                    <ProvenanceBadge field={detail.document_status} />
+                  </dd>
+                </div>
+                <div>
+                  <dt>Operativno</dt>
+                  <dd>
+                    <ProvenanceBadge field={detail.operational_status} />
+                  </dd>
+                </div>
+                <div>
+                  <dt>Saldakonto</dt>
+                  <dd>
+                    <ProvenanceBadge field={detail.subledger.state} />
+                  </dd>
+                </div>
+                <div>
+                  <dt>Otvoreno</dt>
+                  <dd>{formatHrMoney(detail.subledger.open_amount.value, detail.amounts.currency)}</dd>
+                </div>
+                <div>
+                  <dt>Profil</dt>
+                  <dd>{detail.posting_profile_name || '—'}</dd>
+                </div>
+                <div>
+                  <dt>Temeljnica</dt>
+                  <dd>{detail.posting.entry_number.value || '—'}</dd>
+                </div>
+                <div>
+                  <dt>Datum knjiženja</dt>
+                  <dd>
+                    {formatHrInputDate(
+                      typeof detail.posting.entry_date.value === 'string'
+                        ? detail.posting.entry_date.value
+                        : null,
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Fiskalno razdoblje</dt>
+                  <dd>
+                    {detail.posting.fiscal_period.value == null
+                      ? '—'
+                      : String(detail.posting.fiscal_period.value)}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+          {detail.notes ? (
+            <section className="incoming-card">
+              <h2>Napomene</h2>
+              <pre className="incoming-notes">{detail.notes}</pre>
+            </section>
+          ) : null}
           {writable && status !== 'cancelled' && !profileLocked ? (
             <section className="incoming-card">
               <h2>Profil knjiženja</h2>

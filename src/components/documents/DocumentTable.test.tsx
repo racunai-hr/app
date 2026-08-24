@@ -55,6 +55,28 @@ describe('DocumentTable', () => {
     expect(onOpenDocument).not.toHaveBeenCalled();
   });
 
+  it('labels official VAT lifecycle as not applicable', () => {
+    render(
+      <DocumentTable
+        slug="finestar"
+        rows={[
+          sampleDocument({
+            id: 1,
+            direction: 'official',
+            internal_number: 'UP/I-410-22/26-09/49557',
+            vat: {
+              lifecycle: { value: 'not_tax_active', reason: null, source: 'official_document' },
+              period: { value: null, reason: 'not_applicable', source: null },
+              disclaimer: null,
+            },
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByText('Nije primjenjivo')).toBeInTheDocument();
+    expect(screen.queryByText('PDV se ne primjenjuje')).toBeNull();
+  });
+
   it('uses button overlay only for deposit when onOpenDocument is set', () => {
     const onOpenDocument = vi.fn();
     render(

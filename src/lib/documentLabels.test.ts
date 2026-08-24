@@ -29,6 +29,7 @@ describe('documentLabels', () => {
 
   it('labels known statuses and controls in Croatian', () => {
     expect(statusLabel('paid')).toBe('Plaćen');
+    expect(statusLabel('not_tax_active')).toBe('Nije primjenjivo');
     expect(statusLabel('not_posted')).toBe('not_posted');
     expect(controlLabel('paid_status_subledger_missing')).toBe('Plaćen bez saldakonta');
     expect(controlLabel('unknown_control')).toBe('unknown_control');

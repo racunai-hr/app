@@ -92,7 +92,7 @@ export const STATEMENT_DIRECTION_TABS = [
 ] as const;
 
 export const VAT_LIFECYCLE_LABELS: Record<string, string> = {
-  not_tax_active: 'Nije porezno aktivan',
+  not_tax_active: 'Nije primjenjivo',
   awaiting_ledger: 'Čeka evidenciju',
   in_ledger: 'U knjizi',
   mismatch: 'Neusklađenost',
