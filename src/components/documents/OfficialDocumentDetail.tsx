@@ -15,6 +15,7 @@ import {
   type DocumentDetail,
 } from '@/lib/documents';
 import { formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import type { Provenance } from '@/lib/provenance';
 import {
   canWriteFinance,
   cancelOfficialDocument,
@@ -34,6 +35,19 @@ type Props = {
   slug: string;
   documentId: number;
 };
+
+function asProvenance(field: DocumentDetail['document_status']): Provenance {
+  return field as Provenance;
+}
+
+function formatProvenancedMoney(value: unknown, currency: string | null): string {
+  const amount = typeof value === 'string' || typeof value === 'number' ? value : null;
+  return formatHrMoney(amount, currency ?? 'EUR');
+}
+
+function provenancedDisplay(value: unknown): string {
+  return value == null ? '—' : String(value);
+}
 
 export function OfficialDocumentDetail({ slug, documentId }: Props) {
   const router = useRouter();
@@ -225,7 +239,7 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
                 </div>
                 <div>
                   <dt>Iznos</dt>
-                  <dd>{formatHrMoney(detail.amounts.gross, detail.amounts.currency)}</dd>
+                  <dd>{formatProvenancedMoney(detail.amounts.gross, detail.amounts.currency)}</dd>
                 </div>
                 <div>
                   <dt>Referenca</dt>
@@ -251,24 +265,29 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
                 <div>
                   <dt>Status</dt>
                   <dd>
-                    <ProvenanceBadge field={detail.document_status} />
+                    <ProvenanceBadge field={asProvenance(detail.document_status)} />
                   </dd>
                 </div>
                 <div>
                   <dt>Operativno</dt>
                   <dd>
-                    <ProvenanceBadge field={detail.operational_status} />
+                    <ProvenanceBadge field={asProvenance(detail.operational_status)} />
                   </dd>
                 </div>
                 <div>
                   <dt>Saldakonto</dt>
                   <dd>
-                    <ProvenanceBadge field={detail.subledger.state} />
+                    <ProvenanceBadge field={asProvenance(detail.subledger.state)} />
                   </dd>
                 </div>
                 <div>
                   <dt>Otvoreno</dt>
-                  <dd>{formatHrMoney(detail.subledger.open_amount.value, detail.amounts.currency)}</dd>
+                  <dd>
+                    {formatProvenancedMoney(
+                      detail.subledger.open_amount.value,
+                      detail.amounts.currency,
+                    )}
+                  </dd>
                 </div>
                 <div>
                   <dt>Profil</dt>
@@ -276,7 +295,7 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
                 </div>
                 <div>
                   <dt>Temeljnica</dt>
-                  <dd>{detail.posting.entry_number.value || '—'}</dd>
+                  <dd>{provenancedDisplay(detail.posting.entry_number.value)}</dd>
                 </div>
                 <div>
                   <dt>Datum knjiženja</dt>
