@@ -8,6 +8,7 @@ import { ApiError } from '@/lib/api';
 import { formatHrAmount, formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
 import {
   fetchJournalEntry,
+  journalSourceDocumentHref,
   journalSourceLabel,
   journalStatusLabel,
   type JournalEntryDetail,
@@ -42,6 +43,9 @@ export function JournalEntryDetailView({ slug, entryId }: Props) {
       cancelled = true;
     };
   }, [session, entryId]);
+
+  const sourceHref =
+    data?.source_document ? journalSourceDocumentHref(slug, data.source_document) : null;
 
   return (
     <section className="docs-shell">
@@ -81,7 +85,17 @@ export function JournalEntryDetailView({ slug, entryId }: Props) {
             </div>
             <div>
               <dt>Izvor</dt>
-              <dd>{journalSourceLabel(data.source_type)}</dd>
+              <dd>
+                {journalSourceLabel(data.source_type)}
+                {sourceHref && data.source_document ? (
+                  <>
+                    {' — '}
+                    <a href={sourceHref} target="_blank" rel="noopener noreferrer">
+                      {data.source_document.label} ↗
+                    </a>
+                  </>
+                ) : null}
+              </dd>
             </div>
             <div>
               <dt>Referenca</dt>

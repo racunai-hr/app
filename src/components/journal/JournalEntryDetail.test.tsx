@@ -43,6 +43,11 @@ const detail = {
   as_of: '2026-08-19T10:00:00Z',
   reference: 'INV-001/2026',
   source_id: 8,
+  source_document: {
+    direction: 'outgoing' as const,
+    id: 8,
+    label: 'INV-001/2026',
+  },
   lines: [
     {
       id: 101,
@@ -78,8 +83,11 @@ describe('JournalEntryDetailView', () => {
       'href',
       '/t/finestar/glavna-knjiga',
     );
-    expect(screen.getByText('INV-001/2026')).toBeInTheDocument();
-    expect(screen.getByText('Račun')).toBeInTheDocument();
+    expect(screen.getByText(/Račun/)).toBeInTheDocument();
+    const sourceLink = screen.getByRole('link', { name: 'INV-001/2026 ↗' });
+    expect(sourceLink).toHaveAttribute('href', '/t/finestar/dokumenti/izlazni/8');
+    expect(sourceLink).toHaveAttribute('target', '_blank');
+    expect(sourceLink).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.getByText('Knjižena')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Konto' })).toBeInTheDocument();
     expect(screen.getByText('1200')).toBeInTheDocument();

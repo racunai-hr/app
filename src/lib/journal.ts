@@ -3,6 +3,7 @@ import type { components } from './openapi/generated';
 
 export type JournalEntryListItem = components['schemas']['JournalEntryListItem'];
 export type JournalEntryDetail = components['schemas']['JournalEntryDetail'];
+export type JournalSourceDocument = components['schemas']['JournalEntrySourceDocument'];
 export type JournalEntryLine = components['schemas']['JournalEntryLine'];
 export type PaginatedJournalEntries = components['schemas']['PaginatedJournalEntries'];
 export type JournalSourceType = components['schemas']['SourceTypeEnum'];
@@ -42,6 +43,18 @@ export function journalStatusLabel(status: string | null | undefined): string {
 
 export function journalSourceLabel(sourceType: string | null | undefined): string {
   return labelOrRaw(JOURNAL_SOURCE_LABELS, sourceType);
+}
+
+const DOCUMENT_PATH: Partial<Record<JournalSourceDocument['direction'], string>> = {
+  incoming: 'ulazni',
+  outgoing: 'izlazni',
+  official: 'sluzbeni',
+};
+
+export function journalSourceDocumentHref(slug: string, doc: JournalSourceDocument): string | null {
+  const segment = DOCUMENT_PATH[doc.direction];
+  if (!segment) return null;
+  return `/t/${slug}/dokumenti/${segment}/${doc.id}`;
 }
 
 async function authorized(origin: string, path: string, token: string): Promise<Response> {

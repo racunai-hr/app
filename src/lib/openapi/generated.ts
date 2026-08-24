@@ -2077,6 +2077,7 @@ export interface components {
             as_of: string;
             reference: string;
             source_id: number | null;
+            source_document: components["schemas"]["JournalEntrySourceDocument"] | null;
             lines: components["schemas"]["JournalEntryLine"][];
         };
         JournalEntryLine: {
@@ -2102,6 +2103,11 @@ export interface components {
             total_debit: string;
             /** @description Decimal as string, e.g. "1100.00" */
             total_credit: string;
+        };
+        JournalEntrySourceDocument: {
+            direction: components["schemas"]["DirectionEnum"];
+            id: number;
+            label: string;
         };
         JournalLine: {
             account_code: string;
