@@ -77,6 +77,7 @@ describe('FixedAssetList', () => {
     searchParams.delete('origin');
     searchParams.delete('search');
     searchParams.delete('page');
+    searchParams.delete('page_size');
   });
 
   it('renders register columns, HR labels, and name links', async () => {

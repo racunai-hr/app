@@ -51,3 +51,19 @@ Invalid / null / empty → `—` (ili `— EUR` kod `formatHrMoney`).
 Decimalni string s API-ja (`32144.76`) ostaje za API, bazu, input `value`,
 računanje, sortiranje i ostale machine-readable vrijednosti.
 Lokalizacija je presentation concern.
+
+## Pagination
+
+Sve paginirane liste u App UI-u koriste dijeljenu `Pagination` komponentu
+(`src/components/ui/Pagination.tsx`) i helperi iz `src/lib/pagination.ts`.
+Nema lokalnih pagera niti ručnog zapisa `page` / `page_size` u URL.
+
+| Concern | Gdje |
+|---|---|
+| Čitanje URL-a | `parsePage` / `parsePageSize` |
+| Zapis URL-a | `writePageParams` — `page=1` i `page_size=20` se ne zapisuju |
+| Broj stranica | `pageCountOf` (nevaljan `pageSize` pada na 20) |
+| Overflow nakon filtera | `usePageBounds` na call-siteu, samo kad je `ready` |
+
+Promjena `page_size` uvijek resetira na stranicu 1 (kanonski URL bez `page`).
+Nove liste ne smiju kopirati Prethodna/Sljedeća markup.

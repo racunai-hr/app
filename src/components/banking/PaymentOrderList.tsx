@@ -1,15 +1,16 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { DateField } from '@/components/documents/DateField';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 import { ApiError } from '@/lib/api';
 import { fetchPaymentOrders, formatIban, type Paginated, type PaymentOrderDto } from '@/lib/banking';
 import { PAYMENT_ORDER_STATUS_LABELS, labelOrRaw } from '@/lib/bankingLabels';
 import { formatHrMoney, formatHrDateTime } from '@/lib/formatHr';
-import { DateField } from '@/components/documents/DateField';
-
-import { BankingPager } from './BankingPager';
+import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
 
 type Props = { slug: string; origin: string; token: string };
 
@@ -18,8 +19,8 @@ function queryFromSearch(params: URLSearchParams) {
     status: params.get('status') || '',
     date_from: params.get('date_from') || '',
     date_to: params.get('date_to') || '',
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
+    page: parsePage(params.get('page')),
+    page_size: parsePageSize(params.get('page_size')),
   };
 }
 
@@ -32,16 +33,20 @@ export function PaymentOrderList({ slug, origin, token }: Props) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  function replaceQuery(next: Partial<typeof query>) {
-    const merged = { ...query, ...next };
-    const params = new URLSearchParams();
-    if (merged.status) params.set('status', merged.status);
-    if (merged.date_from) params.set('date_from', merged.date_from);
-    if (merged.date_to) params.set('date_to', merged.date_to);
-    if (merged.page > 1) params.set('page', String(merged.page));
-    const qs = params.toString();
-    router.replace(qs ? `/t/${slug}/bankarstvo/nalozi?${qs}` : `/t/${slug}/bankarstvo/nalozi`);
-  }
+  const replaceQuery = useCallback(
+    (next: Partial<typeof query>) => {
+      const merged = { ...query, ...next };
+      const params = new URLSearchParams();
+      if (merged.status) params.set('status', merged.status);
+      if (merged.date_from) params.set('date_from', merged.date_from);
+      if (merged.date_to) params.set('date_to', merged.date_to);
+      writePageParams(params, merged.page, merged.page_size);
+      const qs = params.toString();
+      router.replace(qs ? `/t/${slug}/bankarstvo/nalozi?${qs}` : `/t/${slug}/bankarstvo/nalozi`);
+    },
+    [query, router, slug],
+  );
+  const onPage = useCallback((page: number) => replaceQuery({ page }), [replaceQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +78,13 @@ export function PaymentOrderList({ slug, origin, token }: Props) {
     });
   }
 
-  const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
+  const pageCount = data ? pageCountOf(data.count, query.page_size) : 1;
+  usePageBounds({
+    page: query.page,
+    pageCount,
+    ready: Boolean(data) && !loading && !error,
+    onPage,
+  });
 
   return (
     <>
@@ -149,8 +160,15 @@ export function PaymentOrderList({ slug, origin, token }: Props) {
           </table>
         </div>
       )}
-      {data && data.count > data.page_size && (
-        <BankingPager page={data.page} pageCount={pageCount} onPage={(page) => replaceQuery({ page })} />
+      {data && (
+        <Pagination
+          page={query.page}
+          pageCount={pageCount}
+          count={data.count}
+          pageSize={query.page_size}
+          onPage={onPage}
+          onPageSize={(page_size) => replaceQuery({ page_size, page: 1 })}
+        />
       )}
     </>
   );

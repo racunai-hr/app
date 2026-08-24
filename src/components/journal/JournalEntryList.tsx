@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { DateField } from '@/components/documents/DateField';
 import { usePartnerSession } from '@/components/partners/usePartnerSession';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 import { ApiError } from '@/lib/api';
 import { formatHrAmount, formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
 import {
@@ -14,6 +16,7 @@ import {
   journalStatusLabel,
   type PaginatedJournalEntries,
 } from '@/lib/journal';
+import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
 
 type Props = { slug: string };
 
@@ -23,8 +26,8 @@ function queryFromSearch(params: URLSearchParams) {
     date_from: params.get('date_from') || '',
     date_to: params.get('date_to') || '',
     search: params.get('search') || '',
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
+    page: parsePage(params.get('page')),
+    page_size: parsePageSize(params.get('page_size')),
   };
 }
 
@@ -38,17 +41,22 @@ export function JournalEntryList({ slug }: Props) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  function replaceQuery(next: Partial<typeof query>) {
-    const merged = { ...query, ...next };
-    const params = new URLSearchParams();
-    if (merged.status) params.set('status', merged.status);
-    if (merged.date_from) params.set('date_from', merged.date_from);
-    if (merged.date_to) params.set('date_to', merged.date_to);
-    if (merged.search) params.set('search', merged.search);
-    if (merged.page > 1) params.set('page', String(merged.page));
-    const qs = params.toString();
-    router.replace(qs ? `/t/${slug}/glavna-knjiga?${qs}` : `/t/${slug}/glavna-knjiga`);
-  }
+  const replaceQuery = useCallback(
+    (next: Partial<typeof query>) => {
+      const merged = { ...query, ...next };
+      const params = new URLSearchParams();
+      if (merged.status) params.set('status', merged.status);
+      if (merged.date_from) params.set('date_from', merged.date_from);
+      if (merged.date_to) params.set('date_to', merged.date_to);
+      if (merged.search) params.set('search', merged.search);
+      writePageParams(params, merged.page, merged.page_size);
+      const qs = params.toString();
+      router.replace(qs ? `/t/${slug}/glavna-knjiga?${qs}` : `/t/${slug}/glavna-knjiga`);
+    },
+    [query, router, slug],
+  );
+
+  const onPage = useCallback((page: number) => replaceQuery({ page }), [replaceQuery]);
 
   useEffect(() => {
     if (!session) return;
@@ -82,7 +90,13 @@ export function JournalEntryList({ slug }: Props) {
     });
   }
 
-  const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
+  const pageCount = data ? pageCountOf(data.count, query.page_size) : 1;
+  usePageBounds({
+    page: query.page,
+    pageCount,
+    ready: Boolean(data) && !loading && !error,
+    onPage,
+  });
 
   return (
     <section className="docs-shell">
@@ -157,28 +171,15 @@ export function JournalEntryList({ slug }: Props) {
           </table>
         </div>
       )}
-      {data && pageCount > 1 && (
-        <nav className="pager" aria-label="Paginacija">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={query.page <= 1}
-            onClick={() => replaceQuery({ page: query.page - 1 })}
-          >
-            Prethodna
-          </button>
-          <span>
-            Stranica {query.page} / {pageCount}
-          </span>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={query.page >= pageCount}
-            onClick={() => replaceQuery({ page: query.page + 1 })}
-          >
-            Sljedeća
-          </button>
-        </nav>
+      {data && (
+        <Pagination
+          page={query.page}
+          pageCount={pageCount}
+          count={data.count}
+          pageSize={query.page_size}
+          onPage={onPage}
+          onPageSize={(page_size) => replaceQuery({ page_size, page: 1 })}
+        />
       )}
     </section>
   );

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const replace = vi.fn();
@@ -74,6 +74,41 @@ describe('JournalEntryList', () => {
     searchParams.delete('date_from');
     searchParams.delete('date_to');
     searchParams.delete('page');
+    searchParams.delete('page_size');
+  });
+
+  it('clamps an out-of-range page after count shrinks and keeps filters', async () => {
+    searchParams.set('page', '9');
+    searchParams.set('search', 'acme');
+    searchParams.set('status', 'posted');
+    fetchJournalEntries.mockResolvedValue({
+      ...page,
+      count: 35,
+      page: 9,
+      page_size: 20,
+      results: [],
+    });
+    render(<JournalEntryList slug="finestar" />);
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledTimes(1);
+    });
+    expect(replace).toHaveBeenCalledWith(
+      '/t/finestar/glavna-knjiga?status=posted&search=acme&page=2',
+    );
+  });
+
+  it('writes a canonical page_size URL and keeps filters', async () => {
+    searchParams.set('search', 'acme');
+    searchParams.set('status', 'posted');
+    fetchJournalEntries.mockResolvedValue({ ...page, count: 35, page: 1, page_size: 20 });
+    render(<JournalEntryList slug="finestar" />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('Redaka po stranici')).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByLabelText('Redaka po stranici'), { target: { value: '50' } });
+    expect(replace).toHaveBeenCalledWith(
+      '/t/finestar/glavna-knjiga?status=posted&search=acme&page_size=50',
+    );
   });
 
   it('renders the read-only journal list with HR labels and entry number links', async () => {
@@ -91,7 +126,7 @@ describe('JournalEntryList', () => {
     expect(screen.getByRole('cell', { name: 'Knjižena' })).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: 'Nacrt' })).toBeInTheDocument();
     expect(screen.getAllByText('10.347,20')).toHaveLength(2);
-    expect(screen.getByText('19. 8. 2026. u 12:00')).toBeInTheDocument();
+    expect(screen.getByText('19.08.2026. 12:00')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '202608-MAN' })).toHaveAttribute(
       'href',
       '/t/finestar/glavna-knjiga/1',

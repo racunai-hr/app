@@ -18,6 +18,7 @@ export type FixedAssetListQuery = {
   origin?: string;
   search?: string;
   page?: number;
+  page_size?: number;
 };
 
 export const FIXED_ASSET_STATUS_LABELS: Record<string, string> = {
@@ -109,6 +110,7 @@ export async function fetchFixedAssets(
     origin: query.origin,
     search: query.search,
     page: query.page || 1,
+    page_size: query.page_size || 20,
   });
   const response = await authorized(origin, `/api/assets/fixed-assets/?${params}`, token);
   if (!response.ok) throw new ApiError(await parseApiError(response), response.status);

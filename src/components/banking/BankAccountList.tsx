@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 import { ApiError } from '@/lib/api';
 import {
   fetchBankAccounts,
@@ -10,16 +12,16 @@ import {
   type BankAccountDto,
   type Paginated,
 } from '@/lib/banking';
+import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
 
 import { BalanceCell } from './BalanceCell';
-import { BankingPager } from './BankingPager';
 
 type Props = { slug: string; origin: string; token: string };
 
 function queryFromSearch(params: URLSearchParams) {
   return {
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
+    page: parsePage(params.get('page')),
+    page_size: parsePageSize(params.get('page_size')),
   };
 }
 
@@ -32,13 +34,17 @@ export function BankAccountList({ slug, origin, token }: Props) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  function replaceQuery(next: { page?: number }) {
-    const params = new URLSearchParams();
-    const page = next.page ?? query.page;
-    if (page > 1) params.set('page', String(page));
-    const qs = params.toString();
-    router.replace(qs ? `/t/${slug}/bankarstvo/racuni?${qs}` : `/t/${slug}/bankarstvo/racuni`);
-  }
+  const replaceQuery = useCallback(
+    (next: Partial<typeof query>) => {
+      const merged = { ...query, ...next };
+      const params = new URLSearchParams();
+      writePageParams(params, merged.page, merged.page_size);
+      const qs = params.toString();
+      router.replace(qs ? `/t/${slug}/bankarstvo/racuni?${qs}` : `/t/${slug}/bankarstvo/racuni`);
+    },
+    [query, router, slug],
+  );
+  const onPage = useCallback((page: number) => replaceQuery({ page }), [replaceQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +67,13 @@ export function BankAccountList({ slug, origin, token }: Props) {
     };
   }, [origin, token, searchKey, query]);
 
-  const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
+  const pageCount = data ? pageCountOf(data.count, query.page_size) : 1;
+  usePageBounds({
+    page: query.page,
+    pageCount,
+    ready: Boolean(data) && !loading && !error,
+    onPage,
+  });
 
   return (
     <>
@@ -100,8 +112,15 @@ export function BankAccountList({ slug, origin, token }: Props) {
           </table>
         </div>
       )}
-      {data && data.count > data.page_size && (
-        <BankingPager page={data.page} pageCount={pageCount} onPage={(page) => replaceQuery({ page })} />
+      {data && (
+        <Pagination
+          page={query.page}
+          pageCount={pageCount}
+          count={data.count}
+          pageSize={query.page_size}
+          onPage={onPage}
+          onPageSize={(page_size) => replaceQuery({ page_size, page: 1 })}
+        />
       )}
     </>
   );

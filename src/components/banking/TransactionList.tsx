@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -26,9 +26,10 @@ import {
   reconcileCandidateDocumentLink,
   type ReconcileDocumentLink,
 } from '@/lib/bankingReconcile';
+import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
 import { DateField } from '@/components/documents/DateField';
-
-import { BankingPager } from './BankingPager';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 
 type Props = {
   slug: string;
@@ -105,8 +106,8 @@ function queryFromSearch(params: URLSearchParams, reconcileMode?: boolean) {
     date_from: params.get('date_from') || '',
     date_to: params.get('date_to') || '',
     search: params.get('search') || '',
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
+    page: parsePage(params.get('page')),
+    page_size: parsePageSize(params.get('page_size')),
   };
 }
 
@@ -133,22 +134,26 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
     return fetchTransactions(origin, token, query).then((list) => setData(list));
   }
 
-  function replaceQuery(next: Partial<typeof query>) {
-    const merged = { ...query, ...next };
-    const params = new URLSearchParams();
-    if (merged.bank_account) params.set('bank_account', merged.bank_account);
-    if (merged.statement) params.set('statement', merged.statement);
-    if (merged.match_status) params.set('match_status', merged.match_status);
-    if (merged.transaction_type) params.set('transaction_type', merged.transaction_type);
-    if (merged.date_from) params.set('date_from', merged.date_from);
-    if (merged.date_to) params.set('date_to', merged.date_to);
-    if (merged.search) params.set('search', merged.search);
-    if (merged.page > 1) params.set('page', String(merged.page));
-    const subledgerItem = searchParams.get('subledger_item');
-    if (subledgerItem) params.set('subledger_item', subledgerItem);
-    const qs = params.toString();
-    router.replace(qs ? `${basePath}?${qs}` : basePath);
-  }
+  const replaceQuery = useCallback(
+    (next: Partial<typeof query>) => {
+      const merged = { ...query, ...next };
+      const params = new URLSearchParams();
+      if (merged.bank_account) params.set('bank_account', merged.bank_account);
+      if (merged.statement) params.set('statement', merged.statement);
+      if (merged.match_status) params.set('match_status', merged.match_status);
+      if (merged.transaction_type) params.set('transaction_type', merged.transaction_type);
+      if (merged.date_from) params.set('date_from', merged.date_from);
+      if (merged.date_to) params.set('date_to', merged.date_to);
+      if (merged.search) params.set('search', merged.search);
+      writePageParams(params, merged.page, merged.page_size);
+      const subledgerItem = searchParams.get('subledger_item');
+      if (subledgerItem) params.set('subledger_item', subledgerItem);
+      const qs = params.toString();
+      router.replace(qs ? `${basePath}?${qs}` : basePath);
+    },
+    [basePath, query, router, searchParams],
+  );
+  const onPage = useCallback((page: number) => replaceQuery({ page }), [replaceQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -255,7 +260,13 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
     }
   }
 
-  const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
+  const pageCount = data ? pageCountOf(data.count, query.page_size) : 1;
+  usePageBounds({
+    page: query.page,
+    pageCount,
+    ready: Boolean(data) && !loading && !error,
+    onPage,
+  });
   const statusTabs = [
     { value: 'unmatched', label: 'Neusklađeno' },
     { value: 'suggested', label: 'Prijedlozi' },
@@ -518,8 +529,15 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
         </div>
       )}
 
-      {data && data.count > data.page_size && (
-        <BankingPager page={data.page} pageCount={pageCount} onPage={(page) => replaceQuery({ page })} />
+      {data && (
+        <Pagination
+          page={query.page}
+          pageCount={pageCount}
+          count={data.count}
+          pageSize={query.page_size}
+          onPage={onPage}
+          onPageSize={(page_size) => replaceQuery({ page_size, page: 1 })}
+        />
       )}
     </>
   );

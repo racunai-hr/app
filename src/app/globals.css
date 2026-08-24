@@ -620,8 +620,73 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
   color: var(--text-muted);
+}
+
+.pager-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pager-page {
+  min-width: 2rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.pager-page:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.pager-page-active,
+.pager-page-active:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.pager-gap {
+  padding: 0 0.2rem;
+  color: var(--text-muted);
+}
+
+.pager-goto,
+.pager-size {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+}
+
+.pager-goto label,
+.pager-size {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pager-goto input,
+.pager-size select {
+  width: 4rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.pager-summary {
+  font-size: 0.8rem;
 }
 
 .date-field {
@@ -1156,6 +1221,16 @@ input {
   100% {
     background-position: -100% 0;
   }
+}
+
+.docs-pdf-preview {
+  display: block;
+  width: 100%;
+  min-height: 36rem;
+  margin-top: 0.75rem;
+  border: 1px solid var(--border, #d6dbe3);
+  border-radius: 0.5rem;
+  background: #f8fafc;
 }
 
 @media (max-width: 1100px) {
