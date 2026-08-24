@@ -111,6 +111,11 @@ const ownerMe = {
   tenants: [{ ...viewerMe.tenants[0], role: 'owner' }],
 };
 
+const statusTone = (container: HTMLElement, label: string) =>
+  Array.from(container.querySelectorAll('.incoming-status-dl .badge'))
+    .find((el) => el.textContent === label)
+    ?.getAttribute('data-tone');
+
 describe('IncomingExpenseDetail', () => {
   beforeEach(() => {
     fetchDocument.mockReset();
@@ -217,7 +222,7 @@ describe('IncomingExpenseDetail', () => {
         },
       }),
     );
-    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    const { container } = render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Knjiženje' })).toBeInTheDocument();
@@ -234,6 +239,7 @@ describe('IncomingExpenseDetail', () => {
     expect(screen.getAllByText('Evidentiran').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Djelomično').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Neusklađeno').length).toBeGreaterThan(0);
+    expect(statusTone(container, 'Djelomično')).toBe('warning');
     expect(screen.getByRole('link', { name: 'Zatvori bankom' })).toHaveAttribute(
       'href',
       '/t/finestar/bankarstvo/uskladivanje?match_status=unmatched&subledger_item=3',
@@ -241,6 +247,86 @@ describe('IncomingExpenseDetail', () => {
     expect(screen.getByText('4000')).toBeInTheDocument();
     expect(screen.getByText('2026-05')).toBeInTheDocument();
     expect(screen.queryByText('Zatvoreno')).toBeNull();
+  });
+
+  it('renders Status badges with one representative tone per axis', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        status: {
+          document: 'received',
+          workflow: 'rejected',
+          integration: 'received',
+          posting: 'posted',
+          vat: 'absent',
+          subledger: 'partial',
+          payment: null,
+        },
+      }),
+    );
+    const { container } = render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Status' })).toBeInTheDocument();
+    });
+
+    expect(statusTone(container, 'Proknjiženo')).toBe('success');
+    expect(statusTone(container, 'Odbijen')).toBe('danger');
+    expect(statusTone(container, 'Djelomično')).toBe('warning');
+    expect(statusTone(container, 'Zaprimljen')).toBe('neutral');
+    expect(statusTone(container, 'Uspješno zaprimljen')).toBe('neutral');
+    expect(statusTone(container, 'Nije evidentiran')).toBe('neutral');
+    expect(statusTone(container, '—')).toBe('unknown');
+  });
+
+  it('renders open subledger as a neutral Status badge', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        status: {
+          document: 'received',
+          workflow: 'approved',
+          integration: 'received',
+          posting: 'posted',
+          vat: 'recorded',
+          subledger: 'open',
+          payment: 'unmatched',
+        },
+      }),
+    );
+    const { container } = render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Status' })).toBeInTheDocument();
+    });
+
+    expect(statusTone(container, 'Neplaćeno')).toBe('neutral');
+  });
+
+  it('renders cancelled subledger as an unknown Podmirenje badge', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        status: {
+          document: 'received',
+          workflow: 'approved',
+          integration: 'received',
+          posting: 'posted',
+          vat: 'recorded',
+          subledger: 'cancelled',
+          payment: null,
+        },
+      }),
+    );
+    const { container } = render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Status' })).toBeInTheDocument();
+    });
+
+    expect(container.querySelectorAll('.incoming-status-dl .badge-unknown')).toHaveLength(2);
+    expect(
+      Array.from(container.querySelectorAll('.incoming-status-dl .badge')).some(
+        (el) => el.textContent === 'Otkazano',
+      ),
+    ).toBe(false);
   });
 
   it('renders settlement trail closings, bank deep-link, and possible-duplicate alert', async () => {

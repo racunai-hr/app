@@ -36,6 +36,7 @@ import {
   type ExpensePostingPreview,
 } from '@/lib/expensePosting';
 import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { type ProvenanceTone } from '@/lib/provenance';
 import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
 import { PostingPreviewLines } from '@/components/finance/PostingPreviewLines';
 import { DocumentPdfPreview } from '@/components/documents/DocumentPdfPreview';
@@ -92,6 +93,59 @@ const PAYMENT_STATUS_LABEL: Record<string, string> = {
   suggested: 'Prijedlog',
 };
 
+const DOCUMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
+  received: 'neutral',
+  cancelled: 'danger',
+  rejected: 'danger',
+};
+
+const WORKFLOW_STATUS_TONE: Record<string, ProvenanceTone> = {
+  approved: 'success',
+  pending: 'warning',
+  rejection_pending: 'warning',
+  cancelled: 'danger',
+  rejected: 'danger',
+};
+
+const INTEGRATION_STATUS_TONE: Record<string, ProvenanceTone> = {
+  received: 'neutral',
+};
+
+const POSTING_STATUS_TONE: Record<string, ProvenanceTone> = {
+  posted: 'success',
+  unposted: 'warning',
+  draft: 'warning',
+};
+
+const VAT_STATUS_TONE: Record<string, ProvenanceTone> = {
+  recorded: 'success',
+  absent: 'neutral',
+};
+
+const SETTLEMENT_FROM_SUBLEDGER: Record<string, string> = {
+  closed: 'paid',
+  partial: 'partial',
+  open: 'unpaid',
+};
+
+const SETTLEMENT_STATUS_LABEL: Record<string, string> = {
+  paid: 'Plaćeno',
+  partial: 'Djelomično',
+  unpaid: 'Neplaćeno',
+};
+
+const SETTLEMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
+  paid: 'success',
+  partial: 'warning',
+  unpaid: 'neutral',
+};
+
+const PAYMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
+  matched: 'success',
+  unmatched: 'warning',
+  suggested: 'neutral',
+};
+
 const REFERENCE_TYPE_LABEL: Record<string, string> = {
   originator: 'Oznaka izvornog dokumenta',
   additional: 'Dodatna referenca',
@@ -108,6 +162,23 @@ const REFERENCE_TYPE_LABEL: Record<string, string> = {
 function statusLabel(map: Record<string, string>, value: string | null | undefined): string {
   if (!value) return '—';
   return map[value] || value;
+}
+
+function StatusBadge({
+  map,
+  tones,
+  value,
+}: {
+  map: Record<string, string>;
+  tones: Record<string, ProvenanceTone>;
+  value: string | null | undefined;
+}) {
+  const tone: ProvenanceTone = value ? (tones[value] ?? 'neutral') : 'unknown';
+  return (
+    <span className={`badge badge-${tone}`} data-tone={tone}>
+      {statusLabel(map, value)}
+    </span>
+  );
 }
 
 function isExpensePosted(detail: DocumentDetail): boolean {
@@ -640,31 +711,73 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               <dl className="incoming-dl incoming-status-dl">
                 <div>
                   <dt>Dokument</dt>
-                  <dd>{statusLabel(DOCUMENT_STATUS_LABEL, lifecycle?.document)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={DOCUMENT_STATUS_LABEL}
+                      tones={DOCUMENT_STATUS_TONE}
+                      value={lifecycle?.document}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>Obrada</dt>
-                  <dd>{statusLabel(WORKFLOW_STATUS_LABEL, lifecycle?.workflow)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={WORKFLOW_STATUS_LABEL}
+                      tones={WORKFLOW_STATUS_TONE}
+                      value={lifecycle?.workflow}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>eRačun</dt>
-                  <dd>{statusLabel(INTEGRATION_STATUS_LABEL, lifecycle?.integration)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={INTEGRATION_STATUS_LABEL}
+                      tones={INTEGRATION_STATUS_TONE}
+                      value={lifecycle?.integration}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>Knjiženje</dt>
-                  <dd>{statusLabel(POSTING_STATUS_LABEL, lifecycle?.posting)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={POSTING_STATUS_LABEL}
+                      tones={POSTING_STATUS_TONE}
+                      value={lifecycle?.posting}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>PDV</dt>
-                  <dd>{statusLabel(VAT_STATUS_LABEL, lifecycle?.vat)}</dd>
+                  <dd>
+                    <StatusBadge map={VAT_STATUS_LABEL} tones={VAT_STATUS_TONE} value={lifecycle?.vat} />
+                  </dd>
                 </div>
                 <div>
-                  <dt>Saldakonto</dt>
-                  <dd>{statusLabel(SUBLEDGER_STATUS_LABEL, lifecycle?.subledger)}</dd>
+                  <dt>Podmirenje</dt>
+                  <dd>
+                    <StatusBadge
+                      map={SETTLEMENT_STATUS_LABEL}
+                      tones={SETTLEMENT_STATUS_TONE}
+                      value={
+                        lifecycle?.subledger
+                          ? (SETTLEMENT_FROM_SUBLEDGER[lifecycle.subledger] ?? null)
+                          : null
+                      }
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>Plaćanje</dt>
-                  <dd>{statusLabel(PAYMENT_STATUS_LABEL, lifecycle?.payment)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={PAYMENT_STATUS_LABEL}
+                      tones={PAYMENT_STATUS_TONE}
+                      value={lifecycle?.payment}
+                    />
+                  </dd>
                 </div>
               </dl>
             </section>

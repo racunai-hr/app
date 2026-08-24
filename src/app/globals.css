@@ -1112,6 +1112,26 @@ input {
   grid-template-columns: 1fr;
 }
 
+.incoming-status-dl {
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.55rem;
+}
+
+.incoming-status-dl > div {
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-hover);
+}
+
+.incoming-status-dl dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .incoming-totals .incoming-total-strong dt,
 .incoming-totals .incoming-total-strong dd {
   font-weight: 700;
