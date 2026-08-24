@@ -46,6 +46,73 @@ export function canWriteFinance(role: string): boolean {
   return role === 'owner' || role === 'accountant';
 }
 
+export type OfficialDocumentDto = {
+  id: number;
+  official_kind: 'tax_decision' | 'other';
+  issuer_id: number;
+  issuer_name: string;
+  document_number: string;
+  reference: string;
+  issue_date: string | null;
+  due_date: string | null;
+  amount: string;
+  currency: string;
+  status: string;
+  workflow_status: string;
+  original_filename: string;
+  has_file: boolean;
+  related_fixed_asset_id: number | null;
+  notes: string;
+};
+
+export async function createOfficialDocument(
+  origin: string,
+  token: string,
+  body: FormData,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(origin, '/api/finance/official-documents/', token, {
+    method: 'POST',
+    body,
+  });
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function cancelOfficialDocument(
+  origin: string,
+  token: string,
+  documentId: number,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/official-documents/${documentId}/cancel/`,
+    token,
+    { method: 'POST' },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function linkOfficialDocumentJournal(
+  origin: string,
+  token: string,
+  documentId: number,
+  journalEntryId: number,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/official-documents/${documentId}/link-journal/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ journal_entry_id: journalEntryId }),
+    },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
 export function newIdempotencyKey(): string {
   return crypto.randomUUID();
 }

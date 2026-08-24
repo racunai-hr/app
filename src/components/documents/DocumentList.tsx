@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 import { ApiError, fetchMe, type TenantInfo } from '@/lib/api';
 import { clearTokens, getAccessToken } from '@/lib/auth';
 import { SYSTEM_VIEWS } from '@/lib/documentLabels';
@@ -18,24 +20,34 @@ import { canWritePurchasing } from '@/lib/purchasing';
 import {
   exportDocuments,
   fetchDocuments,
+  INCOMING_GROUP_DIRECTION,
   tenantApiOrigin,
   triggerBlobDownload,
   type DocumentDirection,
+  type DocumentDirectionFilter,
   type DocumentListQuery,
   type DocumentListResponse,
 } from '@/lib/documents';
+import { pageCountOf } from '@/lib/pagination';
 
 import { DateField } from './DateField';
 import { DocumentDetailPanel } from './DocumentDetailPanel';
 import { DocumentKpi } from './DocumentKpi';
 import { DocumentTable } from './DocumentTable';
 
-const TABS: { value: '' | DocumentDirection; label: string }[] = [
+const TABS: { value: DocumentDirectionFilter; label: string }[] = [
   { value: '', label: 'Svi' },
   { value: 'outgoing', label: 'Izlazni' },
-  { value: 'incoming', label: 'Ulazni' },
+  { value: INCOMING_GROUP_DIRECTION, label: 'Ulazni' },
   { value: 'deposit', label: 'Kaucije' },
 ];
+
+function isDirectionTabActive(direction: DocumentDirectionFilter | undefined, tab: DocumentDirectionFilter): boolean {
+  if (tab === INCOMING_GROUP_DIRECTION) {
+    return direction === 'incoming' || direction === INCOMING_GROUP_DIRECTION;
+  }
+  return direction === tab;
+}
 
 type DocumentListProps = {
   slug: string;
@@ -62,9 +74,13 @@ export function DocumentList({
     id: number;
   } | null>(null);
 
-  function replaceQuery(next: Partial<DocumentListQuery>) {
-    router.replace(documentListUrl(slug, basePath, mergeDocumentListQuery(query, next)));
-  }
+  const replaceQuery = useCallback(
+    (next: Partial<DocumentListQuery>) => {
+      router.replace(documentListUrl(slug, basePath, mergeDocumentListQuery(query, next)));
+    },
+    [basePath, query, router, slug],
+  );
+  const onPage = useCallback((page: number) => replaceQuery({ page }), [replaceQuery]);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -142,11 +158,20 @@ export function DocumentList({
     });
   }
 
-  const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
+  const pageCount = data ? pageCountOf(data.count, query.page_size || 20) : 1;
+  usePageBounds({
+    page: query.page || 1,
+    pageCount,
+    ready: Boolean(data) && !loading && !error,
+    onPage,
+  });
 
   const exportActions = (
     <div className="export-actions">
-      {showHeader && query.direction === 'incoming' && tenant && canWritePurchasing(tenant.role) && (
+      {showHeader &&
+        (query.direction === 'incoming' || query.direction === INCOMING_GROUP_DIRECTION) &&
+        tenant &&
+        canWritePurchasing(tenant.role) && (
         <Link className="btn btn-primary" href={`/t/${slug}/ulazni-racuni/ucitaj`}>
           Učitaj račun
         </Link>
@@ -181,7 +206,7 @@ export function DocumentList({
             <button
               key={tab.label}
               type="button"
-              className={query.direction === tab.value ? 'tab tab-active' : 'tab'}
+              className={isDirectionTabActive(query.direction, tab.value) ? 'tab tab-active' : 'tab'}
               onClick={() => replaceQuery(patchDirectionTab(query, tab.value))}
             >
               {tab.label}
@@ -266,28 +291,15 @@ export function DocumentList({
           />
         )}
 
-        {data && data.count > data.page_size && (
-          <nav className="pager" aria-label="Paginacija">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={data.page <= 1}
-              onClick={() => replaceQuery({ page: data.page - 1 })}
-            >
-              Prethodna
-            </button>
-            <span>
-              Stranica {data.page} / {pageCount}
-            </span>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={data.page >= pageCount}
-              onClick={() => replaceQuery({ page: data.page + 1 })}
-            >
-              Sljedeća
-            </button>
-          </nav>
+        {data && (
+          <Pagination
+            page={query.page || 1}
+            pageCount={pageCount}
+            count={data.count}
+            pageSize={query.page_size}
+            onPage={onPage}
+            onPageSize={(page_size) => replaceQuery({ page_size, page: 1 })}
+          />
         )}
     </>
   );

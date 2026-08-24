@@ -2,11 +2,16 @@ import { API_URL, ApiError, parseError as parseApiError } from './api';
 import type { components } from './openapi/generated';
 import type { Provenance } from './provenance';
 
-export type DocumentDirection = 'incoming' | 'outgoing' | 'deposit';
-export type DocumentKind = 'invoice' | 'expense' | 'deposit';
+export type DocumentDirection = 'incoming' | 'outgoing' | 'deposit' | 'official';
+export type DocumentKind = 'invoice' | 'expense' | 'deposit' | 'official';
+export const INCOMING_GROUP_DIRECTION = 'incoming,official';
+export type DocumentDirectionFilter = DocumentDirection | typeof INCOMING_GROUP_DIRECTION | '';
 
 /** Incoming/outgoing detail payload — OpenAPI SSOT (PR A fields included). */
 export type DocumentDetail = components['schemas']['DocumentDetail'] & {
+  related_fixed_asset_id?: number | null;
+  official_kind?: string;
+  notes?: string | null;
   actions?: {
     reject?: {
       available: boolean;
@@ -83,7 +88,7 @@ export type DocumentListResponse = {
 };
 
 export type DocumentListQuery = {
-  direction?: DocumentDirection | '';
+  direction?: DocumentDirectionFilter;
   view?: string;
   search?: string;
   year?: string;
@@ -116,8 +121,12 @@ export function tenantApiOrigin(adminUrl: string): string {
 export function buildDocumentQuery(query: DocumentListQuery, options?: { includePage?: boolean }): URLSearchParams {
   const params = new URLSearchParams();
   const includePage = options?.includePage !== false;
-  if (query.direction === 'incoming' || query.direction === 'outgoing' || query.direction === 'deposit') {
-    params.set('direction', query.direction);
+  if (query.direction) {
+    const tokens = query.direction.split(',').map((part) => part.trim()).filter(Boolean);
+    const allowed = new Set(['incoming', 'outgoing', 'deposit', 'official']);
+    if (tokens.length > 0 && tokens.every((token) => allowed.has(token))) {
+      params.set('direction', tokens.join(','));
+    }
   }
   if (query.view) params.set('view', query.view);
   if (query.search) params.set('search', query.search);
@@ -209,6 +218,38 @@ export async function fetchDocument(
     throw new ApiError(await parseApiError(response), response.status);
   }
   return response.json();
+}
+
+export async function fetchDocumentPdfBlob(
+  origin: string,
+  token: string,
+  direction: DocumentDirection,
+  id: number,
+): Promise<Blob> {
+  const response = await authorized(origin, `/api/documents/${direction}/${id}/pdf/`, token, {
+    headers: { Accept: 'application/pdf' },
+  });
+  if (!response.ok) {
+    throw new ApiError(await parseApiError(response), response.status);
+  }
+  return response.blob();
+}
+
+export async function downloadDocumentAttachment(
+  origin: string,
+  token: string,
+  documentId: number,
+  attachmentId: number,
+): Promise<void> {
+  await downloadAuthorizedBlob(
+    origin,
+    `/api/documents/incoming/${documentId}/attachments/${attachmentId}/`,
+    token,
+    {
+      accept: '*/*',
+      fallbackFilename: `attachment-${attachmentId}`,
+    },
+  );
 }
 
 export async function downloadDocumentPdf(

@@ -56,6 +56,8 @@ vi.mock('@/lib/api', async () => {
 const fetchDocument = vi.fn();
 const downloadDocumentPdf = vi.fn();
 const downloadDocumentUbl = vi.fn();
+const fetchDocumentPdfBlob = vi.fn();
+const downloadDocumentAttachment = vi.fn();
 
 vi.mock('@/lib/documents', async () => {
   const actual = await vi.importActual<typeof import('@/lib/documents')>('@/lib/documents');
@@ -64,6 +66,8 @@ vi.mock('@/lib/documents', async () => {
     fetchDocument: (...args: unknown[]) => fetchDocument(...args),
     downloadDocumentPdf: (...args: unknown[]) => downloadDocumentPdf(...args),
     downloadDocumentUbl: (...args: unknown[]) => downloadDocumentUbl(...args),
+    fetchDocumentPdfBlob: (...args: unknown[]) => fetchDocumentPdfBlob(...args),
+    downloadDocumentAttachment: (...args: unknown[]) => downloadDocumentAttachment(...args),
   };
 });
 

@@ -1,15 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ApiError, fetchMe } from '@/lib/api';
 import { clearTokens, getAccessToken } from '@/lib/auth';
 import {
+  downloadDocumentAttachment,
   downloadDocumentPdf,
   downloadDocumentUbl,
   fetchDocument,
+  fetchDocumentPdfBlob,
   newIdempotencyKey,
   rejectIncomingEracun,
   tenantApiOrigin,
@@ -36,6 +38,7 @@ import {
 import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
 import { PostingPreviewLines } from '@/components/finance/PostingPreviewLines';
+import { DocumentPdfPreview } from '@/components/documents/DocumentPdfPreview';
 
 type Props = {
   slug: string;
@@ -141,6 +144,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const [postingError, setPostingError] = useState('');
   const [postingBusy, setPostingBusy] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [downloadingAttachment, setDownloadingAttachment] = useState<number | null>(null);
+
+  const loadPdf = useCallback(() => {
+    return fetchDocumentPdfBlob(origin, token, 'incoming', expenseId);
+  }, [origin, token, expenseId]);
 
   useEffect(() => {
     const access = getAccessToken();
@@ -1298,7 +1306,22 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                       <td>{att.kind || 'Prilog'}</td>
                       <td>
                         {att.download_available.value ? (
-                          <span className="muted-inline">Dostupan</span>
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            disabled={downloadingAttachment === att.id}
+                            onClick={() => {
+                              if (!origin || !token) return;
+                              setDownloadingAttachment(att.id);
+                              void downloadDocumentAttachment(origin, token, expenseId, att.id)
+                                .catch((err) => {
+                                  setError(err instanceof Error ? err.message : 'Preuzimanje privitka nije uspjelo.');
+                                })
+                                .finally(() => setDownloadingAttachment(null));
+                            }}
+                          >
+                            {downloadingAttachment === att.id ? 'Preuzimam…' : 'Preuzmi'}
+                          </button>
                         ) : (
                           <span className="muted-inline">Nedostupan</span>
                         )}
@@ -1313,6 +1336,9 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </tbody>
               </table>
             </div>
+            {detail.pdf_available && origin && token ? (
+              <DocumentPdfPreview load={loadPdf} title={detail.source_number || 'PDF'} />
+            ) : null}
           </section>
 
           {detail.technical ? (

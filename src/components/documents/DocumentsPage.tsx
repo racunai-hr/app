@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { ApiError, fetchMe, type TenantInfo } from '@/lib/api';
 import { clearTokens, getAccessToken } from '@/lib/auth';
+import { canWriteFinance } from '@/lib/finance';
 import { canWritePurchasing } from '@/lib/purchasing';
 
 import { DocumentsSubnav } from './DocumentsSubnav';
@@ -62,6 +63,11 @@ export function DocumentsPage({ slug, children }: Props) {
           {tenant && canWritePurchasing(tenant.role) && (
             <Link className="btn btn-primary" href={`/t/${slug}/ulazni-racuni/ucitaj`}>
               Učitaj račun
+            </Link>
+          )}
+          {tenant && canWriteFinance(tenant.role) && (
+            <Link className="btn btn-secondary" href={`/t/${slug}/dokumenti/sluzbeni/novi`}>
+              Službeni dokument
             </Link>
           )}
         </div>

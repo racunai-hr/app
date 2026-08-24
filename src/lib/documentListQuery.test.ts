@@ -29,7 +29,7 @@ describe('documentListQuery', () => {
     const current = parseDocumentListQuery(new URLSearchParams('view=attention&search=acme'));
     const next = patchForDocumentsSubnav(current, 'incoming');
     expect(next).toEqual({
-      direction: 'incoming',
+      direction: 'incoming,official',
       view: 'attention',
       search: 'acme',
       year: '',
@@ -86,6 +86,38 @@ describe('documentListQuery', () => {
     expect(url).toBe('/t/finestar/dokumenti?direction=incoming&view=attention&search=acme');
   });
 
+  it('canonicalizes page and page_size in the URL', () => {
+    expect(
+      documentListUrl('finestar', 'dokumenti', {
+        search: 'acme',
+        page: 3,
+        page_size: 20,
+      }),
+    ).toBe('/t/finestar/dokumenti?search=acme&page=3');
+    expect(
+      documentListUrl('finestar', 'dokumenti', {
+        search: 'acme',
+        page: 1,
+        page_size: 50,
+      }),
+    ).toBe('/t/finestar/dokumenti?search=acme&page_size=50');
+    expect(
+      documentListUrl('finestar', 'dokumenti', {
+        search: 'acme',
+        page: 3,
+        page_size: 50,
+      }),
+    ).toBe('/t/finestar/dokumenti?search=acme&page=3&page_size=50');
+  });
+
+  it('parses page_size from the URL', () => {
+    expect(parseDocumentListQuery(new URLSearchParams('page=3&page_size=50'))).toMatchObject({
+      page: 3,
+      page_size: 50,
+    });
+    expect(parseDocumentListQuery(new URLSearchParams('page_size=999')).page_size).toBe(20);
+  });
+
   it('marks subnav presets from direction and view independently', () => {
     const incomingAttention = parseDocumentListQuery(
       new URLSearchParams('direction=incoming&view=attention'),
@@ -126,7 +158,7 @@ describe('documentListQuery', () => {
       new URLSearchParams('direction=outgoing&view=unpaid_outgoing&search=acme'),
     );
     const next = patchForDocumentsSubnav(current, 'incoming');
-    expect(next.direction).toBe('incoming');
+    expect(next.direction).toBe('incoming,official');
     expect(next.view).toBe('');
     expect(next.search).toBe('acme');
   });
@@ -174,6 +206,15 @@ describe('documentListQuery', () => {
       expect(
         documentsListHref('finestar', { direction: 'incoming', view: 'incoming_ready_to_pay' }),
       ).toBe('/t/finestar/dokumenti?direction=incoming&view=incoming_ready_to_pay');
+    });
+
+    it('maps Ulazni to incoming,official group filter', () => {
+      expect(DOCUMENTS_OPERATIVE_HREFS.incoming('finestar')).toBe(
+        '/t/finestar/dokumenti?direction=incoming%2Cofficial',
+      );
+      const grouped = parseDocumentListQuery(new URLSearchParams('direction=incoming,official'));
+      expect(isDocumentsSubnavActive(grouped, 'incoming')).toBe(true);
+      expect(patchDirectionTab(grouped, 'incoming,official').direction).toBe('incoming,official');
     });
 
     it('exposes operative presets without saldakonti paths', () => {

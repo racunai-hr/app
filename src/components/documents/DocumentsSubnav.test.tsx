@@ -46,7 +46,7 @@ describe('DocumentsSubnav', () => {
     );
     expect(screen.getByRole('link', { name: 'Ulazni' })).toHaveAttribute(
       'href',
-      '/t/finestar/dokumenti?direction=incoming',
+      '/t/finestar/dokumenti?direction=incoming%2Cofficial',
     );
     expect(screen.getByRole('link', { name: 'Izlazni' })).toHaveAttribute(
       'href',
@@ -103,7 +103,7 @@ describe('DocumentsSubnav', () => {
     render(<DocumentsSubnav slug="finestar" />);
     expect(screen.getByRole('link', { name: 'Ulazni' })).toHaveAttribute(
       'href',
-      '/t/finestar/dokumenti?direction=incoming&view=attention&search=acme',
+      '/t/finestar/dokumenti?direction=incoming%2Cofficial&view=attention&search=acme',
     );
   });
 
@@ -114,7 +114,7 @@ describe('DocumentsSubnav', () => {
     render(<DocumentsSubnav slug="finestar" />);
     expect(screen.getByRole('link', { name: 'Ulazni' })).toHaveAttribute(
       'href',
-      '/t/finestar/dokumenti?direction=incoming&search=acme',
+      '/t/finestar/dokumenti?direction=incoming%2Cofficial&search=acme',
     );
   });
 

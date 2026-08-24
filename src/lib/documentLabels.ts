@@ -4,6 +4,7 @@ export const DIRECTION_LABELS = {
   outgoing: 'Izlazni',
   incoming: 'Ulazni',
   deposit: 'Kaucija',
+  official: 'Službeni',
 } as const;
 
 export const SYSTEM_VIEWS = [
@@ -28,6 +29,7 @@ export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
   overdue: 'Dospio',
   cancelled: 'Otkazan',
   approved: 'Odobren',
+  registered: 'Registriran',
   rejected: 'Odbijen',
   open: 'Otvoreno',
   returned: 'Vraćeno',
@@ -49,6 +51,8 @@ export const OPERATIONAL_STATUS_LABELS: Record<string, string> = {
   rejected: 'Odbijen',
   ready_to_pay: 'Spreman za plaćanje',
   approved: 'Odobren',
+  registered: 'Registriran',
+  posted: 'Knjižen',
   pending_approval: 'Čeka odobrenje',
   received: 'Zaprimljen',
   open: 'Otvoreno',

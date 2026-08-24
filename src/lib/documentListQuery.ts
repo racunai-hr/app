@@ -1,4 +1,10 @@
-import { buildDocumentQuery, type DocumentDirection, type DocumentListQuery } from './documents';
+import {
+  buildDocumentQuery,
+  INCOMING_GROUP_DIRECTION,
+  type DocumentDirectionFilter,
+  type DocumentListQuery,
+} from './documents';
+import { parsePage, parsePageSize, writePageParams } from './pagination';
 
 const EMPTY_DOCUMENT_LIST_QUERY: DocumentListQuery = {
   direction: '',
@@ -17,7 +23,11 @@ export function parseDocumentListQuery(params: URLSearchParams): DocumentListQue
   const direction = params.get('direction');
   return {
     direction:
-      direction === 'incoming' || direction === 'outgoing' || direction === 'deposit'
+      direction === 'incoming' ||
+      direction === 'outgoing' ||
+      direction === 'deposit' ||
+      direction === 'official' ||
+      direction === INCOMING_GROUP_DIRECTION
         ? direction
         : '',
     view: params.get('view') || '',
@@ -27,16 +37,14 @@ export function parseDocumentListQuery(params: URLSearchParams): DocumentListQue
     status: params.get('status') || '',
     date_from: params.get('date_from') || '',
     date_to: params.get('date_to') || '',
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
+    page: parsePage(params.get('page')),
+    page_size: parsePageSize(params.get('page_size')),
   };
 }
 
 export function serializeDocumentListUrlQuery(query: DocumentListQuery): URLSearchParams {
   const params = buildDocumentQuery(query, { includePage: false });
-  if (query.page && query.page > 1) {
-    params.set('page', String(query.page));
-  }
+  writePageParams(params, query.page || 1, query.page_size || 20);
   return params;
 }
 
@@ -46,7 +54,7 @@ export function documentsListHref(slug: string, query: Partial<DocumentListQuery
 
 /** Canonical hrefs for common operativni pregledi (Faza 3a). */
 export const DOCUMENTS_OPERATIVE_HREFS = {
-  incoming: (slug: string) => documentsListHref(slug, { direction: 'incoming' }),
+  incoming: (slug: string) => documentsListHref(slug, { direction: INCOMING_GROUP_DIRECTION }),
   incomingReadyToPay: (slug: string) =>
     documentsListHref(slug, { direction: 'incoming', view: 'incoming_ready_to_pay' }),
   outgoing: (slug: string) => documentsListHref(slug, { direction: 'outgoing' }),
@@ -136,7 +144,7 @@ export function patchForDocumentsSubnav(
   const base = { ...current, page: 1 };
   switch (preset) {
     case 'incoming':
-      return { ...base, direction: 'incoming', view: withoutOperativeView(base.view) };
+      return { ...base, direction: INCOMING_GROUP_DIRECTION, view: withoutOperativeView(base.view) };
     case 'outgoing':
       return { ...base, direction: 'outgoing', view: withoutOperativeView(base.view) };
     case 'attention':
@@ -174,7 +182,7 @@ export function isDocumentsSubnavActive(
     case 'all':
       return !query.direction && !query.view;
     case 'incoming':
-      return query.direction === 'incoming';
+      return query.direction === 'incoming' || query.direction === INCOMING_GROUP_DIRECTION;
     case 'outgoing':
       return query.direction === 'outgoing';
     case 'attention':
@@ -197,7 +205,7 @@ export function isOperativeSubnavActive(
 
 export function patchDirectionTab(
   current: DocumentListQuery,
-  direction: '' | DocumentDirection,
+  direction: DocumentDirectionFilter,
 ): DocumentListQuery {
   return { ...current, direction, page: 1 };
 }

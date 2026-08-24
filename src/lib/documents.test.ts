@@ -23,6 +23,9 @@ describe('documents client', () => {
   it('sends only incoming or outgoing as direction', () => {
     expect(buildDocumentQuery({ direction: 'incoming' }).get('direction')).toBe('incoming');
     expect(buildDocumentQuery({ direction: 'outgoing' }).get('direction')).toBe('outgoing');
+    expect(buildDocumentQuery({ direction: 'incoming,official' }).get('direction')).toBe(
+      'incoming,official',
+    );
     expect(buildDocumentQuery({}).get('direction')).toBeNull();
   });
 

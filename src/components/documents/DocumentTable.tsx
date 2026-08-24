@@ -43,7 +43,9 @@ export function DocumentTable({ rows, slug, onOpenDocument }: Props) {
                 ? `/t/${slug}/dokumenti/ulazni/${row.id}`
                 : slug && row.direction === 'outgoing'
                   ? `/t/${slug}/dokumenti/izlazni/${row.id}`
-                  : null;
+                  : slug && row.direction === 'official'
+                    ? `/t/${slug}/dokumenti/sluzbeni/${row.id}`
+                    : null;
             return (
               <tr key={`${row.direction}-${row.id}`}>
                 <td>
