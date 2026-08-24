@@ -660,6 +660,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/official-document-posting-profiles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_official_document_posting_profiles_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/official-documents/": {
         parameters: {
             query?: never;
@@ -718,6 +734,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["finance_official_documents_link_journal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_official_documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/{id}/posting-profile/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_official_documents_set_posting_profile"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1529,6 +1577,7 @@ export interface components {
             /** @default EUR */
             currency: string;
             related_fixed_asset_id?: number | null;
+            posting_profile_id?: number | null;
             notes?: string;
             register?: boolean;
             /** Format: binary */
@@ -1680,6 +1729,11 @@ export interface components {
             subledger_context?: components["schemas"]["SubledgerContext"];
             payment?: components["schemas"]["PaymentBlock"];
             settlement_trail?: components["schemas"]["SettlementTrail"];
+            official_kind?: string | null;
+            related_fixed_asset_id?: number | null;
+            posting_profile_id?: number | null;
+            posting_profile_code?: string | null;
+            posting_profile_name?: string | null;
         };
         DocumentItem: {
             item_name: string;
@@ -1744,6 +1798,12 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * @description * `capitalize` - capitalize
+         *     * `expense` - expense
+         * @enum {string}
+         */
+        EconomicEffectEnum: "capitalize" | "expense";
         EracunBlock: {
             as4_status: components["schemas"]["Provenanced"];
             message_id: components["schemas"]["Provenanced"];
@@ -2103,8 +2163,20 @@ export interface components {
             file_size: number;
             has_file: boolean;
             related_fixed_asset_id: number | null;
+            posting_profile_id: number | null;
+            posting_profile_code: string | null;
+            posting_profile_name: string | null;
             notes: string;
             created_at: string | null;
+        };
+        OfficialDocumentPostingProfile: {
+            id: number;
+            code: string;
+            name: string;
+            economic_effect: components["schemas"]["EconomicEffectEnum"];
+            allowed_kinds: string[];
+            requires_fixed_asset: boolean;
+            is_active: boolean;
         };
         /**
          * @description * `tax_decision` - tax_decision
@@ -2652,6 +2724,9 @@ export interface components {
             return_date?: string;
             /** @description Decimal as string, e.g. "1100.00" */
             amount?: string;
+        };
+        SetOfficialDocumentPostingProfileRequest: {
+            posting_profile_id: number;
         };
         SettlementTrail: {
             obligation: components["schemas"]["SettlementTrailObligation"] | null;
@@ -4873,6 +4948,34 @@ export interface operations {
             };
         };
     };
+    finance_official_document_posting_profiles_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocumentPostingProfile"][];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     finance_official_documents_create: {
         parameters: {
             query?: never;
@@ -5035,6 +5138,126 @@ export interface operations {
                 "application/json": components["schemas"]["LinkOfficialDocumentJournalRequest"];
                 "application/x-www-form-urlencoded": components["schemas"]["LinkOfficialDocumentJournalRequest"];
                 "multipart/form-data": components["schemas"]["LinkOfficialDocumentJournalRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_set_posting_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetOfficialDocumentPostingProfileRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SetOfficialDocumentPostingProfileRequest"];
+                "multipart/form-data": components["schemas"]["SetOfficialDocumentPostingProfileRequest"];
             };
         };
         responses: {

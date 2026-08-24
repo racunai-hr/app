@@ -9,7 +9,12 @@ import { clearTokens, getAccessToken } from '@/lib/auth';
 import { DOCUMENTS_OPERATIVE_HREFS } from '@/lib/documentListQuery';
 import { tenantApiOrigin } from '@/lib/documents';
 import { fetchFixedAssets } from '@/lib/assets';
-import { canWriteFinance, createOfficialDocument } from '@/lib/finance';
+import {
+  canWriteFinance,
+  createOfficialDocument,
+  fetchOfficialDocumentPostingProfiles,
+  type OfficialDocumentPostingProfileDto,
+} from '@/lib/finance';
 import { fetchPartners } from '@/lib/partners';
 
 type Props = {
@@ -22,8 +27,16 @@ export function OfficialDocumentCreate({ slug }: Props) {
   const [token, setToken] = useState('');
   const [issuers, setIssuers] = useState<Array<{ id: number; name: string }>>([]);
   const [assets, setAssets] = useState<Array<{ id: number; name: string }>>([]);
+  const [profiles, setProfiles] = useState<OfficialDocumentPostingProfileDto[]>([]);
+  const [profileId, setProfileId] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  function suggestedProfileId(selectedAssetId: string): string {
+    if (!selectedAssetId) return '';
+    const ppmv = profiles.find((row) => row.code === 'ppmv_vehicle_acquisition');
+    return ppmv ? String(ppmv.id) : '';
+  }
 
   useEffect(() => {
     const access = getAccessToken();
@@ -38,15 +51,17 @@ export function OfficialDocumentCreate({ slug }: Props) {
         if (!found) throw new ApiError('Tvrtka nije pronađena.', 404);
         if (!canWriteFinance(found.role)) throw new ApiError('Nemate pravo unosa.', 403);
         const apiOrigin = tenantApiOrigin(found.admin_url);
-        const [partners, fixedAssets] = await Promise.all([
+        const [partners, fixedAssets, catalog] = await Promise.all([
           fetchPartners(apiOrigin, access, { page_size: 100, status: 'active' }),
           fetchFixedAssets(apiOrigin, access, { page: 1 }),
+          fetchOfficialDocumentPostingProfiles(apiOrigin, access),
         ]);
         if (cancelled) return;
         setOrigin(apiOrigin);
         setToken(access);
         setIssuers(partners.results.map((row) => ({ id: row.id, name: row.name })));
         setAssets(fixedAssets.results.map((row) => ({ id: row.id, name: row.name })));
+        setProfiles(catalog.filter((row) => row.allowed_kinds.includes('tax_decision')));
       })
       .catch((err) => {
         if (cancelled) return;
@@ -69,6 +84,9 @@ export function OfficialDocumentCreate({ slug }: Props) {
     form.set('register', 'true');
     if (!String(form.get('related_fixed_asset_id') || '')) {
       form.delete('related_fixed_asset_id');
+    }
+    if (!String(form.get('posting_profile_id') || '')) {
+      form.delete('posting_profile_id');
     }
     setBusy(true);
     setError('');
@@ -129,11 +147,34 @@ export function OfficialDocumentCreate({ slug }: Props) {
         </label>
         <label>
           Povezana imovina
-          <select name="related_fixed_asset_id">
+          <select
+            name="related_fixed_asset_id"
+            onChange={(event) => {
+              const next = event.target.value;
+              if (!profileId) {
+                setProfileId(suggestedProfileId(next));
+              }
+            }}
+          >
             <option value="">Bez kartice</option>
             {assets.map((asset) => (
               <option key={asset.id} value={asset.id}>
                 {asset.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Profil knjiženja
+          <select
+            name="posting_profile_id"
+            value={profileId}
+            onChange={(event) => setProfileId(event.target.value)}
+          >
+            <option value="">Kasnije prije Knjiži</option>
+            {profiles.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
               </option>
             ))}
           </select>

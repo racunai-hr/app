@@ -11,6 +11,9 @@ export type DocumentDirectionFilter = DocumentDirection | typeof INCOMING_GROUP_
 export type DocumentDetail = components['schemas']['DocumentDetail'] & {
   related_fixed_asset_id?: number | null;
   official_kind?: string;
+  posting_profile_id?: number | null;
+  posting_profile_code?: string | null;
+  posting_profile_name?: string | null;
   notes?: string | null;
   actions?: {
     reject?: {

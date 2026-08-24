@@ -18,10 +18,16 @@ import { formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import {
   canWriteFinance,
   cancelOfficialDocument,
+  fetchOfficialDocumentPostingProfiles,
   linkOfficialDocumentJournal,
+  newIdempotencyKey,
+  postOfficialDocument,
+  setOfficialDocumentPostingProfile,
+  type OfficialDocumentPostingProfileDto,
 } from '@/lib/finance';
 import { provenanceText } from '@/lib/provenance';
-import { OPERATIONAL_STATUS_LABELS, DOCUMENT_STATUS_LABELS } from '@/lib/documentLabels';
+import { OPERATIONAL_STATUS_LABELS, DOCUMENT_STATUS_LABELS, SUBLEDGER_LABELS } from '@/lib/documentLabels';
+import { documentBankCloseHref, shouldShowBankCloseCta } from '@/lib/bankingReconcile';
 
 import { DocumentPdfPreview } from './DocumentPdfPreview';
 
@@ -36,6 +42,8 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
   const [journalId, setJournalId] = useState('');
+  const [profiles, setProfiles] = useState<OfficialDocumentPostingProfileDto[]>([]);
+  const [profileId, setProfileId] = useState('');
   const [role, setRole] = useState('');
   const [origin, setOrigin] = useState('');
   const [token, setToken] = useState('');
@@ -56,12 +64,17 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
         const found = me.tenants.find((row) => row.slug === slug);
         if (!found) throw new ApiError('Tvrtka nije pronađena.', 404);
         const apiOrigin = tenantApiOrigin(found.admin_url);
-        const doc = await fetchDocument(apiOrigin, access, 'official', documentId);
+        const [doc, catalog] = await Promise.all([
+          fetchDocument(apiOrigin, access, 'official', documentId),
+          fetchOfficialDocumentPostingProfiles(apiOrigin, access),
+        ]);
         if (cancelled) return;
         setRole(found.role);
         setOrigin(apiOrigin);
         setToken(access);
         setDetail(doc);
+        setProfiles(catalog);
+        setProfileId(doc.posting_profile_id ? String(doc.posting_profile_id) : '');
       })
       .catch((err) => {
         if (cancelled) return;
@@ -86,6 +99,42 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
       setDetail(await fetchDocument(origin, token, 'official', documentId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Otkazivanje nije uspjelo.');
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function handleSaveProfile() {
+    if (!origin || !token) return;
+    const id = Number(profileId);
+    if (!Number.isFinite(id) || id <= 0) {
+      setError('Odaberite profil knjiženja.');
+      return;
+    }
+    setBusy('profile');
+    setError('');
+    try {
+      await setOfficialDocumentPostingProfile(origin, token, documentId, id);
+      const doc = await fetchDocument(origin, token, 'official', documentId);
+      setDetail(doc);
+      setProfileId(doc.posting_profile_id ? String(doc.posting_profile_id) : String(id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Profil nije spremljen.');
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function handlePost() {
+    if (!origin || !token) return;
+    setBusy('post');
+    setError('');
+    try {
+      await postOfficialDocument(origin, token, documentId, newIdempotencyKey());
+      const doc = await fetchDocument(origin, token, 'official', documentId);
+      setDetail(doc);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Knjiženje nije uspjelo.');
     } finally {
       setBusy('');
     }
@@ -116,6 +165,7 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
   const writable = canWriteFinance(role);
   const status = String(detail?.document_status.value || '');
   const operational = String(detail?.operational_status.value || '');
+  const profileLocked = Boolean(detail?.subledger.state.value);
 
   return (
     <div className="docs-shell incoming-detail">
@@ -139,6 +189,16 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
             >
               Preuzmi PDF
             </button>
+          ) : null}
+          {writable && status === 'registered' && operational !== 'paid' ? (
+            <button type="button" className="btn btn-primary" disabled={busy === 'post'} onClick={() => void handlePost()}>
+              {busy === 'post' ? 'Knjižim…' : 'Knjiži'}
+            </button>
+          ) : null}
+          {detail && shouldShowBankCloseCta(detail) ? (
+            <Link className="btn btn-primary" href={documentBankCloseHref(slug, detail)}>
+              Zatvori bankom
+            </Link>
           ) : null}
           {writable && status && status !== 'cancelled' ? (
             <button type="button" className="btn btn-secondary" disabled={busy === 'cancel'} onClick={() => void handleCancel()}>
@@ -176,6 +236,19 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
                 <dd>{formatHrMoney(detail.amounts.gross, detail.amounts.currency)}</dd>
               </div>
               <div>
+                <dt>Profil</dt>
+                <dd>{detail.posting_profile_name || '—'}</dd>
+              </div>
+              <div>
+                <dt>Saldakonto</dt>
+                <dd>
+                  {detail.subledger.state.value
+                    ? SUBLEDGER_LABELS[String(detail.subledger.state.value)] ||
+                      provenanceText(detail.subledger.state)
+                    : '—'}
+                </dd>
+              </div>
+              <div>
                 <dt>Temeljnica</dt>
                 <dd>{detail.posting.entry_number.value || '—'}</dd>
               </div>
@@ -190,13 +263,42 @@ export function OfficialDocumentDetail({ slug, documentId }: Props) {
             </dl>
             {detail.notes ? <p>{detail.notes}</p> : null}
           </section>
+          {writable && status !== 'cancelled' && !profileLocked ? (
+            <section className="incoming-card">
+              <h2>Profil knjiženja</h2>
+              <form
+                className="docs-filters"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void handleSaveProfile();
+                }}
+              >
+                <label>
+                  Profil
+                  <select value={profileId} onChange={(event) => setProfileId(event.target.value)}>
+                    <option value="">Odaberi profil</option>
+                    {profiles
+                      .filter((row) => !detail.official_kind || row.allowed_kinds.includes(detail.official_kind))
+                      .map((profile) => (
+                        <option key={profile.id} value={profile.id}>
+                          {profile.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <button type="submit" className="btn btn-secondary" disabled={busy === 'profile'}>
+                  {busy === 'profile' ? 'Spremam…' : 'Spremi profil'}
+                </button>
+              </form>
+            </section>
+          ) : null}
           {detail.pdf_available && origin && token ? (
             <section className="incoming-card">
               <h2>PDF</h2>
               <DocumentPdfPreview load={loadPdf} title={detail.source_number || 'PDF'} />
             </section>
           ) : null}
-          {writable && status !== 'cancelled' ? (
+          {writable && status !== 'cancelled' && operational !== 'posted' && operational !== 'paid' ? (
             <section className="incoming-card">
               <h2>Poveži temeljnicu</h2>
               <form className="docs-filters" onSubmit={(event) => void handleLinkJournal(event)}>

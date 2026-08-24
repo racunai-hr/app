@@ -69,6 +69,11 @@ export function reconcileCandidateDocumentLink(
         href: `/t/${slug}/dokumenti/izlazni/${candidate.source_id}`,
         label: candidate.source_label || 'Izlazni dokument',
       };
+    case 'officialdocument':
+      return {
+        href: `/t/${slug}/dokumenti/sluzbeni/${candidate.source_id}`,
+        label: candidate.source_label || 'Službeni dokument',
+      };
     default:
       return null;
   }

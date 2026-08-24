@@ -53,6 +53,7 @@ export const OPERATIONAL_STATUS_LABELS: Record<string, string> = {
   approved: 'Odobren',
   registered: 'Registriran',
   posted: 'Knjižen',
+  unpaid: 'Nije plaćeno',
   pending_approval: 'Čeka odobrenje',
   received: 'Zaprimljen',
   open: 'Otvoreno',

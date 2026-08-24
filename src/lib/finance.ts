@@ -62,7 +62,20 @@ export type OfficialDocumentDto = {
   original_filename: string;
   has_file: boolean;
   related_fixed_asset_id: number | null;
+  posting_profile_id: number | null;
+  posting_profile_code: string | null;
+  posting_profile_name: string | null;
   notes: string;
+};
+
+export type OfficialDocumentPostingProfileDto = {
+  id: number;
+  code: string;
+  name: string;
+  economic_effect: 'capitalize' | 'expense';
+  allowed_kinds: string[];
+  requires_fixed_asset: boolean;
+  is_active: boolean;
 };
 
 export async function createOfficialDocument(
@@ -107,6 +120,58 @@ export async function linkOfficialDocumentJournal(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ journal_entry_id: journalEntryId }),
+    },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function fetchOfficialDocumentPostingProfiles(
+  origin: string,
+  token: string,
+): Promise<OfficialDocumentPostingProfileDto[]> {
+  const response = await authorized(
+    origin,
+    '/api/finance/official-document-posting-profiles/',
+    token,
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function setOfficialDocumentPostingProfile(
+  origin: string,
+  token: string,
+  documentId: number,
+  postingProfileId: number,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/official-documents/${documentId}/posting-profile/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ posting_profile_id: postingProfileId }),
+    },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function postOfficialDocument(
+  origin: string,
+  token: string,
+  documentId: number,
+  idempotencyKey: string,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/official-documents/${documentId}/post/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
     },
   );
   if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
