@@ -76,6 +76,15 @@ const patchDraftExpense = vi.fn();
 const approveExpense = vi.fn();
 const fetchExpenseCategories = vi.fn();
 const fetchChartOfAccounts = vi.fn();
+const fetchCostCenters = vi.fn();
+
+vi.mock('@/lib/costCenters', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/costCenters')>('@/lib/costCenters');
+  return {
+    ...actual,
+    fetchCostCenters: (...args: unknown[]) => fetchCostCenters(...args),
+  };
+});
 
 vi.mock('@/lib/expensePosting', async () => {
   const actual = await vi.importActual<typeof import('@/lib/expensePosting')>('@/lib/expensePosting');
@@ -137,6 +146,11 @@ describe('IncomingExpenseDetail', () => {
     fetchChartOfAccounts.mockResolvedValue({
       count: 1,
       results: [{ id: 10, code: '4120', name: 'Ostali nespomenuti rashodi', active: true }],
+    });
+    fetchCostCenters.mockReset();
+    fetchCostCenters.mockResolvedValue({
+      count: 1,
+      results: [{ id: 6, code: '110', name: 'Kuhinja', kind: 'location', notes: '', parent: null }],
     });
   });
 
@@ -701,6 +715,28 @@ describe('IncomingExpenseDetail', () => {
     render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
     expect(await screen.findByRole('cell', { name: '4100 · Najam' })).toBeInTheDocument();
     expect(screen.getByText('Prijedlog knjiženja')).toBeInTheDocument();
+  });
+
+  it('keeps posting inputs usable when the cost center codebook fails', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchCostCenters.mockRejectedValue(new Error('cost centers down'));
+    fetchExpenseCategories.mockResolvedValue({
+      count: 2,
+      results: [
+        { id: 1, name: 'Ostalo', is_active: true, default_account: null },
+        { id: 2, name: 'Telekomunikacije', is_active: true, default_account: null },
+      ],
+    });
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview());
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    expect(await screen.findByLabelText('Vrsta troška')).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Telekomunikacije' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('option', { name: '4120 · Ostali nespomenuti rashodi' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('cost centers down')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Mjesto troška')).toHaveValue('');
   });
 
   it('refetches preview after a successful draft PATCH', async () => {

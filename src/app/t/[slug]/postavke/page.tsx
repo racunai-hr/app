@@ -1,10 +1,7 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-
-import { ExpenseCategorySettings } from '@/components/settings/ExpenseCategorySettings';
+import { SettingsOverviewRoute } from '@/components/settings/routes';
 
 export default function PostavkePage() {
-  const params = useParams<{ slug: string }>();
-  return <ExpenseCategorySettings slug={params.slug} />;
+  return <SettingsOverviewRoute />;
 }

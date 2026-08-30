@@ -66,6 +66,16 @@ vi.mock('@/lib/purchasingImport', () => ({
   pollInvoiceImport: vi.fn(),
 }));
 
+const fetchCostCenters = vi.fn();
+
+vi.mock('@/lib/costCenters', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/costCenters')>('@/lib/costCenters');
+  return {
+    ...actual,
+    fetchCostCenters: (...args: unknown[]) => fetchCostCenters(...args),
+  };
+});
+
 import { InvoiceReview } from './InvoiceReview';
 
 function extractedRun(overrides: Record<string, unknown> = {}) {
@@ -145,6 +155,24 @@ describe('InvoiceReview', () => {
       count: 1,
       results: [{ id: 11, code: '4100', name: 'Najam', active: true }],
     });
+    fetchCostCenters.mockReset();
+    fetchCostCenters.mockResolvedValue({
+      count: 1,
+      results: [{ id: 6, code: '110', name: 'Kuhinja', kind: 'location', notes: '', parent: null }],
+    });
+  });
+
+  it('keeps posting inputs usable when the cost center codebook fails', async () => {
+    fetchCostCenters.mockRejectedValue(new Error('cost centers down'));
+    render(<InvoiceReview slug="finestar" importId={9} />);
+    const category = await screen.findByLabelText('Vrsta troška');
+    expect(category).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Telekomunikacije' })).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: '4100 · Najam' })).toBeInTheDocument();
+    expect(screen.queryByText('cost centers down')).not.toBeInTheDocument();
+    const costCenter = screen.getByLabelText('Mjesto troška');
+    expect(costCenter).toBeInTheDocument();
+    expect(costCenter).toHaveValue('');
   });
 
   it('sends selected category on confirm and does not invent posting lines', async () => {
@@ -179,6 +207,7 @@ describe('InvoiceReview', () => {
           duplicate_override: false,
           category_id: 2,
           expense_account_id: null,
+          cost_center_id: null,
           remember_category_for_partner: true,
         },
       );

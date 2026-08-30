@@ -309,13 +309,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     Promise.all([
       fetchExpenseCategories(origin, token, abort.signal),
       fetchChartOfAccounts(origin, token, '', abort.signal),
-      fetchCostCenters(origin, token, abort.signal),
     ])
-      .then(([catList, coa, centers]) => {
+      .then(([catList, coa]) => {
         if (cancelled) return;
         setCategories(catList.results);
         setAccounts(coa.results);
-        setCostCenters(centers.results);
       })
       .catch((err) => {
         if (cancelled || abort.signal.aborted) return;
@@ -326,6 +324,24 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
       abort.abort();
     };
   }, [origin, token, detail, role, postingLocked]);
+
+  // Cost centers are an optional dimension; a missing codebook must not block posting inputs.
+  useEffect(() => {
+    if (!origin || !token || !canWriteFinance(role)) return;
+    let cancelled = false;
+    const abort = new AbortController();
+    fetchCostCenters(origin, token, abort.signal)
+      .then((centers) => {
+        if (!cancelled) setCostCenters(centers.results);
+      })
+      .catch(() => {
+        if (!cancelled) setCostCenters([]);
+      });
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
+  }, [origin, token, role]);
 
   async function persistPosting(patch: {
     category_id?: number;

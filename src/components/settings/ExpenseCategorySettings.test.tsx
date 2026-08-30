@@ -1,36 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn() }),
-  useParams: () => ({ slug: 'finestar' }),
-}));
-
-vi.mock('@/lib/auth', () => ({
-  getAccessToken: () => 'token',
-  clearTokens: vi.fn(),
-}));
-
-vi.mock('@/lib/api', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/api')>('@/lib/api');
-  return {
-    ...actual,
-    fetchMe: vi.fn().mockResolvedValue({
-      user: { id: 1, username: 'owner', email: '', is_superuser: false },
-      tenants: [
-        {
-          slug: 'finestar',
-          name: 'FineStar',
-          role: 'owner',
-          is_default: true,
-          admin_url: 'https://finestar-stage.racunai.hr/admin/',
-        },
-      ],
-      platform_admin_url: 'https://admin.racunai.hr/admin/',
-    }),
-  };
-});
-
 const fetchExpenseCategories = vi.fn();
 const fetchChartOfAccounts = vi.fn();
 const patchExpenseCategoryDefaultAccount = vi.fn();
@@ -71,16 +41,23 @@ describe('ExpenseCategorySettings', () => {
       is_active: true,
       default_account: { id: 11, code: '4100', name: 'Najam', active: true },
     });
-    render(<ExpenseCategorySettings slug="finestar" />);
+    render(<ExpenseCategorySettings origin="http://api.test" token="token" canWrite />);
     const select = await screen.findByLabelText('Zadano konto za Ostalo');
     fireEvent.change(select, { target: { value: '11' } });
     await waitFor(() => {
       expect(patchExpenseCategoryDefaultAccount).toHaveBeenCalledWith(
-        expect.any(String),
+        'http://api.test',
         'token',
         1,
         { default_account_id: 11 },
       );
     });
+  });
+
+  it('skips the write-only list without a write role', async () => {
+    render(<ExpenseCategorySettings origin="http://api.test" token="token" canWrite={false} />);
+    expect(await screen.findByRole('note')).toBeInTheDocument();
+    expect(fetchExpenseCategories).not.toHaveBeenCalled();
+    expect(fetchChartOfAccounts).not.toHaveBeenCalled();
   });
 });

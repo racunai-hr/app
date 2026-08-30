@@ -11,8 +11,15 @@ export type CostCenterRef = {
 };
 
 export type CostCenter = CostCenterRef & {
+  kind: string;
   notes: string;
   parent: CostCenterRef | null;
+};
+
+/** Journal and preview DTOs carry only the display parts of a cost center. */
+export type CostCenterLabelParts = {
+  code: string;
+  name: string;
 };
 
 export type CostCenterList = {
@@ -49,11 +56,11 @@ export type CostCenterReport = {
   results: CostCenterReportRow[];
 };
 
-export function formatCostCenterOption(row: CostCenterRef): string {
+export function formatCostCenterOption(row: CostCenterLabelParts): string {
   return `${row.code} · ${row.name}`;
 }
 
-export function costCenterLabel(row: CostCenterRef | null | undefined): string {
+export function costCenterLabel(row: CostCenterLabelParts | null | undefined): string {
   if (!row) return '—';
   return formatCostCenterOption(row);
 }
