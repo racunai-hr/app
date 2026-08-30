@@ -3,7 +3,9 @@ import type { components } from './openapi/generated';
 
 export type AccountRef = components['schemas']['AccountRef'];
 export type ChartOfAccountsList = components['schemas']['ChartOfAccountsList'];
-export type ConfirmInvoiceImportRequest = components['schemas']['ConfirmInvoiceImportRequest'];
+export type ConfirmInvoiceImportRequest = components['schemas']['ConfirmInvoiceImportRequest'] & {
+  cost_center_id?: number | null;
+};
 export type ExpenseApproveResponse = components['schemas']['ExpenseApproveResponse'];
 export type ExpenseCategory = components['schemas']['ExpenseCategory'];
 export type ExpenseCategoryList = components['schemas']['ExpenseCategoryList'];
@@ -11,7 +13,9 @@ export type ExpensePostingPreview = components['schemas']['ExpensePostingPreview
 export type PatchedExpenseCategoryPatchRequest =
   components['schemas']['PatchedExpenseCategoryPatchRequest'];
 export type PatchedExpenseDraftPatchRequest =
-  components['schemas']['PatchedExpenseDraftPatchRequest'];
+  components['schemas']['PatchedExpenseDraftPatchRequest'] & {
+    cost_center_id?: number | null;
+  };
 export type PostingPlanLine = components['schemas']['PostingPlanLine'];
 
 export const NOT_DRAFT_USER_MESSAGE =

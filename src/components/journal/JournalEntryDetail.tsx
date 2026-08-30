@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { usePartnerSession } from '@/components/partners/usePartnerSession';
 import { ApiError } from '@/lib/api';
+import { costCenterLabel } from '@/lib/costCenters';
 import { formatHrAmount, formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
 import {
   fetchJournalEntry,
@@ -121,6 +122,7 @@ export function JournalEntryDetailView({ slug, entryId }: Props) {
                   <tr>
                     <th>Konto</th>
                     <th>Naziv</th>
+                    <th>MT</th>
                     <th>Opis</th>
                     <th>Duguje</th>
                     <th>Potražuje</th>
@@ -131,6 +133,11 @@ export function JournalEntryDetailView({ slug, entryId }: Props) {
                     <tr key={line.id}>
                       <td>{line.account_code || '—'}</td>
                       <td>{line.account_name || '—'}</td>
+                      <td>
+                        {costCenterLabel(
+                          (line as { cost_center?: { code: string; name: string } | null }).cost_center,
+                        )}
+                      </td>
                       <td>{line.description || '—'}</td>
                       <td className="cell-amount">{formatHrAmount(line.debit)}</td>
                       <td className="cell-amount">{formatHrAmount(line.credit)}</td>

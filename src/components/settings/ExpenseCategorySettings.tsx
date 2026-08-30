@@ -15,6 +15,7 @@ import {
   type ExpenseCategory,
 } from '@/lib/expensePosting';
 import { canWritePurchasing } from '@/lib/purchasing';
+import { CostCenterSettings } from '@/components/settings/CostCenterSettings';
 
 type Props = { slug: string };
 
@@ -155,6 +156,9 @@ export function ExpenseCategorySettings({ slug }: Props) {
             </table>
           </div>
         </section>
+      ) : null}
+      {!loading && origin && token ? (
+        <CostCenterSettings origin={origin} token={token} canWrite={canWrite} />
       ) : null}
     </section>
   );

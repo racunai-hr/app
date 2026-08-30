@@ -1,5 +1,6 @@
 'use client';
 
+import { costCenterLabel } from '@/lib/costCenters';
 import { formatHrMoney } from '@/lib/formatHr';
 import {
   formatAccountOption,
@@ -30,6 +31,7 @@ export function PostingPreviewLines({
             <th>Opis</th>
             <th>Duguje</th>
             <th>Potražuje</th>
+            <th>MT</th>
             <th>Iznos</th>
           </tr>
         </thead>
@@ -40,6 +42,13 @@ export function PostingPreviewLines({
               <td>{line.description || '—'}</td>
               <td>{formatAccountOption(line.debit)}</td>
               <td>{formatAccountOption(line.credit)}</td>
+              <td>
+                {costCenterLabel(
+                  (line as { debit_cost_center?: { code: string; name: string } | null }).debit_cost_center
+                  ?? (line as { credit_cost_center?: { code: string; name: string } | null }).credit_cost_center
+                  ?? null,
+                )}
+              </td>
               <td className="cell-amount">{formatHrMoney(line.amount, currency)}</td>
             </tr>
           ))}

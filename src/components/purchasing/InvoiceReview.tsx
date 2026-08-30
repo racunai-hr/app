@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 
+import { fetchCostCenters, type CostCenterRef } from '@/lib/costCenters';
 import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
 import { PostingPreviewLines } from '@/components/finance/PostingPreviewLines';
 import { ApiError } from '@/lib/api';
@@ -59,6 +60,8 @@ export function InvoiceReview({ slug, importId }: Props) {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [accounts, setAccounts] = useState<AccountRef[]>([]);
   const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [costCenters, setCostCenters] = useState<CostCenterRef[]>([]);
+  const [costCenterId, setCostCenterId] = useState<number | null>(null);
   const [expenseAccountId, setExpenseAccountId] = useState<number | null>(null);
   const [remember, setRemember] = useState(false);
   const [preview, setPreview] = useState<ExpensePostingPreview | null>(null);
@@ -99,11 +102,13 @@ export function InvoiceReview({ slug, importId }: Props) {
     Promise.all([
       fetchExpenseCategories(session.origin, session.token, abort.signal),
       fetchChartOfAccounts(session.origin, session.token, '', abort.signal),
+      fetchCostCenters(session.origin, session.token, abort.signal),
     ])
-      .then(([catList, coa]) => {
+      .then(([catList, coa, centers]) => {
         if (cancelled) return;
         setCategories(catList.results);
         setAccounts(coa.results);
+        setCostCenters(centers.results);
       })
       .catch((err) => {
         if (cancelled || abort.signal.aborted) return;
@@ -202,6 +207,7 @@ export function InvoiceReview({ slug, importId }: Props) {
         duplicate_override: override,
         category_id: categoryId,
         expense_account_id: expenseAccountId,
+        cost_center_id: costCenterId,
         remember_category_for_partner: remember,
       });
       setRun(next);
@@ -272,12 +278,15 @@ export function InvoiceReview({ slug, importId }: Props) {
               accounts={accounts}
               categoryId={categoryId}
               expenseAccountId={expenseAccountId}
+              costCenters={costCenters}
+              costCenterId={costCenterId}
               disabled={!canAct}
               allowEmptyCategory
               remember={remember}
               showRemember
               onCategoryChange={setCategoryId}
               onAccountChange={setExpenseAccountId}
+              onCostCenterChange={setCostCenterId}
               onRememberChange={setRemember}
             />
             {run.warnings.length > 0 && (

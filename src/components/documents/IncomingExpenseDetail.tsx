@@ -37,6 +37,7 @@ import {
 } from '@/lib/expensePosting';
 import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { type ProvenanceTone } from '@/lib/provenance';
+import { fetchCostCenters, type CostCenterRef } from '@/lib/costCenters';
 import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
 import { PostingPreviewLines } from '@/components/finance/PostingPreviewLines';
 import { DocumentPdfPreview } from '@/components/documents/DocumentPdfPreview';
@@ -210,6 +211,8 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const [accounts, setAccounts] = useState<AccountRef[]>([]);
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [expenseAccountId, setExpenseAccountId] = useState<number | null>(null);
+  const [costCenters, setCostCenters] = useState<CostCenterRef[]>([]);
+  const [costCenterId, setCostCenterId] = useState<number | null>(null);
   const [postingLocked, setPostingLocked] = useState(false);
   const [lockedNotice, setLockedNotice] = useState<string | null>(null);
   const [postingError, setPostingError] = useState('');
@@ -306,11 +309,13 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     Promise.all([
       fetchExpenseCategories(origin, token, abort.signal),
       fetchChartOfAccounts(origin, token, '', abort.signal),
+      fetchCostCenters(origin, token, abort.signal),
     ])
-      .then(([catList, coa]) => {
+      .then(([catList, coa, centers]) => {
         if (cancelled) return;
         setCategories(catList.results);
         setAccounts(coa.results);
+        setCostCenters(centers.results);
       })
       .catch((err) => {
         if (cancelled || abort.signal.aborted) return;
@@ -322,7 +327,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     };
   }, [origin, token, detail, role, postingLocked]);
 
-  async function persistPosting(patch: { category_id?: number; expense_account_id?: number | null }) {
+  async function persistPosting(patch: {
+    category_id?: number;
+    expense_account_id?: number | null;
+    cost_center_id?: number | null;
+  }) {
     if (!origin || !token) return;
     setPostingBusy(true);
     setPostingError('');
@@ -948,6 +957,8 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 accounts={accounts}
                 categoryId={categoryId}
                 expenseAccountId={expenseAccountId}
+                costCenters={costCenters}
+                costCenterId={costCenterId}
                 disabled={postingBusy || approving}
                 accountSource={preview?.account_source}
                 lockedMessage={lockedNotice}
@@ -958,6 +969,10 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 onAccountChange={(next) => {
                   setExpenseAccountId(next);
                   void persistPosting({ expense_account_id: next });
+                }}
+                onCostCenterChange={(next) => {
+                  setCostCenterId(next);
+                  void persistPosting({ cost_center_id: next });
                 }}
               />
             ) : (
