@@ -22,7 +22,7 @@ export function BankingOverviewRoute() {
       title="Bankarstvo"
       description="Pregled računa, salda i stanja usklađivanja. Salda se ne zbrajaju preko različitih valuta."
     >
-      {({ origin, token }) => <BankingOverview origin={origin} token={token} />}
+      {({ origin, token, role }) => <BankingOverview origin={origin} token={token} role={role} />}
     </BankingPage>
   );
 }
@@ -35,8 +35,8 @@ export function BankingAccountsRoute() {
       title="Računi"
       description="Poslovni bankovni računi s proveniencijom salda (izvor, vrijeme, svježina)."
     >
-      {({ origin, token }) => (
-        <BankAccountList slug={params.slug} origin={origin} token={token} />
+      {({ origin, token, role }) => (
+        <BankAccountList slug={params.slug} origin={origin} token={token} role={role} />
       )}
     </BankingPage>,
   );

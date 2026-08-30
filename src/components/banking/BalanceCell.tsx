@@ -2,7 +2,13 @@ import { formatHrMoney, formatHrDateTime } from '@/lib/formatHr';
 import type { BalanceDto } from '@/lib/banking';
 import { BALANCE_SOURCE_LABELS, BALANCE_TYPE_LABELS, labelOrRaw } from '@/lib/bankingLabels';
 
-export function BalanceCell({ balances }: { balances: BalanceDto[] }) {
+type Props = {
+  balances: BalanceDto[];
+  canImport?: boolean;
+  onImport?: () => void;
+};
+
+export function BalanceCell({ balances, canImport, onImport }: Props) {
   if (!balances.length) {
     return <span className="text-muted">Nema salda</span>;
   }
@@ -16,7 +22,19 @@ export function BalanceCell({ balances }: { balances: BalanceDto[] }) {
             {labelOrRaw(BALANCE_SOURCE_LABELS, balance.source)} ·{' '}
             <time dateTime={balance.as_of ?? undefined}>{formatHrDateTime(balance.as_of)}</time>
             {balance.is_stale ? (
-              <span className="badge badge-warning banking-stale">Zastarjelo</span>
+              canImport && onImport ? (
+                <button
+                  type="button"
+                  className="badge badge-warning banking-stale banking-stale-action"
+                  onClick={onImport}
+                  aria-label="Zastarjelo — uvezi novi XML izvadak (camt.053)"
+                  title="Uvezi novi XML izvadak (camt.053)"
+                >
+                  Zastarjelo
+                </button>
+              ) : (
+                <span className="badge badge-warning banking-stale">Zastarjelo</span>
+              )
             ) : (
               <span className="badge badge-success banking-stale">Svježe</span>
             )}

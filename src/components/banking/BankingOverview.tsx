@@ -6,18 +6,24 @@ import { ApiError } from '@/lib/api';
 import {
   fetchBankingOverview,
   formatIban,
+  type BankAccountDto,
   type BankingOverviewResponse,
 } from '@/lib/banking';
+import { canShowCamtImport } from '@/lib/bankingImport';
 import { formatHrMoney, formatHrDateTime } from '@/lib/formatHr';
 
 import { BalanceCell } from './BalanceCell';
+import { StatementImportDialog } from './StatementImportDialog';
 
-type Props = { origin: string; token: string };
+type Props = { origin: string; token: string; role: string };
 
-export function BankingOverview({ origin, token }: Props) {
+export function BankingOverview({ origin, token, role }: Props) {
   const [data, setData] = useState<BankingOverviewResponse | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [importAccount, setImportAccount] = useState<BankAccountDto | null>(null);
+  const [epoch, setEpoch] = useState(0);
+  const canImport = canShowCamtImport(role);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,7 +43,7 @@ export function BankingOverview({ origin, token }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [origin, token]);
+  }, [origin, token, epoch]);
 
   if (loading && !data) return <div className="loading">Učitavanje pregleda…</div>;
   if (error) return <div className="error">{error}</div>;
@@ -110,7 +116,11 @@ export function BankingOverview({ origin, token }: Props) {
                     </td>
                     <td>{account.currency}</td>
                     <td>
-                      <BalanceCell balances={account.balances} />
+                      <BalanceCell
+                        balances={account.balances}
+                        canImport={canImport}
+                        onImport={() => setImportAccount(account)}
+                      />
                       {!account.balances.length && (
                         <span className="text-muted">
                           {formatHrMoney(null, account.currency)}
@@ -124,6 +134,19 @@ export function BankingOverview({ origin, token }: Props) {
           </div>
         )}
       </section>
+      {importAccount ? (
+        <StatementImportDialog
+          origin={origin}
+          token={token}
+          role={role}
+          account={importAccount}
+          onClose={() => setImportAccount(null)}
+          onImported={() => {
+            setImportAccount(null);
+            setEpoch((value) => value + 1);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
