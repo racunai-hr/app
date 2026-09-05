@@ -484,6 +484,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/cost-centers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_cost_centers_list"];
+        put?: never;
+        post: operations["finance_cost_centers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/cost-centers/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["finance_cost_centers_partial_update"];
+        trace?: never;
+    };
     "/api/finance/deposits/": {
         parameters: {
             query?: never;
@@ -884,6 +916,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/reports/cost-centers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_cost_centers_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/partners/": {
         parameters: {
             query?: never;
@@ -986,6 +1034,40 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["partners_contacts_partial_update"];
+        trace?: never;
+    };
+    "/api/purchasing/eracun/inbound-import/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Import gateway inbox documents into draft expenses. No provider round-trip. */
+        post: operations["purchasing_eracun_inbound_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/eracun/inbox-refresh/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Ask the gateway to reconcile against the provider. Imports nothing. */
+        post: operations["purchasing_eracun_inbox_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/purchasing/expense-categories/": {
@@ -1499,6 +1581,7 @@ export interface components {
             duplicate_override?: boolean;
             category_id?: number | null;
             expense_account_id?: number | null;
+            cost_center_id?: number | null;
             remember_category_for_partner?: boolean;
         };
         ConfirmationResult: {
@@ -1552,6 +1635,77 @@ export interface components {
             is_primary?: boolean;
             is_active?: boolean;
         };
+        CostCenter: {
+            id: number;
+            code: string;
+            name: string;
+            kind: components["schemas"]["CostCenterKindEnum"];
+            is_active: boolean;
+            is_bookable: boolean;
+            notes: string;
+            parent_id: number | null;
+            parent: components["schemas"]["CostCenterRef"] | null;
+        };
+        /**
+         * @description * `location` - location
+         *     * `object` - object
+         *     * `overhead` - overhead
+         *     * `group` - group
+         * @enum {string}
+         */
+        CostCenterKindEnum: "location" | "object" | "overhead" | "group";
+        CostCenterList: {
+            count: number;
+            results: components["schemas"]["CostCenter"][];
+        };
+        CostCenterRef: {
+            id: number;
+            code: string;
+            name: string;
+            kind?: string;
+            is_active?: boolean;
+            is_bookable?: boolean;
+            parent_id?: number | null;
+        };
+        CostCenterReport: {
+            year: number;
+            month: number;
+            cumulative: boolean;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            assigned_total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            unassigned_total: string;
+            groups: components["schemas"]["CostCenterReportRow"][];
+            results: components["schemas"]["CostCenterReportRow"][];
+        };
+        CostCenterReportAccount: {
+            account_code: string;
+            account_name: string;
+            account_class: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount: string;
+        };
+        CostCenterReportRow: {
+            cost_center_id: number | null;
+            code: string;
+            name: string;
+            kind: string;
+            parent_id: number | null;
+            parent_code?: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total: string;
+            accounts?: components["schemas"]["CostCenterReportAccount"][];
+        };
+        CostCenterWriteRequest: {
+            code: string;
+            name: string;
+            kind: components["schemas"]["CostCenterKindEnum"];
+            parent_id?: number | null;
+            notes?: string;
+            is_active?: boolean;
+        };
         CreateDepositRequest: {
             partner_id: number;
             /** @description Decimal as string, e.g. "1100.00" */
@@ -1578,6 +1732,7 @@ export interface components {
             currency: string;
             related_fixed_asset_id?: number | null;
             posting_profile_id?: number | null;
+            cost_center_id?: number | null;
             notes?: string;
             register?: boolean;
             /** Format: binary */
@@ -1809,6 +1964,24 @@ export interface components {
             message_id: components["schemas"]["Provenanced"];
             source: components["schemas"]["Provenanced"];
         };
+        EracunImportError: {
+            invoice_guid?: string;
+            document_id?: string;
+            detail: string;
+        };
+        EracunInboundImportResponse: {
+            scanned: number;
+            imported: number;
+            skipped: number;
+            failed: number;
+            remaining_importable: number;
+            errors: components["schemas"]["EracunImportError"][];
+        };
+        EracunInboxRefreshResponse: {
+            reconciliation_id: string;
+            status: string;
+            detail: string;
+        };
         EracunRejectionEReporting: {
             status: string;
             attempt_id: string | null;
@@ -1845,6 +2018,7 @@ export interface components {
             expense_account_source: string;
             settlement_method: string;
             approved_by_id: number | null;
+            cost_center_id: number | null;
         };
         ExpenseCategory: {
             id: number;
@@ -1852,6 +2026,9 @@ export interface components {
             code: string | null;
             is_active: boolean;
             default_account: components["schemas"]["ExpenseCategoryAccountRef"] | null;
+            default_cost_center: {
+                [key: string]: unknown;
+            } | null;
         };
         ExpenseCategoryAccountRef: {
             id: number;
@@ -2089,6 +2266,7 @@ export interface components {
             debit: string;
             /** @description Decimal as string, e.g. "1100.00" */
             credit: string;
+            cost_center: components["schemas"]["CostCenterRef"] | null;
         };
         JournalEntryListItem: {
             id: number;
@@ -2170,6 +2348,9 @@ export interface components {
             has_file: boolean;
             related_fixed_asset_id: number | null;
             posting_profile_id: number | null;
+            cost_center: {
+                [key: string]: unknown;
+            } | null;
             posting_profile_code: string | null;
             posting_profile_name: string | null;
             notes: string;
@@ -2468,12 +2649,22 @@ export interface components {
             is_primary?: boolean;
             is_active?: boolean;
         };
+        PatchedCostCenterPatchRequest: {
+            code?: string;
+            name?: string;
+            kind?: components["schemas"]["CostCenterKindEnum"];
+            parent_id?: number | null;
+            notes?: string;
+            is_active?: boolean;
+        };
         PatchedExpenseCategoryPatchRequest: {
             default_account_id?: number | null;
+            default_cost_center_id?: number | null;
         };
         PatchedExpenseDraftPatchRequest: {
             category_id?: number;
             expense_account_id?: number | null;
+            cost_center_id?: number | null;
         };
         PatchedPartnerBankAccountWriteRequest: {
             bank_name?: string;
@@ -2671,6 +2862,8 @@ export interface components {
             amount: string;
             debit: components["schemas"]["AccountRef"];
             credit: components["schemas"]["AccountRef"];
+            debit_cost_center: components["schemas"]["CostCenterRef"] | null;
+            credit_cost_center: components["schemas"]["CostCenterRef"] | null;
         };
         PrivateFundsClaim: {
             id: number;
@@ -4336,6 +4529,149 @@ export interface operations {
             };
         };
     };
+    finance_cost_centers_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenterList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_cost_centers_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CostCenterWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CostCenterWriteRequest"];
+                "multipart/form-data": components["schemas"]["CostCenterWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenter"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_cost_centers_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCostCenterPatchRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCostCenterPatchRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCostCenterPatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenter"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     finance_deposits_list: {
         parameters: {
             query?: {
@@ -5656,6 +5992,56 @@ export interface operations {
             };
         };
     };
+    finance_cost_centers_report: {
+        parameters: {
+            query: {
+                cumulative?: boolean;
+                month: number;
+                year: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenterReport"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     partners_list: {
         parameters: {
             query?: {
@@ -6264,6 +6650,139 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    purchasing_eracun_inbound_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EracunInboundImportResponse"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    purchasing_eracun_inbox_refresh: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EracunInboxRefreshResponse"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
                 };
             };
         };
