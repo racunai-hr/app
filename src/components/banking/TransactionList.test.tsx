@@ -60,6 +60,9 @@ function candidate(overrides: Record<string, unknown> = {}) {
     open_amount: '100.00',
     due_date: '2026-08-06',
     action_label: 'Zatvori ulazni',
+    match_score: 50,
+    match_reasons: ['amount_exact'],
+    recommended: false,
     ...overrides,
   };
 }
@@ -244,6 +247,90 @@ describe('TransactionList reconcile deep-link', () => {
       screen.getByRole('link', { name: 'Povratak na dokument: 26210-H120-5154' }),
     ).toHaveAttribute('href', '/t/finestar/dokumenti/ulazni/30');
     expect(replace).toHaveBeenCalledWith('/t/finestar/bankarstvo/uskladivanje?match_status=unmatched');
+  });
+
+  it('opens the picker as a dialog and closes it with Escape', async () => {
+    fetchOpenItemCandidates.mockResolvedValue({
+      count: 1,
+      results: [candidate()],
+    });
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/uskladivanje"
+        reconcileMode
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('Uplata')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Poveži transakciju 5' }));
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Odaberi otvorenu stavku' })).toBeInTheDocument());
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Odaberi otvorenu stavku' })).toBeNull();
+    });
+  });
+
+  it('shows Preporučeno only on recommended candidates and keeps amount chips', async () => {
+    fetchOpenItemCandidates.mockResolvedValue({
+      count: 2,
+      results: [
+        candidate({
+          item_id: 7,
+          source_label: 'EXP-OTHER',
+          recommended: true,
+          match_score: 75,
+          match_reasons: ['amount_exact', 'iban_match'],
+        }),
+        candidate({
+          item_id: 42,
+          recommended: false,
+          match_score: 50,
+          match_reasons: ['amount_exact'],
+        }),
+      ],
+    });
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/uskladivanje"
+        reconcileMode
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('Uplata')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Poveži transakciju 5' }));
+    await waitFor(() => expect(screen.getByText('Preporučeno')).toBeInTheDocument());
+    expect(screen.getAllByText('Točan iznos')).toHaveLength(2);
+    expect(screen.getByText('IBAN partnera')).toBeInTheDocument();
+    expect(screen.getAllByText('Preporučeno')).toHaveLength(1);
+  });
+
+  it('passes the partner search to fetchOpenItemCandidates', async () => {
+    fetchOpenItemCandidates.mockResolvedValue({
+      count: 1,
+      results: [candidate()],
+    });
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/uskladivanje"
+        reconcileMode
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('Uplata')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Poveži transakciju 5' }));
+    await waitFor(() => expect(screen.getByPlaceholderText('Naziv, OIB…')).toBeInTheDocument());
+    fireEvent.change(screen.getByPlaceholderText('Naziv, OIB…'), {
+      target: { value: 'Kupac' },
+    });
+    await waitFor(() => {
+      expect(fetchOpenItemCandidates).toHaveBeenCalledWith('https://x', 't', 5, 'Kupac');
+    });
   });
 });
 

@@ -2383,6 +2383,9 @@ export interface components {
             open_amount: string;
             due_date: string | null;
             action_label: string;
+            match_score: number;
+            match_reasons: string[];
+            recommended: boolean;
         };
         OpenItemCandidateList: {
             count: number;
