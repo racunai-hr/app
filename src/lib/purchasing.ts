@@ -219,6 +219,45 @@ export async function discardInvoiceImport(
   return response.json();
 }
 
+export type EracunImportResult = {
+  scanned: number;
+  imported: number;
+  skipped: number;
+  failed: number;
+  remaining_importable: number;
+  errors: Array<{ invoice_guid?: string; document_id?: string; detail: string }>;
+};
+
+export type EracunRefreshResult = {
+  reconciliation_id: string;
+  status: string;
+  detail: string;
+};
+
+export async function importInboundEracun(
+  origin: string,
+  token: string,
+): Promise<EracunImportResult> {
+  const response = await authorized(origin, '/api/purchasing/eracun/inbound-import/', token, {
+    method: 'POST',
+  });
+  if (!response.ok) throw await parsePurchasingError(response);
+  return response.json();
+}
+
+export async function refreshInboundEracunInbox(
+  origin: string,
+  token: string,
+  idempotencyKey: string,
+): Promise<EracunRefreshResult> {
+  const response = await authorized(origin, '/api/purchasing/eracun/inbox-refresh/', token, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey },
+  });
+  if (!response.ok) throw await parsePurchasingError(response);
+  return response.json();
+}
+
 export function canWritePurchasing(role: string): boolean {
   return role === 'owner' || role === 'accountant';
 }

@@ -110,6 +110,7 @@ describe('DocumentList', () => {
     expect(screen.queryByRole('button', { name: /spremi|obriši|pošalji/i })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull();
     expect(screen.queryByText('Otvori admin')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Uvezi nove eRačune iz pretinca' })).toBeNull();
   });
 
   it('uses dokumenti base path and omits its own heading when wrapped by DocumentsPage', async () => {

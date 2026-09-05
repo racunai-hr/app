@@ -34,6 +34,7 @@ import { DateField } from './DateField';
 import { DocumentDetailPanel } from './DocumentDetailPanel';
 import { DocumentKpi } from './DocumentKpi';
 import { DocumentTable } from './DocumentTable';
+import { EracunSyncButton } from './EracunSyncButton';
 
 const TABS: { value: DocumentDirectionFilter; label: string }[] = [
   { value: '', label: 'Svi' },
@@ -69,6 +70,7 @@ export function DocumentList({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<'csv' | 'xlsx' | null>(null);
+  const [epoch, setEpoch] = useState(0);
   const [selection, setSelection] = useState<{
     direction: DocumentDirection;
     id: number;
@@ -122,7 +124,7 @@ export function DocumentList({
     };
     // URL query is the source of truth; avoid depending on router identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- searchKey encodes filters
-  }, [searchKey, slug]);
+  }, [searchKey, slug, epoch]);
 
   async function handleExport(format: 'csv' | 'xlsx') {
     const token = getAccessToken();
@@ -198,7 +200,18 @@ export function DocumentList({
   const listBody = (
     <>
         {!showHeader && (
-          <div className="docs-list-toolbar">{exportActions}</div>
+          <div className="docs-list-toolbar">
+            {tenant && canWritePurchasing(tenant.role) && (
+              <EracunSyncButton
+                origin={tenantApiOrigin(tenant.admin_url)}
+                onImported={() => {
+                  replaceQuery({ page: 1 });
+                  setEpoch((value) => value + 1);
+                }}
+              />
+            )}
+            {exportActions}
+          </div>
         )}
 
         <nav className="tabs" aria-label="Smjer dokumenata">
