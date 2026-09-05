@@ -189,6 +189,8 @@ describe('InvoiceReview', () => {
             amount: '100.00',
             debit: { id: 11, code: '4100', name: 'Najam', active: true },
             credit: { id: 20, code: '2200', name: 'Dobavljači', active: true },
+            debit_cost_center: null,
+            credit_cost_center: null,
           },
         ],
       }),

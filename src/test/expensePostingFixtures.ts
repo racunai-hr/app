@@ -21,6 +21,8 @@ export function samplePostingPreview(
         amount: '100.00',
         debit: { id: 10, code: '4120', name: 'Ostali nespomenuti rashodi', active: true },
         credit: { id: 20, code: '2200', name: 'Dobavljači', active: true },
+        debit_cost_center: null,
+        credit_cost_center: null,
       },
       {
         amount_field: 'tax_amount',
@@ -28,6 +30,8 @@ export function samplePostingPreview(
         amount: '25.00',
         debit: { id: 30, code: '1400', name: 'Potrazivanja za PDV', active: true },
         credit: { id: 20, code: '2200', name: 'Dobavljači', active: true },
+        debit_cost_center: null,
+        credit_cost_center: null,
       },
     ],
     ...overrides,
