@@ -1,4 +1,5 @@
 import { ApiError, parseError as parseApiError } from './api';
+import { tenantFetch } from './tenantRequest';
 
 export type DepositDto = {
   id: number;
@@ -183,7 +184,7 @@ export function newIdempotencyKey(): string {
 }
 
 async function authorized(origin: string, path: string, token: string, init?: RequestInit): Promise<Response> {
-  return fetch(`${origin}${path}`, {
+  return tenantFetch(`${origin}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,

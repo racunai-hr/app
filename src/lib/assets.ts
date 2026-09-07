@@ -1,6 +1,7 @@
 import { ApiError, parseError as parseApiError } from './api';
 import { tenantApiOrigin } from './documents';
 import type { components } from './openapi/generated';
+import { tenantFetch } from './tenantRequest';
 
 export { tenantApiOrigin };
 
@@ -83,7 +84,7 @@ export function journalAuditStatusLabel(
 }
 
 async function authorized(origin: string, path: string, token: string): Promise<Response> {
-  return fetch(`${origin}${path}`, {
+  return tenantFetch(`${origin}${path}`, {
     headers: {
       Accept: 'application/json',
       Authorization: `Bearer ${token}`,

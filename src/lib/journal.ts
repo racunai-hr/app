@@ -1,5 +1,6 @@
 import { ApiError, parseError as parseApiError } from './api';
 import type { components } from './openapi/generated';
+import { tenantFetch } from './tenantRequest';
 
 export type JournalEntryListItem = components['schemas']['JournalEntryListItem'];
 export type JournalEntryDetail = components['schemas']['JournalEntryDetail'];
@@ -58,7 +59,7 @@ export function journalSourceDocumentHref(slug: string, doc: JournalSourceDocume
 }
 
 async function authorized(origin: string, path: string, token: string): Promise<Response> {
-  return fetch(`${origin}${path}`, {
+  return tenantFetch(`${origin}${path}`, {
     headers: {
       Accept: 'application/json',
       Authorization: `Bearer ${token}`,

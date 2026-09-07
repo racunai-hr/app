@@ -1,6 +1,7 @@
 import { API_URL, ApiError, parseError as parseApiError } from './api';
 import type { components } from './openapi/generated';
 import type { Provenance } from './provenance';
+import { tenantFetch } from './tenantRequest';
 
 export type DocumentDirection = 'incoming' | 'outgoing' | 'deposit' | 'official';
 export type DocumentKind = 'invoice' | 'expense' | 'deposit' | 'official';
@@ -149,7 +150,7 @@ export function buildDocumentQuery(query: DocumentListQuery, options?: { include
 }
 
 async function authorized(origin: string, path: string, token: string, init?: RequestInit): Promise<Response> {
-  const response = await fetch(`${origin}${path}`, {
+  const response = await tenantFetch(`${origin}${path}`, {
     ...init,
     headers: {
       Accept: (init?.headers as Record<string, string> | undefined)?.Accept || 'application/json',

@@ -1,6 +1,7 @@
 import { ApiError, parseError as parseApiError } from './api';
 import { tenantApiOrigin, triggerBlobDownload } from './documents';
 import type { components } from './openapi/generated';
+import { tenantFetch } from './tenantRequest';
 
 export { tenantApiOrigin };
 
@@ -151,7 +152,7 @@ async function authorized(
   const headers = new Headers(init.headers);
   if (!headers.has('Accept')) headers.set('Accept', 'application/json');
   headers.set('Authorization', `Bearer ${token}`);
-  return fetch(`${origin}${path}`, { ...init, headers });
+  return tenantFetch(`${origin}${path}`, { ...init, headers });
 }
 
 async function readJson<T>(response: Response): Promise<T> {

@@ -1,6 +1,7 @@
 import { ApiError, parseError as parseApiError } from './api';
 import { tenantApiOrigin } from './documents';
 import type { components } from './openapi/generated';
+import { tenantFetch } from './tenantRequest';
 
 export { tenantApiOrigin };
 
@@ -44,7 +45,7 @@ async function authorized(
   token: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  return fetch(`${origin}${path}`, {
+  return tenantFetch(`${origin}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
