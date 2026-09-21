@@ -11,6 +11,7 @@ import {
   downloadDocumentPdf,
   downloadDocumentUbl,
   fetchDocument,
+  fetchDocumentAttachmentBlob,
   fetchDocumentPdfBlob,
   newIdempotencyKey,
   rejectIncomingEracun,
@@ -22,7 +23,7 @@ import {
   documentBankCloseHref,
   shouldShowBankCloseCta,
 } from '@/lib/bankingReconcile';
-import { canWriteFinance } from '@/lib/finance';
+import { canWriteFinance, createPrivateFundsClaim, postPrivateFundsClaim } from '@/lib/finance';
 import {
   approveExpense,
   fetchChartOfAccounts,
@@ -38,14 +39,37 @@ import {
 import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { type ProvenanceTone } from '@/lib/provenance';
 import { fetchCostCenters, type CostCenterRef } from '@/lib/costCenters';
+import { fetchPartners, type PartnerListItem } from '@/lib/partners';
 import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
+import { AccountPicker } from '@/components/finance/AccountPicker';
 import { PostingPreviewLines } from '@/components/finance/PostingPreviewLines';
 import { DocumentPdfPreview } from '@/components/documents/DocumentPdfPreview';
+import { DocumentPdfPreviewDialog } from '@/components/documents/DocumentPdfPreviewDialog';
 
 type Props = {
   slug: string;
   expenseId: number;
 };
+
+type PdfPreviewTarget =
+  | { kind: 'invoice-pdf' }
+  | { kind: 'attachment'; id: number; filename: string };
+
+function isPdfFilename(name: string): boolean {
+  return /\.pdf$/i.test(name.trim());
+}
+
+function isImageFilename(name: string): boolean {
+  return /\.(jpe?g|png)$/i.test(name.trim());
+}
+
+function isPreviewableFilename(name: string): boolean {
+  return isPdfFilename(name) || isImageFilename(name);
+}
+
+function previewKindFromFilename(name: string): 'pdf' | 'image' {
+  return isImageFilename(name) ? 'image' : 'pdf';
+}
 
 function money(value: string | null | undefined, currency = 'EUR'): string {
   if (value == null || value === '') return '—';
@@ -190,6 +214,26 @@ function isExpensePosted(detail: DocumentDetail): boolean {
   );
 }
 
+const ANTE_OIB = '11528564544';
+
+function machineDate(value: string | null | undefined): string {
+  if (!value) return '';
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : '';
+}
+
+function preferredPrivateFundsPartnerId(rows: PartnerListItem[]): number | '' {
+  const ante = rows.find(
+    (row) =>
+      row.tax_number === ANTE_OIB || row.name.trim().toLowerCase() === 'ante vrcan',
+  );
+  return ante?.id ?? '';
+}
+
+function normalizeClaimAmount(raw: string): string {
+  return raw.trim().replace(/\s/g, '').replace(',', '.');
+}
+
 export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const router = useRouter();
   const [detail, setDetail] = useState<DocumentDetail | null>(null);
@@ -205,12 +249,18 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const [rejecting, setRejecting] = useState(false);
   const [rejectError, setRejectError] = useState('');
   const [idempotencyKey, setIdempotencyKey] = useState(() => newIdempotencyKey());
+  const [privateFundsOpen, setPrivateFundsOpen] = useState(false);
+  const [privateFundsPartners, setPrivateFundsPartners] = useState<PartnerListItem[]>([]);
+  const [privateFundsPartnerId, setPrivateFundsPartnerId] = useState<number | ''>('');
+  const [privateFundsAmount, setPrivateFundsAmount] = useState('');
+  const [privateFundsDate, setPrivateFundsDate] = useState('');
+  const [privateFundsBusy, setPrivateFundsBusy] = useState(false);
+  const [privateFundsError, setPrivateFundsError] = useState('');
   const [role, setRole] = useState('');
   const [preview, setPreview] = useState<ExpensePostingPreview | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [accounts, setAccounts] = useState<AccountRef[]>([]);
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [expenseAccountId, setExpenseAccountId] = useState<number | null>(null);
+  const [expenseAccount, setExpenseAccount] = useState<AccountRef | null>(null);
   const [costCenters, setCostCenters] = useState<CostCenterRef[]>([]);
   const [costCenterId, setCostCenterId] = useState<number | null>(null);
   const [postingLocked, setPostingLocked] = useState(false);
@@ -219,10 +269,21 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const [postingBusy, setPostingBusy] = useState(false);
   const [approving, setApproving] = useState(false);
   const [downloadingAttachment, setDownloadingAttachment] = useState<number | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<PdfPreviewTarget | null>(null);
 
   const loadPdf = useCallback(() => {
     return fetchDocumentPdfBlob(origin, token, 'incoming', expenseId);
   }, [origin, token, expenseId]);
+
+  const loadPreviewPdf = useCallback(() => {
+    if (!origin || !token || !pdfPreview) {
+      return Promise.reject(new Error('PDF nije dostupan.'));
+    }
+    if (pdfPreview.kind === 'invoice-pdf') {
+      return fetchDocumentPdfBlob(origin, token, 'incoming', expenseId);
+    }
+    return fetchDocumentAttachmentBlob(origin, token, expenseId, pdfPreview.id);
+  }, [origin, token, expenseId, pdfPreview]);
 
   useEffect(() => {
     const access = getAccessToken();
@@ -286,8 +347,8 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
         if (cancelled) return;
         setPreview(next);
         setCategoryId(next.category?.id ?? null);
-        setExpenseAccountId(
-          next.account_source === 'manual_override' ? next.expense_account?.id ?? null : null,
+        setExpenseAccount(
+          next.account_source === 'manual_override' ? next.expense_account ?? null : null,
         );
       })
       .catch((err) => {
@@ -306,14 +367,10 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     }
     let cancelled = false;
     const abort = new AbortController();
-    Promise.all([
-      fetchExpenseCategories(origin, token, abort.signal),
-      fetchChartOfAccounts(origin, token, '', abort.signal),
-    ])
-      .then(([catList, coa]) => {
+    fetchExpenseCategories(origin, token, abort.signal)
+      .then((catList) => {
         if (cancelled) return;
         setCategories(catList.results);
-        setAccounts(coa.results);
       })
       .catch((err) => {
         if (cancelled || abort.signal.aborted) return;
@@ -347,18 +404,14 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     category_id?: number;
     expense_account_id?: number | null;
     cost_center_id?: number | null;
+    line_accounts?: Array<{ position: number; posting_account_id: number | null }>;
   }) {
     if (!origin || !token) return;
     setPostingBusy(true);
     setPostingError('');
     try {
       await patchDraftExpense(origin, token, expenseId, patch);
-      const next = await fetchExpensePostingPreview(origin, token, expenseId);
-      setPreview(next);
-      setCategoryId(next.category?.id ?? null);
-      setExpenseAccountId(
-        next.account_source === 'manual_override' ? next.expense_account?.id ?? null : null,
-      );
+      await refreshExpenseAndPreview();
       setLockedNotice(null);
     } catch (err) {
       if (isNotDraftConflict(err)) {
@@ -380,8 +433,8 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     setDetail(refreshed);
     setPreview(nextPreview);
     setCategoryId(nextPreview.category?.id ?? null);
-    setExpenseAccountId(
-      nextPreview.account_source === 'manual_override' ? nextPreview.expense_account?.id ?? null : null,
+    setExpenseAccount(
+      nextPreview.account_source === 'manual_override' ? nextPreview.expense_account ?? null : null,
     );
     return refreshed;
   }
@@ -440,6 +493,28 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     }
   }
 
+  async function handleAttachmentDownload(attachmentId: number) {
+    if (!origin || !token) return;
+    setDownloadingAttachment(attachmentId);
+    setError('');
+    try {
+      await downloadDocumentAttachment(origin, token, expenseId, attachmentId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Preuzimanje privitka nije uspjelo.');
+    } finally {
+      setDownloadingAttachment(null);
+    }
+  }
+
+  async function handlePreviewDownload() {
+    if (!pdfPreview) return;
+    if (pdfPreview.kind === 'invoice-pdf') {
+      await handleDownload('pdf');
+      return;
+    }
+    await handleAttachmentDownload(pdfPreview.id);
+  }
+
   async function handleReject() {
     if (!detail || !origin || !token) return;
     setRejecting(true);
@@ -472,6 +547,72 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     }
   }
 
+  async function openPrivateFundsDialog() {
+    if (!detail || !origin || !token) return;
+    setPrivateFundsError('');
+    setPrivateFundsAmount(detail.subledger_context?.open_amount || '');
+    setPrivateFundsDate(machineDate(detail.document?.issue_date));
+    setPrivateFundsPartnerId('');
+    setPrivateFundsOpen(true);
+    try {
+      const data = await fetchPartners(origin, token, { filter: 'all', page_size: 100 });
+      setPrivateFundsPartners(data.results);
+      setPrivateFundsPartnerId(preferredPrivateFundsPartnerId(data.results));
+    } catch (err) {
+      setPrivateFundsPartners([]);
+      setPrivateFundsError(err instanceof ApiError ? err.message : 'Lista partnera se nije učitala.');
+    }
+  }
+
+  async function handlePrivateFundsPost() {
+    if (!detail || !origin || !token) return;
+    const partnerId = typeof privateFundsPartnerId === 'number' ? privateFundsPartnerId : Number(privateFundsPartnerId);
+    if (!Number.isInteger(partnerId) || partnerId <= 0) {
+      setPrivateFundsError('Odaberite partnera koji je platio.');
+      return;
+    }
+    const amount = normalizeClaimAmount(privateFundsAmount);
+    if (!amount || Number(amount) <= 0) {
+      setPrivateFundsError('Iznos mora biti veći od nule.');
+      return;
+    }
+    const openRaw = detail.subledger_context?.open_amount;
+    if (openRaw && Number(amount) > Number(openRaw) + 0.005) {
+      setPrivateFundsError('Iznos premašuje otvorenu obvezu.');
+      return;
+    }
+    const claimDate = machineDate(privateFundsDate);
+    if (!claimDate) {
+      setPrivateFundsError('Datum je obavezan.');
+      return;
+    }
+    setPrivateFundsBusy(true);
+    setPrivateFundsError('');
+    try {
+      const created = await createPrivateFundsClaim(
+        origin,
+        token,
+        {
+          partner_id: partnerId,
+          claim_type: 'supplier_payment',
+          amount,
+          claim_date: claimDate,
+          related_type: 'expense',
+          related_id: detail.id,
+        },
+        newIdempotencyKey(),
+      );
+      await postPrivateFundsClaim(origin, token, created.id, newIdempotencyKey());
+      const refreshed = await fetchDocument(origin, token, 'incoming', detail.id);
+      setDetail(refreshed);
+      setPrivateFundsOpen(false);
+    } catch (err) {
+      setPrivateFundsError(err instanceof ApiError ? err.message : 'Knjiženje privatnih sredstava nije uspjelo.');
+    } finally {
+      setPrivateFundsBusy(false);
+    }
+  }
+
   const title =
     detail?.number ||
     detail?.source_number ||
@@ -484,6 +625,9 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const integration = detail?.integration;
   const externalUrl = integration?.external_view_url || null;
   const lines = detail?.lines || [];
+  const hasExpenseLines = lines.some((line) => line.id != null);
+  const splitLinePosting =
+    hasExpenseLines && lines.every((line) => Boolean(line.posting_account?.id));
   const charges = detail?.charges || [];
   const taxSummary = detail?.tax_summary || [];
   const references = detail?.references || [];
@@ -495,6 +639,13 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const canReject = detail?.actions?.reject?.available === true;
   const posted = detail ? isExpensePosted(detail) : false;
   const canEditPosting = canWriteFinance(role) && !posted && !postingLocked && !approving;
+  const searchAccounts = useCallback(
+    (term: string, signal: AbortSignal) => {
+      if (!origin || !token) return Promise.resolve({ count: 0, results: [] });
+      return fetchChartOfAccounts(origin, token, term, signal);
+    },
+    [origin, token],
+  );
   const canApprove =
     canWriteFinance(role) && !posted && !postingLocked && preview?.can_approve === true;
 
@@ -571,11 +722,40 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               Zatvori bankom
             </Link>
           ) : null}
+          {detail && canWriteFinance(role) && shouldShowBankCloseCta(detail) ? (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={privateFundsBusy}
+              onClick={() => void openPrivateFundsDialog()}
+            >
+              Platio partner
+            </button>
+          ) : null}
           <Link className="btn btn-secondary" href={DOCUMENTS_OPERATIVE_HREFS.incoming(slug)}>
             Natrag
           </Link>
         </div>
       </header>
+
+      {pdfPreview && origin && token ? (
+        <DocumentPdfPreviewDialog
+          title={pdfPreview.kind === 'invoice-pdf' ? 'račun.pdf' : pdfPreview.filename}
+          kind={
+            pdfPreview.kind === 'invoice-pdf'
+              ? 'pdf'
+              : previewKindFromFilename(pdfPreview.filename)
+          }
+          load={loadPreviewPdf}
+          downloading={
+            pdfPreview.kind === 'invoice-pdf'
+              ? downloading === 'pdf'
+              : downloadingAttachment === pdfPreview.id
+          }
+          onDownload={() => void handlePreviewDownload()}
+          onClose={() => setPdfPreview(null)}
+        />
+      ) : null}
 
       {rejectOpen ? (
         <div className="incoming-reject-dialog" role="dialog" aria-modal="true" aria-labelledby="incoming-reject-title">
@@ -612,6 +792,87 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </button>
               <button type="button" className="btn btn-primary" disabled={rejecting} onClick={() => void handleReject()}>
                 {rejecting ? 'Šaljem…' : 'Potvrdi odbijanje'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {privateFundsOpen ? (
+        <div
+          className="incoming-reject-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="incoming-private-funds-title"
+        >
+          <div className="incoming-reject-panel">
+            <h2 id="incoming-private-funds-title">Platio partner</h2>
+            <p>Zatvara obvezu prema dobavljaču i prebacuje je na odabranog partnera (privatna gotovina).</p>
+            <label className="incoming-reject-label" htmlFor="incoming-private-funds-partner">
+              Partner
+            </label>
+            <select
+              id="incoming-private-funds-partner"
+              className="incoming-reject-field"
+              value={privateFundsPartnerId === '' ? '' : String(privateFundsPartnerId)}
+              onChange={(e) =>
+                setPrivateFundsPartnerId(e.target.value ? Number(e.target.value) : '')
+              }
+              disabled={privateFundsBusy}
+            >
+              <option value="">Odaberi partnera</option>
+              {privateFundsPartners.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.name}
+                </option>
+              ))}
+            </select>
+            <label className="incoming-reject-label" htmlFor="incoming-private-funds-amount">
+              Iznos
+            </label>
+            <input
+              id="incoming-private-funds-amount"
+              className="incoming-reject-field"
+              inputMode="decimal"
+              value={privateFundsAmount}
+              onChange={(e) => setPrivateFundsAmount(e.target.value)}
+              disabled={privateFundsBusy}
+            />
+            <label className="incoming-reject-label" htmlFor="incoming-private-funds-date">
+              Datum
+            </label>
+            <input
+              id="incoming-private-funds-date"
+              className="incoming-reject-field"
+              type="date"
+              value={privateFundsDate}
+              onChange={(e) => setPrivateFundsDate(e.target.value)}
+              disabled={privateFundsBusy}
+            />
+            {privateFundsError ? (
+              <p className="error" role="alert">
+                {privateFundsError}
+              </p>
+            ) : null}
+            <div className="incoming-reject-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={privateFundsBusy}
+                onClick={() => {
+                  setPrivateFundsOpen(false);
+                  setPrivateFundsError('');
+                }}
+              >
+                Odustani
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={privateFundsBusy}
+                onClick={() => void handlePrivateFundsPost()}
+              >
+                {privateFundsBusy ? 'Knjižim…' : 'Proknjiži'}
               </button>
             </div>
           </div>
@@ -960,8 +1221,9 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
             </section>
           ) : null}
 
+          {posted && splitLinePosting ? null : (
           <section className="incoming-card">
-            <h2>Vrsta troška</h2>
+            <h2>{splitLinePosting ? 'Mjesto troška' : 'Vrsta troška'}</h2>
             {postingError ? (
               <p className="error" role="alert">
                 {postingError}
@@ -970,21 +1232,23 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
             {canEditPosting ? (
               <ExpensePostingInputs
                 categories={categories}
-                accounts={accounts}
                 categoryId={categoryId}
-                expenseAccountId={expenseAccountId}
+                expenseAccount={expenseAccount}
+                searchAccounts={searchAccounts}
                 costCenters={costCenters}
                 costCenterId={costCenterId}
                 disabled={postingBusy || approving}
-                accountSource={preview?.account_source}
+                accountSource={splitLinePosting ? null : preview?.account_source}
+                hideCategory={splitLinePosting}
+                hideAccount={splitLinePosting}
                 lockedMessage={lockedNotice}
                 onCategoryChange={(next) => {
                   setCategoryId(next);
                   if (next != null) void persistPosting({ category_id: next });
                 }}
                 onAccountChange={(next) => {
-                  setExpenseAccountId(next);
-                  void persistPosting({ expense_account_id: next });
+                  setExpenseAccount(next);
+                  void persistPosting({ expense_account_id: next?.id ?? null });
                 }}
                 onCostCenterChange={(next) => {
                   setCostCenterId(next);
@@ -998,20 +1262,27 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                     {lockedNotice}
                   </p>
                 ) : null}
-                <dl className="incoming-dl incoming-dl-inline">
-                  <div>
-                    <dt>Vrsta</dt>
-                    <dd>{preview?.category?.name || '—'}</dd>
-                  </div>
-                  <div>
-                    <dt>Konto</dt>
-                    <dd>
-                      {preview?.expense_account
-                        ? `${preview.expense_account.code} · ${preview.expense_account.name}`
-                        : '—'}
-                    </dd>
-                  </div>
-                </dl>
+                {splitLinePosting ? (
+                  <p className="muted-inline">
+                    Konto se bira na stavkama. Mjesto troška vrijedi za klasu 4; klasa 1 knjiži se
+                    bez mjesta troška.
+                  </p>
+                ) : (
+                  <dl className="incoming-dl incoming-dl-inline">
+                    <div>
+                      <dt>Vrsta</dt>
+                      <dd>{preview?.category?.name || '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Konto</dt>
+                      <dd>
+                        {preview?.expense_account
+                          ? `${preview.expense_account.code} · ${preview.expense_account.name}`
+                          : '—'}
+                      </dd>
+                    </div>
+                  </dl>
+                )}
               </>
             )}
             {!posted ? (
@@ -1034,6 +1305,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
             ) : null}
           </section>
+          )}
 
           <section className="incoming-card">
             <h2>Knjiženje</h2>
@@ -1273,11 +1545,12 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                       <th>Cijena</th>
                       <th>PDV</th>
                       <th>Iznos</th>
+                      {hasExpenseLines ? <th>Konto</th> : null}
                     </tr>
                   </thead>
                   <tbody>
                     {lines.map((line) => (
-                      <tr key={`${line.position}-${line.name || ''}`}>
+                      <tr key={`${line.id ?? line.position}-${line.name || ''}`}>
                         <td>{line.position}</td>
                         <td>
                           {line.classification?.code
@@ -1296,15 +1569,53 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                         <td className="cell-amount">{line.quantity ?? '—'}</td>
                         <td className="cell-amount">{money(line.unit_price, currency)}</td>
                         <td className="cell-amount">
-                          {line.vat_rate != null ? `${line.vat_rate}%` : '—'}
+                          {line.vat_amount
+                            ? money(line.vat_amount, currency)
+                            : line.vat_rate != null
+                              ? `${line.vat_rate}%`
+                              : '—'}
                         </td>
                         <td className="cell-amount">{money(line.net_amount, currency)}</td>
+                        {hasExpenseLines ? (
+                          <td>
+                            {line.id != null && canEditPosting ? (
+                              <AccountPicker
+                                label={`Konto stavke ${line.position}`}
+                                value={line.posting_account ?? null}
+                                onChange={(next) => {
+                                  void persistPosting({
+                                    line_accounts: [
+                                      {
+                                        position: line.position,
+                                        posting_account_id: next?.id ?? null,
+                                      },
+                                    ],
+                                  });
+                                }}
+                                search={searchAccounts}
+                                placeholder="Header konto"
+                                disabled={postingBusy || approving}
+                              />
+                            ) : line.posting_account ? (
+                              `${line.posting_account.code} · ${line.posting_account.name}`
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                        ) : null}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
+            {hasExpenseLines && canEditPosting ? (
+              <p className="muted-inline">
+                {splitLinePosting
+                  ? 'Osnovica i PDV knjiže se po stavkama. Header konto se ne koristi.'
+                  : 'Ako svaka stavka ima konto, osnovica se raspodjeljuje po stavkama. Inače se knjiži header konto.'}
+              </p>
+            ) : null}
           </section>
 
           <div className="incoming-mid-grid">
@@ -1436,10 +1747,9 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          disabled={downloading === 'pdf'}
-                          onClick={() => handleDownload('pdf')}
+                          onClick={() => setPdfPreview({ kind: 'invoice-pdf' })}
                         >
-                          Preuzmi
+                          Pregled
                         </button>
                       </td>
                     </tr>
@@ -1450,22 +1760,30 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                       <td>{att.kind || 'Prilog'}</td>
                       <td>
                         {att.download_available.value ? (
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            disabled={downloadingAttachment === att.id}
-                            onClick={() => {
-                              if (!origin || !token) return;
-                              setDownloadingAttachment(att.id);
-                              void downloadDocumentAttachment(origin, token, expenseId, att.id)
-                                .catch((err) => {
-                                  setError(err instanceof Error ? err.message : 'Preuzimanje privitka nije uspjelo.');
+                          isPreviewableFilename(att.original_filename) ? (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() =>
+                                setPdfPreview({
+                                  kind: 'attachment',
+                                  id: att.id,
+                                  filename: att.original_filename,
                                 })
-                                .finally(() => setDownloadingAttachment(null));
-                            }}
-                          >
-                            {downloadingAttachment === att.id ? 'Preuzimam…' : 'Preuzmi'}
-                          </button>
+                              }
+                            >
+                              Pregled
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              disabled={downloadingAttachment === att.id}
+                              onClick={() => void handleAttachmentDownload(att.id)}
+                            >
+                              {downloadingAttachment === att.id ? 'Preuzimam…' : 'Preuzmi'}
+                            </button>
+                          )
                         ) : (
                           <span className="muted-inline">Nedostupan</span>
                         )}

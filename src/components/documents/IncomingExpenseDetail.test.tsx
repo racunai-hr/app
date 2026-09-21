@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ACCOUNT_PICKER_DEBOUNCE_MS } from '@/components/finance/AccountPicker';
 import { fetchMe } from '@/lib/api';
 import { sampleIncomingDetail } from '@/test/documentFixtures';
 import { samplePostingPreview } from '@/test/expensePostingFixtures';
@@ -57,6 +58,7 @@ const fetchDocument = vi.fn();
 const downloadDocumentPdf = vi.fn();
 const downloadDocumentUbl = vi.fn();
 const fetchDocumentPdfBlob = vi.fn();
+const fetchDocumentAttachmentBlob = vi.fn();
 const downloadDocumentAttachment = vi.fn();
 
 vi.mock('@/lib/documents', async () => {
@@ -67,6 +69,7 @@ vi.mock('@/lib/documents', async () => {
     downloadDocumentPdf: (...args: unknown[]) => downloadDocumentPdf(...args),
     downloadDocumentUbl: (...args: unknown[]) => downloadDocumentUbl(...args),
     fetchDocumentPdfBlob: (...args: unknown[]) => fetchDocumentPdfBlob(...args),
+    fetchDocumentAttachmentBlob: (...args: unknown[]) => fetchDocumentAttachmentBlob(...args),
     downloadDocumentAttachment: (...args: unknown[]) => downloadDocumentAttachment(...args),
   };
 });
@@ -95,6 +98,26 @@ vi.mock('@/lib/expensePosting', async () => {
     approveExpense: (...args: unknown[]) => approveExpense(...args),
     fetchExpenseCategories: (...args: unknown[]) => fetchExpenseCategories(...args),
     fetchChartOfAccounts: (...args: unknown[]) => fetchChartOfAccounts(...args),
+  };
+});
+
+const fetchPartners = vi.fn();
+vi.mock('@/lib/partners', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/partners')>('@/lib/partners');
+  return {
+    ...actual,
+    fetchPartners: (...args: unknown[]) => fetchPartners(...args),
+  };
+});
+
+const createPrivateFundsClaim = vi.fn();
+const postPrivateFundsClaim = vi.fn();
+vi.mock('@/lib/finance', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/finance')>('@/lib/finance');
+  return {
+    ...actual,
+    createPrivateFundsClaim: (...args: unknown[]) => createPrivateFundsClaim(...args),
+    postPrivateFundsClaim: (...args: unknown[]) => postPrivateFundsClaim(...args),
   };
 });
 
@@ -130,6 +153,13 @@ describe('IncomingExpenseDetail', () => {
     fetchDocument.mockReset();
     downloadDocumentPdf.mockReset();
     downloadDocumentUbl.mockReset();
+    fetchDocumentPdfBlob.mockReset();
+    fetchDocumentAttachmentBlob.mockReset();
+    downloadDocumentAttachment.mockReset();
+    fetchDocumentPdfBlob.mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }));
+    fetchDocumentAttachmentBlob.mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' }));
+    downloadDocumentPdf.mockResolvedValue(undefined);
+    downloadDocumentAttachment.mockResolvedValue(undefined);
     fetchExpensePostingPreview.mockReset();
     patchDraftExpense.mockReset();
     approveExpense.mockReset();
@@ -152,6 +182,10 @@ describe('IncomingExpenseDetail', () => {
       count: 1,
       results: [{ id: 6, code: '110', name: 'Kuhinja', kind: 'location', notes: '', parent: null }],
     });
+    fetchPartners.mockReset();
+    fetchPartners.mockResolvedValue({ count: 0, results: [] });
+    createPrivateFundsClaim.mockReset();
+    postPrivateFundsClaim.mockReset();
   });
 
   it('renders PR A blocks and capability-driven actions', async () => {
@@ -665,6 +699,7 @@ describe('IncomingExpenseDetail', () => {
         '/t/finestar/bankarstvo/uskladivanje?match_status=unmatched&subledger_item=55',
       );
     });
+    expect(screen.queryByRole('button', { name: 'Platio partner' })).toBeNull();
   });
 
   it('hides banking close CTA when subledger is closed', async () => {
@@ -734,11 +769,218 @@ describe('IncomingExpenseDetail', () => {
     render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
     expect(await screen.findByLabelText('Vrsta troška')).toBeInTheDocument();
     expect(await screen.findByRole('option', { name: 'Telekomunikacije' })).toBeInTheDocument();
-    expect(
-      await screen.findByRole('option', { name: '4120 · Ostali nespomenuti rashodi' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Konto rashoda' })).toHaveAttribute(
+      'placeholder',
+      'Zadano konto vrste',
+    );
     expect(screen.queryByText('cost centers down')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Mjesto troška')).toHaveValue('');
+  });
+
+  it('lets an owner assign an account per expense line', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        ubl_available: false,
+        lines: [
+          {
+            id: 11,
+            position: 1,
+            classification: null,
+            name: 'ENC nadoplata',
+            description: null,
+            unit: null,
+            quantity: null,
+            unit_price: null,
+            vat_rate: null,
+            net_amount: '80.00',
+            vat_amount: '20.00',
+            gross_amount: '100.00',
+            posting_account: null,
+          },
+          {
+            id: 12,
+            position: 2,
+            classification: null,
+            name: 'ENC uređaj',
+            description: null,
+            unit: null,
+            quantity: null,
+            unit_price: null,
+            vat_rate: null,
+            net_amount: '24.00',
+            vat_amount: '6.00',
+            gross_amount: '30.00',
+            posting_account: null,
+          },
+        ],
+      }),
+    );
+    fetchExpenseCategories.mockResolvedValue({
+      count: 1,
+      results: [{ id: 1, name: 'Ostalo', is_active: true, default_account: null }],
+    });
+    fetchChartOfAccounts.mockResolvedValue({
+      count: 1,
+      results: [
+        {
+          id: 1909,
+          code: '1909',
+          name: 'Unaprijed plaćeni ostali troškovi poslovanja',
+          active: true,
+        },
+      ],
+    });
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview());
+    patchDraftExpense.mockResolvedValue({ id: 30, status: 'draft' });
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    expect(await screen.findByText('ENC nadoplata')).toBeInTheDocument();
+    const picker = screen.getByRole('combobox', { name: 'Konto stavke 1' });
+    fireEvent.focus(picker);
+    fireEvent.change(picker, { target: { value: '1909' } });
+    const option = await screen.findByRole(
+      'option',
+      { name: '1909 · Unaprijed plaćeni ostali troškovi poslovanja' },
+      { timeout: ACCOUNT_PICKER_DEBOUNCE_MS + 2000 },
+    );
+    fireEvent.click(option);
+    await waitFor(() => {
+      expect(patchDraftExpense).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        30,
+        { line_accounts: [{ position: 1, posting_account_id: 1909 }] },
+      );
+    });
+  });
+
+  it('hides header vrsta and konto when every line already has a posting account', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        ubl_available: false,
+        lines: [
+          {
+            id: 11,
+            position: 1,
+            classification: null,
+            name: 'ENC nadoplata',
+            description: null,
+            unit: null,
+            quantity: null,
+            unit_price: null,
+            vat_rate: null,
+            net_amount: '80.00',
+            vat_amount: '20.00',
+            gross_amount: '100.00',
+            posting_account: {
+              id: 1900,
+              code: '1900',
+              name: 'Unaprijed plaćeni troškovi',
+              active: true,
+            },
+          },
+          {
+            id: 12,
+            position: 2,
+            classification: null,
+            name: 'ENC uređaj',
+            description: null,
+            unit: null,
+            quantity: null,
+            unit_price: null,
+            vat_rate: null,
+            net_amount: '24.00',
+            vat_amount: '6.00',
+            gross_amount: '30.00',
+            posting_account: {
+              id: 4040,
+              code: '4040',
+              name: 'Troškovi uredskog sitnog inventara',
+              active: true,
+            },
+          },
+        ],
+      }),
+    );
+    fetchExpenseCategories.mockResolvedValue({
+      count: 1,
+      results: [{ id: 1, name: 'Cestarine', is_active: true, default_account: null }],
+    });
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        category: { id: 1, name: 'Cestarine' },
+        account_source: 'posting_rule_fallback',
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    expect(await screen.findByRole('heading', { name: 'Mjesto troška' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Vrsta troška')).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Konto rashoda' })).toBeNull();
+    expect(screen.queryByText(/Izvor konta/)).toBeNull();
+    expect(screen.getByLabelText('Mjesto troška')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Konto se bira na stavkama/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Osnovica i PDV knjiže se po stavkama. Header konto se ne koristi.'),
+    ).toBeInTheDocument();
+  });
+
+  it('omits the header posting card after split lines are posted', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        ubl_available: false,
+        status: {
+          document: 'received',
+          workflow: 'approved',
+          integration: 'received',
+          posting: 'posted',
+          vat: 'recorded',
+          subledger: 'closed',
+          payment: 'matched',
+        },
+        accounting: {
+          journal_entry_id: 9,
+          entry_number: '202609-0026',
+          entry_date: '2026-09-20',
+          status: 'posted',
+          debit_total: '130.00',
+          credit_total: '130.00',
+          lines: [],
+        },
+        lines: [
+          {
+            id: 11,
+            position: 1,
+            classification: null,
+            name: 'ENC nadoplata',
+            description: null,
+            unit: null,
+            quantity: null,
+            unit_price: null,
+            vat_rate: null,
+            net_amount: '80.00',
+            vat_amount: '20.00',
+            gross_amount: '100.00',
+            posting_account: {
+              id: 1900,
+              code: '1900',
+              name: 'Unaprijed plaćeni troškovi',
+              active: true,
+            },
+          },
+        ],
+      }),
+    );
+    fetchExpensePostingPreview.mockResolvedValue(samplePostingPreview({ can_approve: false }));
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    expect(await screen.findByRole('heading', { name: 'Knjiženje' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Vrsta troška' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Mjesto troška' })).toBeNull();
+    expect(screen.queryByLabelText('Vrsta troška')).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Konto rashoda' })).toBeNull();
   });
 
   it('refetches preview after a successful draft PATCH', async () => {
@@ -938,5 +1180,567 @@ describe('IncomingExpenseDetail', () => {
     fireEvent.click((await screen.findAllByRole('button', { name: 'Odobri' }))[0]);
     expect(await screen.findByText('Trošak nije u statusu koji se može odobriti.')).toBeInTheDocument();
     expect(screen.queryByText('Detalje dokumenta trenutno nije moguće učitati.')).toBeNull();
+  });
+
+  const openApDetail = () =>
+    sampleIncomingDetail({
+      id: 54,
+      document: {
+        issue_date: '2026-09-09',
+        delivery_date: '2026-09-09',
+        due_date: '2026-09-09',
+        received_at: '2026-09-09T10:00:00+02:00',
+        currency: 'EUR',
+        business_process: 'P5',
+        source_label: 'SUPER eRačun',
+        format: 'UBL',
+        primary_reference: null,
+      },
+      status: {
+        document: 'received',
+        workflow: 'approved',
+        integration: 'received',
+        posting: 'posted',
+        vat: 'recorded',
+        subledger: 'open',
+        payment: 'unmatched',
+      },
+      subledger: {
+        state: { value: 'open', reason: null, source: 'subledger_item' },
+        open_amount: { value: '8.99', reason: null, source: 'subledger_item' },
+        original_amount: { value: '8.99', reason: null, source: 'subledger_item' },
+        aging_bucket: { value: 'current', reason: null, source: 'subledger_item' },
+        days: { value: 0, reason: null, source: 'subledger_item' },
+      },
+      subledger_context: {
+        item_id: 84,
+        state: 'open',
+        original_amount: '8.99',
+        allocated_amount: '0.00',
+        open_amount: '8.99',
+        due_date: '2026-09-09',
+        allocations: [],
+      },
+    });
+
+  it('shows Platio partner for owner when AP is open', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(openApDetail());
+    render(<IncomingExpenseDetail slug="finestar" expenseId={54} />);
+    expect(await screen.findByRole('button', { name: 'Platio partner' })).toBeInTheDocument();
+  });
+
+  it('hides Platio partner for owner when AP is closed', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        subledger: {
+          state: { value: 'closed', reason: null, source: 'subledger_item' },
+          open_amount: { value: '0.00', reason: null, source: 'subledger_item' },
+          original_amount: { value: '8.99', reason: null, source: 'subledger_item' },
+          aging_bucket: { value: null, reason: 'not_applicable', source: null },
+          days: { value: null, reason: 'not_applicable', source: null },
+        },
+        subledger_context: {
+          item_id: 84,
+          state: 'closed',
+          original_amount: '8.99',
+          allocated_amount: '8.99',
+          open_amount: '0.00',
+          due_date: '2026-09-09',
+          allocations: [],
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={54} />);
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: '26210-H120-5154' })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: 'Platio partner' })).toBeNull();
+  });
+
+  it('posts supplier_payment then refetches the document', async () => {
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(openApDetail());
+    fetchPartners.mockResolvedValue({
+      count: 2,
+      results: [
+        {
+          id: 14,
+          partner_code: '00005',
+          name: 'LINKS d.o.o.',
+          short_name: '',
+          partner_type: 'supplier',
+          status: 'active',
+          jurisdiction: 'HR',
+          country_code: 'HR',
+          tax_number: '32614011568',
+          city: 'Zagreb',
+          country: 'Hrvatska',
+          email: '',
+          phone: '',
+        },
+        {
+          id: 24,
+          partner_code: '00012',
+          name: 'Ante Vrcan',
+          short_name: 'Ante',
+          partner_type: 'other',
+          status: 'active',
+          jurisdiction: 'HR',
+          country_code: 'HR',
+          tax_number: '11528564544',
+          city: 'Hanau',
+          country: 'Hrvatska',
+          email: '',
+          phone: '',
+        },
+      ],
+    });
+    createPrivateFundsClaim.mockResolvedValue({
+      id: 99,
+      number: 'PFC-202609-0001',
+      claim_type: 'supplier_payment',
+      partner_id: 24,
+      partner_name: 'Ante Vrcan',
+      amount: '8.99',
+      currency: 'EUR',
+      claim_date: '2026-09-09',
+      status: 'draft',
+      operational_status: 'none',
+      open_amount: '8.99',
+      reference: '',
+      notes: '',
+      related_type: 'expense',
+      related_id: 54,
+      journal_entry_id: null,
+      created_at: null,
+    });
+    postPrivateFundsClaim.mockResolvedValue({
+      id: 99,
+      number: 'PFC-202609-0001',
+      claim_type: 'supplier_payment',
+      partner_id: 24,
+      partner_name: 'Ante Vrcan',
+      amount: '8.99',
+      currency: 'EUR',
+      claim_date: '2026-09-09',
+      status: 'posted',
+      operational_status: 'open',
+      open_amount: '8.99',
+      reference: '',
+      notes: '',
+      related_type: 'expense',
+      related_id: 54,
+      journal_entry_id: 501,
+      created_at: null,
+    });
+
+    render(<IncomingExpenseDetail slug="finestar" expenseId={54} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Platio partner' }));
+    await waitFor(() => {
+      expect(screen.getByRole('combobox', { name: 'Partner' })).toHaveValue('24');
+    });
+    expect(screen.getByLabelText('Iznos')).toHaveValue('8.99');
+    expect(screen.getByLabelText('Datum')).toHaveValue('2026-09-09');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Proknjiži' }));
+
+    await waitFor(() => {
+      expect(createPrivateFundsClaim).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        {
+          partner_id: 24,
+          claim_type: 'supplier_payment',
+          amount: '8.99',
+          claim_date: '2026-09-09',
+          related_type: 'expense',
+          related_id: 54,
+        },
+        expect.any(String),
+      );
+    });
+    expect(postPrivateFundsClaim).toHaveBeenCalledWith(
+      expect.any(String),
+      'token',
+      99,
+      expect.any(String),
+    );
+    expect(fetchDocument).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps Preuzmi for XML, Pregled for PDFs and images', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        pdf_available: true,
+        ubl_available: true,
+        attachments: [
+          {
+            id: 7,
+            original_filename: 'petrol_832827.pdf',
+            created_at: null,
+            uploaded_by: null,
+            download_available: { value: true, reason: null, source: 'test' },
+            kind: 'upload',
+          },
+          {
+            id: 8,
+            original_filename: 'scan.jpg',
+            created_at: null,
+            uploaded_by: null,
+            download_available: { value: true, reason: null, source: 'test' },
+            kind: 'upload',
+          },
+          {
+            id: 9,
+            original_filename: 'notes.xml',
+            created_at: null,
+            uploaded_by: null,
+            download_available: { value: true, reason: null, source: 'test' },
+            kind: 'upload',
+          },
+        ],
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('petrol_832827.pdf')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('račun.pdf')).toBeInTheDocument();
+    expect(screen.getByText('invoice.xml')).toBeInTheDocument();
+    expect(screen.getByText('scan.jpg')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Pregled' })).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: 'Preuzmi' })).toHaveLength(2);
+  });
+
+  it('opens a PDF modal from Pregled and downloads from the dialog', async () => {
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => 'blob:pdf'),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        pdf_available: true,
+        attachments: [
+          {
+            id: 7,
+            original_filename: 'petrol_832827.pdf',
+            created_at: null,
+            uploaded_by: null,
+            download_available: { value: true, reason: null, source: 'test' },
+            kind: 'upload',
+          },
+        ],
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('petrol_832827.pdf')).toBeInTheDocument();
+    });
+
+    const previewButtons = screen.getAllByRole('button', { name: 'Pregled' });
+    fireEvent.click(previewButtons[1]);
+
+    const attachmentDialog = await screen.findByRole('dialog', { name: 'petrol_832827.pdf' });
+    await waitFor(() => {
+      expect(fetchDocumentAttachmentBlob).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        30,
+        7,
+      );
+    });
+
+    fireEvent.click(within(attachmentDialog).getByRole('button', { name: 'Preuzmi' }));
+    await waitFor(() => {
+      expect(downloadDocumentAttachment).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        30,
+        7,
+      );
+    });
+
+    fireEvent.click(within(attachmentDialog).getByRole('button', { name: 'Zatvori' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'petrol_832827.pdf' })).toBeNull();
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Pregled' })[0]);
+    const invoiceDialog = await screen.findByRole('dialog', { name: 'račun.pdf' });
+    fireEvent.click(within(invoiceDialog).getByRole('button', { name: 'Preuzmi' }));
+    await waitFor(() => {
+      expect(downloadDocumentPdf).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        'incoming',
+        30,
+      );
+    });
+  });
+
+  it('opens an image modal from Pregled on JPG and downloads from the dialog', async () => {
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => 'blob:jpg'),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
+    fetchDocumentAttachmentBlob.mockResolvedValue(
+      new Blob(['jpeg'], { type: 'image/jpeg' }),
+    );
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        pdf_available: false,
+        ubl_available: false,
+        attachments: [
+          {
+            id: 8,
+            original_filename: 'scan.jpg',
+            created_at: null,
+            uploaded_by: null,
+            download_available: { value: true, reason: null, source: 'test' },
+            kind: 'upload',
+          },
+        ],
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('scan.jpg')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pregled' }));
+
+    const imageDialog = await screen.findByRole('dialog', { name: 'scan.jpg' });
+    await waitFor(() => {
+      expect(fetchDocumentAttachmentBlob).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        30,
+        8,
+      );
+    });
+    expect(within(imageDialog).getByRole('img', { name: 'scan.jpg' })).toHaveAttribute(
+      'src',
+      'blob:jpg',
+    );
+
+    fireEvent.click(within(imageDialog).getByRole('button', { name: 'Preuzmi' }));
+    await waitFor(() => {
+      expect(downloadDocumentAttachment).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        30,
+        8,
+      );
+    });
+
+    fireEvent.click(within(imageDialog).getByRole('button', { name: 'Zatvori' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'scan.jpg' })).toBeNull();
+    });
+  });
+});
+
+const ACCOUNT_4198 = {
+  id: 38413,
+  code: '4198',
+  name: 'Troškovi posredovanja pri nabavi ili prodaji dobara i usluga',
+  active: true,
+};
+
+const ACCOUNT_4100 = {
+  id: 11,
+  code: '4100',
+  name: 'Najam',
+  active: true,
+};
+
+async function searchAndSelectAccount(label: string | RegExp) {
+  const input = screen.getByRole('combobox', { name: 'Konto rashoda' });
+  fireEvent.change(input, { target: { value: '4198' } });
+  await waitFor(
+    () => {
+      expect(screen.getByRole('option', { name: label })).toBeInTheDocument();
+    },
+    { timeout: ACCOUNT_PICKER_DEBOUNCE_MS + 500 },
+  );
+  fireEvent.click(screen.getByRole('option', { name: label }));
+}
+
+describe('IncomingExpenseDetail account picker', () => {
+  beforeEach(() => {
+    fetchDocument.mockReset();
+    fetchExpensePostingPreview.mockReset();
+    patchDraftExpense.mockReset();
+    fetchExpenseCategories.mockReset();
+    fetchChartOfAccounts.mockReset();
+    vi.mocked(fetchMe).mockResolvedValue(ownerMe as never);
+    fetchDocument.mockResolvedValue(sampleIncomingDetail());
+    fetchExpenseCategories.mockResolvedValue({
+      count: 2,
+      results: [
+        { id: 1, name: 'Ostalo', is_active: true, default_account: null },
+        {
+          id: 2,
+          name: 'Telekomunikacije',
+          is_active: true,
+          default_account: ACCOUNT_4100,
+        },
+      ],
+    });
+    fetchChartOfAccounts.mockResolvedValue({ count: 1, results: [ACCOUNT_4198] });
+    fetchCostCenters.mockResolvedValue({
+      count: 1,
+      results: [{ id: 6, code: '110', name: 'Kuhinja', kind: 'location', notes: '', parent: null }],
+    });
+  });
+
+  it('does not fetch the chart until the user types at least one character', async () => {
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        account_source: 'category_default',
+        expense_account: ACCOUNT_4100,
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    const input = await screen.findByRole('combobox', { name: 'Konto rashoda' });
+    await waitFor(() => {
+      expect(fetchExpenseCategories).toHaveBeenCalled();
+    });
+    expect(fetchChartOfAccounts).not.toHaveBeenCalled();
+
+    fireEvent.change(input, { target: { value: '4' } });
+    await waitFor(
+      () => {
+        expect(fetchChartOfAccounts).toHaveBeenCalled();
+      },
+      { timeout: ACCOUNT_PICKER_DEBOUNCE_MS + 500 },
+    );
+  });
+
+  it('shows a manual override as the committed picker value', async () => {
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        account_source: 'manual_override',
+        expense_account: ACCOUNT_4198,
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    const input = await screen.findByRole('combobox', { name: 'Konto rashoda' });
+    await waitFor(() => {
+      expect(input).toHaveValue(
+        '4198 · Troškovi posredovanja pri nabavi ili prodaji dobara i usluga',
+      );
+    });
+  });
+
+  it('shows the category default placeholder instead of a derived account', async () => {
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        category: { id: 2, name: 'Telekomunikacije' },
+        account_source: 'category_default',
+        expense_account: ACCOUNT_4100,
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    const input = await screen.findByRole('combobox', { name: 'Konto rashoda' });
+    expect(input).toHaveValue('');
+    await waitFor(() => {
+      expect(input).toHaveAttribute('placeholder', 'Zadano konto vrste (4100 · Najam)');
+    });
+  });
+
+  it('clears a previous override when a later preview is a derived source', async () => {
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        account_source: 'manual_override',
+        expense_account: ACCOUNT_4198,
+      }),
+    );
+    patchDraftExpense.mockResolvedValue({ id: 30, status: 'draft' });
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    const overrideInput = await screen.findByRole('combobox', { name: 'Konto rashoda' });
+    await waitFor(() => {
+      expect(overrideInput).toHaveValue(
+        '4198 · Troškovi posredovanja pri nabavi ili prodaji dobara i usluga',
+      );
+    });
+
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        category: { id: 2, name: 'Telekomunikacije' },
+        account_source: 'category_default',
+        expense_account: ACCOUNT_4100,
+      }),
+    );
+    fireEvent.change(screen.getByLabelText('Vrsta troška'), { target: { value: '2' } });
+    await waitFor(() => {
+      expect(patchDraftExpense).toHaveBeenCalled();
+    });
+    const input = screen.getByRole('combobox', { name: 'Konto rashoda' });
+    await waitFor(() => {
+      expect(input).toHaveValue('');
+    });
+    expect(input).toHaveAttribute('placeholder', 'Zadano konto vrste (4100 · Najam)');
+    expect(input).not.toHaveValue(
+      '4198 · Troškovi posredovanja pri nabavi ili prodaji dobara i usluga',
+    );
+  });
+
+  it('persists the selected AccountRef id, not the typed search text', async () => {
+    fetchExpensePostingPreview.mockResolvedValue(
+      samplePostingPreview({
+        account_source: 'category_default',
+        expense_account: ACCOUNT_4100,
+      }),
+    );
+    patchDraftExpense.mockResolvedValue({ id: 30, status: 'draft' });
+    fetchExpensePostingPreview
+      .mockResolvedValueOnce(
+        samplePostingPreview({
+          account_source: 'category_default',
+          expense_account: ACCOUNT_4100,
+        }),
+      )
+      .mockResolvedValue(
+        samplePostingPreview({
+          account_source: 'manual_override',
+          expense_account: ACCOUNT_4198,
+        }),
+      );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
+    await screen.findByRole('combobox', { name: 'Konto rashoda' });
+    await searchAndSelectAccount(/4198/);
+    await waitFor(() => {
+      expect(patchDraftExpense).toHaveBeenCalledWith(
+        expect.any(String),
+        'token',
+        30,
+        { expense_account_id: 38413 },
+      );
+    });
+    expect(patchDraftExpense).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ expense_account_id: '4198' }),
+    );
   });
 });

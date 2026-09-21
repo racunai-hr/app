@@ -16,6 +16,41 @@ export type PartnerDiff = {
   extracted: string;
 };
 
+export type OcrParty = {
+  name: string;
+  oib: string;
+  vat_number: string;
+  address: string;
+  city: string;
+  postal_code: string;
+  country: string;
+  country_code: string;
+  iban: string;
+};
+
+export type PartyCandidate = OcrParty & {
+  role: 'issuer' | 'buyer' | string;
+  is_own_company: boolean;
+  suspected_own_company: boolean;
+  blank: boolean;
+};
+
+export type InvoiceDirection = {
+  code: string;
+  supplier_source: string;
+  override_required: boolean;
+  unresolved: boolean;
+  party_candidates: PartyCandidate[];
+};
+
+export type AllocatedOcrLine = {
+  position: number;
+  description: string;
+  net_amount: string;
+  vat_amount: string;
+  gross_amount: string;
+};
+
 export type IncomingInvoiceImport = {
   id: number;
   status: string;
@@ -28,17 +63,9 @@ export type IncomingInvoiceImport = {
   ocr_schema_version: string;
   ocr_extracted_at: string | null;
   extracted: {
-    supplier: {
-      name: string;
-      oib: string;
-      vat_number: string;
-      address: string;
-      city: string;
-      postal_code: string;
-      country: string;
-      country_code: string;
-      iban: string;
-    };
+    supplier: OcrParty;
+    issuer: OcrParty;
+    buyer: OcrParty;
     invoice_number: string;
     issue_date: string;
     due_date: string | null;
@@ -49,7 +76,9 @@ export type IncomingInvoiceImport = {
     iban: string;
     vat_breakdown: Array<Record<string, string>>;
     line_items: Array<Record<string, string | null>>;
+    allocated_lines?: AllocatedOcrLine[];
   };
+  direction: InvoiceDirection;
   warnings: string[];
   partner: {
     match: string;
@@ -188,6 +217,26 @@ export async function applyPartnerUpdates(
     `/api/purchasing/invoices/import/${id}/apply-partner-updates/`,
     token,
     { method: 'POST' },
+  );
+  if (!response.ok) throw await parsePurchasingError(response);
+  return response.json();
+}
+
+export async function applySupplier(
+  origin: string,
+  token: string,
+  id: number,
+  payload: { source: 'issuer' | 'buyer' | 'manual'; supplier?: Record<string, string> },
+): Promise<IncomingInvoiceImport> {
+  const response = await authorized(
+    origin,
+    `/api/purchasing/invoices/import/${id}/apply-supplier/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
   );
   if (!response.ok) throw await parsePurchasingError(response);
   return response.json();

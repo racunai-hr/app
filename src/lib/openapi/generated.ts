@@ -2372,7 +2372,7 @@ export interface components {
          */
         OfficialKindEnum: "tax_decision" | "other";
         OpenItemCandidate: {
-            item_id: number;
+            item_id: number | null;
             partner_id: number | null;
             partner_name: string;
             direction: string;

@@ -6,6 +6,8 @@ export type AccountRef = components['schemas']['AccountRef'];
 export type ChartOfAccountsList = components['schemas']['ChartOfAccountsList'];
 export type ConfirmInvoiceImportRequest = components['schemas']['ConfirmInvoiceImportRequest'] & {
   cost_center_id?: number | null;
+  direction_override?: boolean;
+  line_accounts?: Array<{ position: number; posting_account_id: number | null }>;
 };
 export type ExpenseApproveResponse = components['schemas']['ExpenseApproveResponse'];
 export type ExpenseCategory = components['schemas']['ExpenseCategory'];
@@ -16,6 +18,7 @@ export type PatchedExpenseCategoryPatchRequest =
 export type PatchedExpenseDraftPatchRequest =
   components['schemas']['PatchedExpenseDraftPatchRequest'] & {
     cost_center_id?: number | null;
+    line_accounts?: Array<{ position: number; posting_account_id: number | null }>;
   };
 export type PostingPlanLine = components['schemas']['PostingPlanLine'];
 

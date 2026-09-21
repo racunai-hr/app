@@ -384,6 +384,57 @@
   align-items: center;
 }
 
+.tz2-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.tz2-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.tz2-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.tz2-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.tz2-grid input,
+.tz2-grid select,
+.tz2-triples input {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: inherit;
+}
+
+.tz2-triples {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(8rem, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.tz2-triples label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
 .tax-evidence-form {
   display: flex;
   flex-direction: column;
@@ -1307,6 +1358,11 @@
   font-size: 1rem;
 }
 
+.ocr-lines h3 {
+  margin: 0.4rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
 .ocr-field {
   display: grid;
   grid-template-columns: 8rem minmax(0, 1fr);
@@ -1379,6 +1435,13 @@
   align-items: center;
   gap: 0.45rem;
   margin-top: 0.5rem;
+}
+
+.ocr-party-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.92rem;
 }
 
 .ocr-success {

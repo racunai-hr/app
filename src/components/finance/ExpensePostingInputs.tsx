@@ -1,18 +1,23 @@
 'use client';
 
+import { useCallback } from 'react';
+
 import {
   accountSourceLabel,
   formatAccountOption,
   type AccountRef,
+  type ChartOfAccountsList,
   type ExpenseCategory,
 } from '@/lib/expensePosting';
 import { formatCostCenterOption, type CostCenterRef } from '@/lib/costCenters';
 
+import { AccountPicker } from './AccountPicker';
+
 type Props = {
   categories: ExpenseCategory[];
-  accounts: AccountRef[];
   categoryId: number | null;
-  expenseAccountId: number | null;
+  expenseAccount: AccountRef | null;
+  searchAccounts: (term: string, signal: AbortSignal) => Promise<ChartOfAccountsList>;
   costCenters?: CostCenterRef[];
   costCenterId?: number | null;
   disabled?: boolean;
@@ -21,17 +26,19 @@ type Props = {
   remember?: boolean;
   showRemember?: boolean;
   lockedMessage?: string | null;
+  hideCategory?: boolean;
+  hideAccount?: boolean;
   onCategoryChange: (categoryId: number | null) => void;
-  onAccountChange: (expenseAccountId: number | null) => void;
+  onAccountChange: (expenseAccount: AccountRef | null) => void;
   onCostCenterChange?: (costCenterId: number | null) => void;
   onRememberChange?: (remember: boolean) => void;
 };
 
 export function ExpensePostingInputs({
   categories,
-  accounts,
   categoryId,
-  expenseAccountId,
+  expenseAccount,
+  searchAccounts,
   costCenters = [],
   costCenterId = null,
   disabled = false,
@@ -40,6 +47,8 @@ export function ExpensePostingInputs({
   remember = false,
   showRemember = false,
   lockedMessage,
+  hideCategory = false,
+  hideAccount = false,
   onCategoryChange,
   onAccountChange,
   onCostCenterChange,
@@ -49,6 +58,10 @@ export function ExpensePostingInputs({
   const defaultHint = selected?.default_account
     ? formatAccountOption(selected.default_account)
     : null;
+  const search = useCallback(
+    (term: string, signal: AbortSignal) => searchAccounts(term, signal),
+    [searchAccounts],
+  );
 
   return (
     <div className="expense-posting-fields">
@@ -57,50 +70,48 @@ export function ExpensePostingInputs({
           {lockedMessage}
         </p>
       ) : null}
-      <label>
-        Vrsta troška
-        <select
-          value={categoryId ?? ''}
+      {hideCategory && hideAccount ? (
+        <p className="muted-inline">
+          Konto se bira na stavkama. Mjesto troška vrijedi za klasu 4; klasa 1 knjiži se bez
+          mjesta troška.
+        </p>
+      ) : null}
+      {hideCategory ? null : (
+        <label>
+          Vrsta troška
+          <select
+            value={categoryId ?? ''}
+            disabled={disabled}
+            onChange={(event) => {
+              const value = event.target.value;
+              onCategoryChange(value === '' ? null : Number(value));
+            }}
+          >
+            {allowEmptyCategory ? (
+              <option value="">Predloži pri potvrdi</option>
+            ) : (
+              <option value="" disabled>
+                Odaberite vrstu
+              </option>
+            )}
+            {categories.map((row) => (
+              <option key={row.id} value={row.id}>
+                {row.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {hideAccount ? null : (
+        <AccountPicker
+          label="Konto rashoda"
+          value={expenseAccount}
+          onChange={onAccountChange}
+          search={search}
+          placeholder={defaultHint ? `Zadano konto vrste (${defaultHint})` : 'Zadano konto vrste'}
           disabled={disabled}
-          onChange={(event) => {
-            const value = event.target.value;
-            onCategoryChange(value === '' ? null : Number(value));
-          }}
-        >
-          {allowEmptyCategory ? (
-            <option value="">Predloži pri potvrdi</option>
-          ) : (
-            <option value="" disabled>
-              Odaberite vrstu
-            </option>
-          )}
-          {categories.map((row) => (
-            <option key={row.id} value={row.id}>
-              {row.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Konto rashoda
-        <select
-          value={expenseAccountId ?? ''}
-          disabled={disabled}
-          onChange={(event) => {
-            const value = event.target.value;
-            onAccountChange(value === '' ? null : Number(value));
-          }}
-        >
-          <option value="">
-            {defaultHint ? `Zadano konto vrste (${defaultHint})` : 'Zadano konto vrste'}
-          </option>
-          {accounts.map((row) => (
-            <option key={row.id} value={row.id}>
-              {formatAccountOption(row)}
-            </option>
-          ))}
-        </select>
-      </label>
+        />
+      )}
       {onCostCenterChange ? (
         <label>
           Mjesto troška
@@ -123,10 +134,10 @@ export function ExpensePostingInputs({
           </select>
         </label>
       ) : null}
-      {accountSource ? (
+      {hideAccount || !accountSource ? null : (
         <p className="muted-inline">Izvor konta: {accountSourceLabel(accountSource)}</p>
-      ) : null}
-      {showRemember ? (
+      )}
+      {showRemember && !hideCategory ? (
         <label className="ocr-override">
           <input
             type="checkbox"

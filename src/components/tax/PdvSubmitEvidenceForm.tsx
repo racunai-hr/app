@@ -17,6 +17,10 @@ export function PdvSubmitEvidenceForm({ busy, onSubmit }: Props) {
       }}
     >
       <h2>Uvezi predani XML</h2>
+      <p className="app-placeholder-note">
+        XML obrasca skinut s ePorezne nakon predaje. Portal često vraća obrazac bez
+        XML potpisa — to je u redu.
+      </p>
       <label>
         Predani XML obrazac
         <input name="submitted_xml" type="file" accept=".xml,application/xml,text/xml" required />

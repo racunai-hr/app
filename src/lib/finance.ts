@@ -266,6 +266,78 @@ export function cancelDeposit(origin: string, token: string, depositId: number) 
   return depositAction(origin, token, depositId, 'cancel', null);
 }
 
+export type PrivateFundsClaimDto = {
+  id: number;
+  number: string;
+  claim_type: string;
+  partner_id: number;
+  partner_name: string;
+  amount: string;
+  currency: string;
+  claim_date: string | null;
+  status: string;
+  operational_status: string;
+  open_amount: string;
+  reference: string;
+  notes: string;
+  related_type: string;
+  related_id: number;
+  journal_entry_id: number | null;
+  created_at: string | null;
+};
+
+export type CreatePrivateFundsClaimInput = {
+  partner_id: number;
+  claim_type: 'supplier_payment' | 'deposit_funding';
+  amount: string;
+  currency?: string;
+  claim_date: string;
+  related_type: 'expense' | 'deposit';
+  related_id: number;
+  reference?: string;
+  notes?: string;
+};
+
+export async function createPrivateFundsClaim(
+  origin: string,
+  token: string,
+  body: CreatePrivateFundsClaimInput,
+  idempotencyKey: string,
+): Promise<PrivateFundsClaimDto> {
+  const response = await authorized(origin, '/api/finance/private-funds-claims/', token, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: JSON.stringify({
+      currency: 'EUR',
+      ...body,
+    }),
+  });
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function postPrivateFundsClaim(
+  origin: string,
+  token: string,
+  claimId: number,
+  idempotencyKey: string,
+): Promise<PrivateFundsClaimDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/private-funds-claims/${claimId}/post/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
+    },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
 export function depositWorkflowLabel(status: string): string {
   const labels: Record<string, string> = {
     draft: 'Nacrt',

@@ -308,6 +308,40 @@ describe('TransactionList reconcile deep-link', () => {
     expect(screen.getAllByText('Preporučeno')).toHaveLength(1);
   });
 
+  it('links an unposted incoming document without a close action', async () => {
+    fetchOpenItemCandidates.mockResolvedValue({
+      count: 1,
+      results: [
+        candidate({
+          item_id: null,
+          source_id: 48,
+          source_label: 'ERAC-28902-H120-5139',
+          partner_name: 'CVH STP VODICE',
+          action_label: 'Otvori dokument',
+          match_reasons: ['amount_exact'],
+        }),
+      ],
+    });
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/uskladivanje"
+        reconcileMode
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('Uplata')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Poveži transakciju 5' }));
+    await waitFor(() => expect(screen.getByText(/ERAC-28902-H120-5139/)).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Zatvori obvezu' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Zatvori ulazni' })).toBeNull();
+    const links = screen.getAllByRole('link', { name: 'Otvori dokument' });
+    expect(links.length).toBeGreaterThan(0);
+    expect(links[0]).toHaveAttribute('href', '/t/finestar/dokumenti/ulazni/48');
+    expect(reconcileOpenItem).not.toHaveBeenCalled();
+  });
+
   it('passes the partner search to fetchOpenItemCandidates', async () => {
     fetchOpenItemCandidates.mockResolvedValue({
       count: 1,

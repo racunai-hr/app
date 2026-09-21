@@ -133,7 +133,9 @@ describe('settings routes', () => {
     role = r;
     pathname = '/t/finestar/postavke/vrste-troska';
     render(<ExpenseCategoriesRoute />);
-    expect(await screen.findByLabelText('Zadano konto za Ostalo')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('combobox', { name: 'Zadano konto za Ostalo' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Postavke tvrtke' })).toBeInTheDocument();
   });
 

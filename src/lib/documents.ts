@@ -26,6 +26,17 @@ export type DocumentDetail = components['schemas']['DocumentDetail'] & {
   status?: components['schemas']['DocumentDetail']['status'] & {
     workflow?: string | null;
   };
+  lines?: Array<
+    components['schemas']['IncomingLine'] & {
+      id?: number | null;
+      posting_account?: {
+        id: number;
+        code: string;
+        name: string;
+        active: boolean;
+      } | null;
+    }
+  >;
 };
 
 export type EracunRejectionResponse = {
@@ -233,6 +244,24 @@ export async function fetchDocumentPdfBlob(
   const response = await authorized(origin, `/api/documents/${direction}/${id}/pdf/`, token, {
     headers: { Accept: 'application/pdf' },
   });
+  if (!response.ok) {
+    throw new ApiError(await parseApiError(response), response.status);
+  }
+  return response.blob();
+}
+
+export async function fetchDocumentAttachmentBlob(
+  origin: string,
+  token: string,
+  documentId: number,
+  attachmentId: number,
+): Promise<Blob> {
+  const response = await authorized(
+    origin,
+    `/api/documents/incoming/${documentId}/attachments/${attachmentId}/`,
+    token,
+    { headers: { Accept: '*/*' } },
+  );
   if (!response.ok) {
     throw new ApiError(await parseApiError(response), response.status);
   }

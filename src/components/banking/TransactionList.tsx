@@ -224,7 +224,7 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
   );
 
   async function confirmReconcile(item: OpenItemCandidate) {
-    if (activeTxId == null) return;
+    if (activeTxId == null || item.item_id == null) return;
     setBusy(true);
     setError('');
     try {

@@ -13,7 +13,9 @@ export default function PdvRazdobljaPage() {
       title="PDV razdoblja"
       description="Odabir poreznog razdoblja. Kontrolni pregledi i prijava otvaraju se tek nakon odabira mjeseca."
     >
-      {({ origin, token }) => <PdvPeriodList slug={params.slug} origin={origin} token={token} />}
+      {({ origin, token, role }) => (
+        <PdvPeriodList slug={params.slug} origin={origin} token={token} role={role} />
+      )}
     </PdvPage>
   );
 }

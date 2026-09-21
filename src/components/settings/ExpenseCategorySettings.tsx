@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import { AccountPicker } from '@/components/finance/AccountPicker';
 import { ApiError } from '@/lib/api';
 import {
   fetchChartOfAccounts,
   fetchExpenseCategories,
-  formatAccountOption,
   patchExpenseCategoryDefaultAccount,
   type AccountRef,
   type ExpenseCategory,
@@ -20,7 +20,6 @@ type Props = {
 
 export function ExpenseCategorySettings({ origin, token, canWrite }: Props) {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [accounts, setAccounts] = useState<AccountRef[]>([]);
   const [loading, setLoading] = useState(canWrite);
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState<number | null>(null);
@@ -34,14 +33,10 @@ export function ExpenseCategorySettings({ origin, token, canWrite }: Props) {
     const abort = new AbortController();
     setLoading(true);
     setError('');
-    Promise.all([
-      fetchExpenseCategories(origin, token, abort.signal),
-      fetchChartOfAccounts(origin, token, '', abort.signal),
-    ])
-      .then(([catList, coa]) => {
+    fetchExpenseCategories(origin, token, abort.signal)
+      .then((catList) => {
         if (cancelled) return;
         setCategories(catList.results);
-        setAccounts(coa.results);
       })
       .catch((err) => {
         if (cancelled || abort.signal.aborted) return;
@@ -56,12 +51,17 @@ export function ExpenseCategorySettings({ origin, token, canWrite }: Props) {
     };
   }, [origin, token, canWrite]);
 
-  async function handleAccountChange(categoryId: number, defaultAccountId: number | null) {
+  const searchAccounts = useCallback(
+    (term: string, signal: AbortSignal) => fetchChartOfAccounts(origin, token, term, signal),
+    [origin, token],
+  );
+
+  async function handleAccountChange(categoryId: number, account: AccountRef | null) {
     setSavingId(categoryId);
     setError('');
     try {
       const updated = await patchExpenseCategoryDefaultAccount(origin, token, categoryId, {
-        default_account_id: defaultAccountId,
+        default_account_id: account?.id ?? null,
       });
       setCategories((rows) => rows.map((row) => (row.id === updated.id ? updated : row)));
     } catch (err) {
@@ -111,22 +111,16 @@ export function ExpenseCategorySettings({ origin, token, canWrite }: Props) {
                 <tr key={row.id}>
                   <td>{row.name}</td>
                   <td>
-                    <select
-                      aria-label={`Zadano konto za ${row.name}`}
-                      value={row.default_account?.id ?? ''}
+                    <AccountPicker
+                      label={`Zadano konto za ${row.name}`}
+                      value={row.default_account ?? null}
+                      placeholder="Nije zadano"
                       disabled={savingId === row.id}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        void handleAccountChange(row.id, value === '' ? null : Number(value));
+                      search={searchAccounts}
+                      onChange={(account) => {
+                        void handleAccountChange(row.id, account);
                       }}
-                    >
-                      <option value="">Nije zadano</option>
-                      {accounts.map((account) => (
-                        <option key={account.id} value={account.id}>
-                          {formatAccountOption(account)}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </td>
                 </tr>
               ))

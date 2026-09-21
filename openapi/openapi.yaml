@@ -7414,6 +7414,7 @@ components:
       properties:
         item_id:
           type: integer
+          nullable: true
         partner_id:
           type: integer
           nullable: true

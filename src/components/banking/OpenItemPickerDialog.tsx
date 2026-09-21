@@ -171,7 +171,7 @@ export function OpenItemPickerDialog({
                   const documentLink = reconcileCandidateDocumentLink(slug, item);
                   return (
                     <tr
-                      key={item.item_id}
+                      key={`${item.source_type}-${item.source_id}-${item.item_id ?? 'doc'}`}
                       id={highlighted ? `subledger-item-${item.item_id}` : undefined}
                       className={highlighted ? 'banking-row-active' : undefined}
                     >
@@ -203,16 +203,22 @@ export function OpenItemPickerDialog({
                         </div>
                       </td>
                       <td className="banking-col-action">
-                        <button
-                          type="button"
-                          className="banking-action-btn"
-                          disabled={busy}
-                          onClick={() => onConfirm(item)}
-                          title={item.action_label}
-                        >
-                          <IconCheck />
-                          <span>{item.action_label}</span>
-                        </button>
+                        {item.item_id != null ? (
+                          <button
+                            type="button"
+                            className="banking-action-btn"
+                            disabled={busy}
+                            onClick={() => onConfirm(item)}
+                            title={item.action_label}
+                          >
+                            <IconCheck />
+                            <span>{item.action_label}</span>
+                          </button>
+                        ) : documentLink ? (
+                          <Link className="banking-action-btn" href={documentLink.href}>
+                            <span>{item.action_label}</span>
+                          </Link>
+                        ) : null}
                       </td>
                     </tr>
                   );

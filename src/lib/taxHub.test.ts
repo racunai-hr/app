@@ -8,6 +8,7 @@ describe('TAX_HUB_GROUPS', () => {
       'pdv',
       'porez-na-dobit',
       'porez-na-potrosnju',
+      'turisticka-clanarina',
       'joppd',
       'predaje',
       'kalendar',
@@ -32,9 +33,10 @@ describe('TAX_HUB_GROUPS', () => {
 
   it('sends PDV and PDV-S to separate form screens', () => {
     const ready = taxHubReadyForms();
-    expect(ready.map((form) => form.id)).toEqual(['pdv', 'pdv-s']);
+    expect(ready.map((form) => form.id)).toEqual(['pdv', 'pdv-s', 'tz2']);
     expect(ready.find((form) => form.id === 'pdv')?.href?.('finestar')).toBe('/t/finestar/porezi/pdv');
     expect(ready.find((form) => form.id === 'pdv-s')?.href?.('finestar')).toBe('/t/finestar/porezi/pdv-s');
+    expect(ready.find((form) => form.id === 'tz2')?.href?.('finestar')).toBe('/t/finestar/porezi/tz2?year=2026');
     expect(ready.find((form) => form.id === 'pdv-s')?.note).toBeUndefined();
     expect(TAX_HUB_GROUPS.flatMap((group) => group.forms).some((form) => form.href?.('x')?.includes('/zp'))).toBe(
       false,

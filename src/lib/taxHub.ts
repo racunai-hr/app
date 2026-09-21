@@ -1,4 +1,5 @@
 import { pdvSListHref, razdobljaHref } from './pdv';
+import { tz2Href } from './tz2';
 
 export type TaxHubForm = {
   id: string;
@@ -35,6 +36,11 @@ export const TAX_HUB_GROUPS: TaxHubGroup[] = [
     id: 'porez-na-potrosnju',
     label: 'Porez na potrošnju',
     forms: [{ id: 'ppo', label: 'PPO', ready: false, href: null }],
+  },
+  {
+    id: 'turisticka-clanarina',
+    label: 'Turistička članarina',
+    forms: [{ id: 'tz2', label: 'TZ 2', ready: true, href: tz2Href }],
   },
   {
     id: 'joppd',
