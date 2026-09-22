@@ -21,11 +21,27 @@ function sample(overrides: Partial<FixedAssetDetail> = {}): FixedAssetDetail {
     useful_life_months: 60,
     depreciation_method: 'linear',
     activation_journal_entry_id: 88,
+    cost_center: null,
     ...overrides,
   };
 }
 
 describe('AssetOverview', () => {
+  it('links the cost center to its card', () => {
+    render(
+      <AssetOverview
+        slug="finestar"
+        asset={sample({
+          cost_center: { id: 18, code: '701', name: 'Audi A8 Lang 50 TDI' },
+        })}
+      />,
+    );
+    expect(screen.getByRole('link', { name: '701 · Audi A8 Lang 50 TDI' })).toHaveAttribute(
+      'href',
+      '/t/finestar/izvjestaji/mjesta-troska/18',
+    );
+  });
+
   it('links activation journal entry only when id exists', () => {
     const { rerender } = render(<AssetOverview slug="finestar" asset={sample()} />);
     expect(screen.getByRole('link', { name: 'Temeljnica aktivacije' })).toHaveAttribute(
@@ -36,6 +52,6 @@ describe('AssetOverview', () => {
       <AssetOverview slug="finestar" asset={sample({ activation_journal_entry_id: null })} />,
     );
     expect(screen.queryByRole('link', { name: 'Temeljnica aktivacije' })).not.toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('Mjesto troška').parentElement).toHaveTextContent('—');
   });
 });

@@ -15,6 +15,7 @@ export type JournalEntryListQuery = {
   date_from?: string;
   date_to?: string;
   search?: string;
+  cost_center?: number | string;
   page?: number;
   page_size?: number;
 };
@@ -86,6 +87,7 @@ export async function fetchJournalEntries(
     date_from: query.date_from,
     date_to: query.date_to,
     search: query.search,
+    cost_center: query.cost_center,
     page: query.page || 1,
     page_size: query.page_size || 20,
   });

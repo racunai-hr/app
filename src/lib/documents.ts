@@ -112,6 +112,8 @@ export type DocumentListQuery = {
   date_from?: string;
   date_to?: string;
   partner?: number | string;
+  cost_center?: number | string;
+  fixed_asset?: number | string;
   page?: number;
   page_size?: number;
 };
@@ -152,6 +154,12 @@ export function buildDocumentQuery(query: DocumentListQuery, options?: { include
   if (query.date_to) params.set('date_to', query.date_to);
   if (query.partner !== undefined && query.partner !== '') {
     params.set('partner', String(query.partner));
+  }
+  if (query.cost_center !== undefined && query.cost_center !== '') {
+    params.set('cost_center', String(query.cost_center));
+  }
+  if (query.fixed_asset !== undefined && query.fixed_asset !== '') {
+    params.set('fixed_asset', String(query.fixed_asset));
   }
   if (includePage) {
     params.set('page', String(query.page || 1));

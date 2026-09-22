@@ -1,29 +1,26 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import Link from 'next/link';
 
 import { ApiError } from '@/lib/api';
 import {
   createCostCenter,
+  costCenterHref,
   fetchCostCenters,
   formatCostCenterOption,
+  COST_CENTER_KIND_LABELS,
   type CostCenter,
 } from '@/lib/costCenters';
 
 type Props = {
+  slug: string;
   origin: string;
   token: string;
   canWrite: boolean;
 };
 
-const KIND_LABELS: Record<string, string> = {
-  location: 'Lokacijsko',
-  object: 'Objektno',
-  overhead: 'Režijsko',
-  group: 'Grupa',
-};
-
-export function CostCenterSettings({ origin, token, canWrite }: Props) {
+export function CostCenterSettings({ slug, origin, token, canWrite }: Props) {
   const [rows, setRows] = useState<CostCenter[]>([]);
   const [error, setError] = useState('');
   const [code, setCode] = useState('');
@@ -102,8 +99,10 @@ export function CostCenterSettings({ origin, token, canWrite }: Props) {
               rows.map((row) => (
                 <tr key={row.id}>
                   <td>{row.code}</td>
-                  <td>{row.name}</td>
-                  <td>{KIND_LABELS[row.kind] || row.kind}</td>
+                  <td>
+                    <Link href={costCenterHref(slug, row.id)}>{row.name}</Link>
+                  </td>
+                  <td>{COST_CENTER_KIND_LABELS[row.kind] || row.kind}</td>
                   <td>{row.parent ? formatCostCenterOption(row.parent) : '—'}</td>
                 </tr>
               ))

@@ -63,7 +63,7 @@ export function CostCentersRoute() {
       description="MT na dokumentu je input za resolver. Kanonski trag nakon knjiženja je stavka temeljnice."
     >
       {({ origin, token, canWrite }) => (
-        <CostCenterSettings origin={origin} token={token} canWrite={canWrite} />
+        <CostCenterSettings slug={params.slug} origin={origin} token={token} canWrite={canWrite} />
       )}
     </SettingsPage>
   );

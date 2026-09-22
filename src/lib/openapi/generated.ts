@@ -507,7 +507,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["finance_cost_centers_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1645,6 +1645,18 @@ export interface components {
             notes: string;
             parent_id: number | null;
             parent: components["schemas"]["CostCenterRef"] | null;
+            vehicle: components["schemas"]["CostCenterLinkedVehicle"] | null;
+            fixed_assets: components["schemas"]["CostCenterLinkedAsset"][];
+        };
+        CostCenterLinkedVehicle: {
+            id: number;
+            name: string;
+            vin: string;
+            fixed_asset_id: number | null;
+        };
+        CostCenterLinkedAsset: {
+            id: number;
+            name: string;
         };
         /**
          * @description * `location` - location
@@ -2098,6 +2110,12 @@ export interface components {
             useful_life_months: number | null;
             depreciation_method: string;
             activation_journal_entry_id: number | null;
+            cost_center: components["schemas"]["AssetCostCenterRef"] | null;
+        };
+        AssetCostCenterRef: {
+            id: number;
+            code: string;
+            name: string;
         };
         FixedAssetListItem: {
             id: number;
@@ -4182,6 +4200,10 @@ export interface operations {
                 page_size?: number;
                 /** @description Partner id */
                 partner?: number;
+                /** @description Documents whose posted journal has a line on this cost center */
+                cost_center?: number;
+                /** @description Official documents on this asset, or expenses on its vehicle */
+                fixed_asset?: number;
                 search?: string;
                 status?: string;
                 view?: "attention" | "bank_unmatched" | "eracun_rejected" | "incoming_ready_to_pay" | "overdue_outgoing" | "partially_paid" | "possible_duplicates" | "unpaid_outgoing" | "unposted" | "vat_mismatch" | "vat_pending";
@@ -4391,6 +4413,10 @@ export interface operations {
                 page_size?: number;
                 /** @description Partner id */
                 partner?: number;
+                /** @description Documents whose posted journal has a line on this cost center */
+                cost_center?: number;
+                /** @description Official documents on this asset, or expenses on its vehicle */
+                fixed_asset?: number;
                 search?: string;
                 status?: string;
                 view?: "attention" | "bank_unmatched" | "eracun_rejected" | "incoming_ready_to_pay" | "overdue_outgoing" | "partially_paid" | "possible_duplicates" | "unpaid_outgoing" | "unposted" | "vat_mismatch" | "vat_pending";
@@ -4599,6 +4625,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_cost_centers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenter"];
                 };
             };
             /** @description Nedostaje ili je nevaljan Bearer token */
@@ -5209,6 +5274,8 @@ export interface operations {
                 page_size?: number;
                 /** @description Filter by entry_number, description, or reference */
                 search?: string;
+                /** @description Journal entries with a line on this cost center */
+                cost_center?: number;
                 status?: "draft" | "posted" | "reversed";
             };
             header?: never;

@@ -110,6 +110,10 @@ describe('settings routes', () => {
     pathname = '/t/finestar/postavke/mjesta-troska';
     render(<CostCentersRoute />);
     expect(await screen.findByText('Kuhinja')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Kuhinja' })).toHaveAttribute(
+      'href',
+      '/t/finestar/izvjestaji/mjesta-troska/6',
+    );
     expect(screen.getByRole('navigation', { name: 'Postavke tvrtke' })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

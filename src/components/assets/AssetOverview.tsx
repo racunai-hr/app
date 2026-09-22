@@ -44,6 +44,18 @@ export function AssetOverview({ slug, asset }: Props) {
         <dd>{formatHrAmount(asset.current_book_value)}</dd>
       </div>
       <div>
+        <dt>Mjesto troška</dt>
+        <dd>
+          {asset.cost_center ? (
+            <Link href={`/t/${slug}/izvjestaji/mjesta-troska/${asset.cost_center.id}`}>
+              {asset.cost_center.code} · {asset.cost_center.name}
+            </Link>
+          ) : (
+            '—'
+          )}
+        </dd>
+      </div>
+      <div>
         <dt>Temeljnica aktivacije</dt>
         <dd>
           {asset.activation_journal_entry_id != null ? (

@@ -20,6 +20,13 @@ describe('documents client', () => {
     expect(params.get('search')).toBe('acme');
   });
 
+  it('sends cost_center and fixed_asset filters', () => {
+    expect(buildDocumentQuery({ cost_center: 18 }).get('cost_center')).toBe('18');
+    expect(buildDocumentQuery({ fixed_asset: 4 }).get('fixed_asset')).toBe('4');
+    expect(buildDocumentQuery({}).get('cost_center')).toBeNull();
+    expect(buildDocumentQuery({}).get('fixed_asset')).toBeNull();
+  });
+
   it('sends only incoming or outgoing as direction', () => {
     expect(buildDocumentQuery({ direction: 'incoming' }).get('direction')).toBe('incoming');
     expect(buildDocumentQuery({ direction: 'outgoing' }).get('direction')).toBe('outgoing');

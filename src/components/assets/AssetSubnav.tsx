@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 
 export const ASSET_SUBNAV = [
   { path: '', label: 'Pregled' },
+  { path: '/dokumenti', label: 'Dokumenti' },
   { path: '/temeljnice', label: 'Temeljnice' },
   { path: '/amortizacija', label: 'Amortizacija' },
 ] as const;

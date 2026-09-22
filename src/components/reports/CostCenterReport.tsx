@@ -142,7 +142,15 @@ export function CostCenterReportView({ slug }: Props) {
                   data.results.map((row) => (
                     <tr key={`${row.cost_center_id ?? 'none'}-${row.code}`}>
                       <td>{row.code || '—'}</td>
-                      <td>{row.name}</td>
+                      <td>
+                        {row.cost_center_id ? (
+                          <Link href={`/t/${slug}/izvjestaji/mjesta-troska/${row.cost_center_id}`}>
+                            {row.name}
+                          </Link>
+                        ) : (
+                          row.name
+                        )}
+                      </td>
                       <td>{row.kind || '—'}</td>
                       <td className="cell-amount">{formatHrAmount(row.total)}</td>
                     </tr>

@@ -15,7 +15,20 @@ export type CostCenter = CostCenterRef & {
   kind: string;
   notes: string;
   parent: CostCenterRef | null;
+  vehicle?: { id: number; name: string; vin: string; fixed_asset_id: number | null } | null;
+  fixed_assets?: { id: number; name: string }[];
 };
+
+export const COST_CENTER_KIND_LABELS: Record<string, string> = {
+  location: 'Lokacijsko',
+  object: 'Objektno',
+  overhead: 'Režijsko',
+  group: 'Grupa',
+};
+
+export function costCenterHref(slug: string, id: number): string {
+  return `/t/${slug}/izvjestaji/mjesta-troska/${id}`;
+}
 
 /** Journal and preview DTOs carry only the display parts of a cost center. */
 export type CostCenterLabelParts = {
@@ -101,6 +114,17 @@ export async function fetchCostCenters(
   signal?: AbortSignal,
 ): Promise<CostCenterList> {
   const response = await authorized(origin, '/api/finance/cost-centers/', token, { signal });
+  if (!response.ok) throw await parseError(response);
+  return response.json();
+}
+
+export async function fetchCostCenter(
+  origin: string,
+  token: string,
+  id: number,
+  signal?: AbortSignal,
+): Promise<CostCenter> {
+  const response = await authorized(origin, `/api/finance/cost-centers/${id}/`, token, { signal });
   if (!response.ok) throw await parseError(response);
   return response.json();
 }

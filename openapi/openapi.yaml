@@ -1065,6 +1065,16 @@ paths:
           type: integer
         description: Partner id
       - in: query
+        name: cost_center
+        schema:
+          type: integer
+        description: Documents whose posted journal has a line on this cost center
+      - in: query
+        name: fixed_asset
+        schema:
+          type: integer
+        description: Official documents on this asset, or expenses on its vehicle
+      - in: query
         name: search
         schema:
           type: string
@@ -1361,6 +1371,16 @@ paths:
           type: integer
         description: Partner id
       - in: query
+        name: cost_center
+        schema:
+          type: integer
+        description: Documents whose posted journal has a line on this cost center
+      - in: query
+        name: fixed_asset
+        schema:
+          type: integer
+        description: Official documents on this asset, or expenses on its vehicle
+      - in: query
         name: search
         schema:
           type: string
@@ -1602,6 +1622,42 @@ paths:
           description: 'Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran
             korisnik bez prava (namjerno 404, ne 403)'
   /api/finance/cost-centers/{id}/:
+    get:
+      operationId: finance_cost_centers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - finance
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostCenter'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+              examples:
+                Unauthorized:
+                  value:
+                    detail: Authentication credentials were not provided.
+          description: Nedostaje ili je nevaljan Bearer token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+          description: 'Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran
+            korisnik bez prava (namjerno 404, ne 403)'
     patch:
       operationId: finance_cost_centers_partial_update
       parameters:
@@ -2174,6 +2230,11 @@ paths:
         schema:
           type: string
         description: Filter by entry_number, description, or reference
+      - in: query
+        name: cost_center
+        schema:
+          type: integer
+        description: Journal entries with a line on this cost center
       - in: query
         name: status
         schema:
@@ -5355,8 +5416,17 @@ components:
           allOf:
           - $ref: '#/components/schemas/CostCenterRef'
           nullable: true
+        vehicle:
+          allOf:
+          - $ref: '#/components/schemas/CostCenterLinkedVehicle'
+          nullable: true
+        fixed_assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/CostCenterLinkedAsset'
       required:
       - code
+      - fixed_assets
       - id
       - is_active
       - is_bookable
@@ -5365,6 +5435,34 @@ components:
       - notes
       - parent
       - parent_id
+      - vehicle
+    CostCenterLinkedVehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        vin:
+          type: string
+        fixed_asset_id:
+          type: integer
+          nullable: true
+      required:
+      - fixed_asset_id
+      - id
+      - name
+      - vin
+    CostCenterLinkedAsset:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
     CostCenterKindEnum:
       enum:
       - location
@@ -6595,11 +6693,16 @@ components:
         activation_journal_entry_id:
           type: integer
           nullable: true
+        cost_center:
+          allOf:
+          - $ref: '#/components/schemas/AssetCostCenterRef'
+          nullable: true
       required:
       - accumulated_depreciation
       - acquisition_cost
       - activation_date
       - activation_journal_entry_id
+      - cost_center
       - current_book_value
       - depreciation_method
       - id
@@ -6610,6 +6713,19 @@ components:
       - status
       - useful_life_months
       - vin
+    AssetCostCenterRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+      required:
+      - code
+      - id
+      - name
     FixedAssetListItem:
       type: object
       properties:
