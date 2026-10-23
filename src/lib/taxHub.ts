@@ -1,4 +1,4 @@
-import { pdvSListHref, razdobljaHref } from './pdv';
+import { pdvIspravakHref, pdvSListHref, razdobljaHref, zpListHref } from './pdv';
 import { tz2Href } from './tz2';
 
 export type TaxHubForm = {
@@ -21,9 +21,9 @@ export const TAX_HUB_GROUPS: TaxHubGroup[] = [
     label: 'Porez na dodanu vrijednost',
     forms: [
       { id: 'pdv', label: 'PDV', ready: true, href: razdobljaHref },
-      { id: 'pdv-ispravak', label: 'PDV-ispravak', ready: false, href: null },
+      { id: 'pdv-ispravak', label: 'PDV-ispravak', ready: true, href: pdvIspravakHref },
       { id: 'pdv-s', label: 'PDV-S (EU poslovanje)', ready: true, href: pdvSListHref },
-      { id: 'zp', label: 'ZP (EU poslovanje)', ready: false, href: null },
+      { id: 'zp', label: 'ZP (EU poslovanje)', ready: true, href: zpListHref },
       { id: 'oss', label: 'OSS (EU poslovanje)', ready: false, href: null },
     ],
   },

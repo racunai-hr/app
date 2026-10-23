@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 
 import { ApiError } from '@/lib/api';
 import { clearTokens } from '@/lib/auth';
-import { formatHrMoney } from '@/lib/formatHr';
+import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import {
   canWriteTax,
   downloadPdvXml,
   fetchPdvBoxes,
   fetchPdvWorkspace,
   pdvBoxRows,
+  pdvFormStatusLabel,
   pdvReturnStatusLabel,
   pdvXmlIntegrityLabel,
   postPdvCorrection,
@@ -20,7 +21,7 @@ import {
   postSubmissionConfirmation,
   razdobljaHref,
   type PdvBoxes,
-  type PdvPeriodWorkspace,
+  type PdvWorkspace,
 } from '@/lib/pdv';
 
 import { PdvSubmitEvidenceForm } from './PdvSubmitEvidenceForm';
@@ -30,7 +31,7 @@ type Props = { slug: string; period: string; origin: string; token: string; role
 export function PdvPrijava({ slug, period, origin, token, role }: Props) {
   const router = useRouter();
   const writable = canWriteTax(role);
-  const [workspace, setWorkspace] = useState<PdvPeriodWorkspace | null>(null);
+  const [workspace, setWorkspace] = useState<PdvWorkspace | null>(null);
   const [boxes, setBoxes] = useState<PdvBoxes | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
@@ -85,19 +86,52 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
   const workingVersion = workspace.latest_return_version ?? workspace.return_version;
   const workingStatus = workspace.latest_return_status ?? workspace.return_status;
   const correctionInProgress = Boolean(workspace.correction_in_progress);
+  const inProcessing = workspace.latest_return_status === 'in_processing';
   const canDownload = workspace.xml_integrity === 'SYNC' && workingVersion != null;
-  const canSubmit = writable && workingStatus === 'generated' && workingVersion != null;
+  const canSubmit = writable && workingStatus === 'generated' && workingVersion != null && !inProcessing;
   const canPrepareCorrection =
     writable &&
     workspace.period_status === 'submitted' &&
     workspace.return_status === 'submitted' &&
-    !correctionInProgress;
+    !correctionInProgress &&
+    !inProcessing;
   const eventUuid = workspace.event_uuid;
   const hasAttachedXml = hasConfirmation || Boolean(workspace.has_confirmation);
 
   return (
     <div className="tax-workflow">
       {error ? <div className="error">{error}</div> : null}
+      {workspace.forms?.length ? (
+        <div className="table-wrap">
+          <table className="docs-table">
+            <thead>
+              <tr>
+                <th>Obrazac</th>
+                <th>Datum/Vrijeme</th>
+                <th>Period od</th>
+                <th>Period do</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {workspace.forms.map((row) => (
+                <tr key={`${row.form}-${row.version}`}>
+                  <td>{row.form}</td>
+                  <td>{formatHrDateTime(row.received_at)}</td>
+                  <td>{formatHrInputDate(row.period_from)}</td>
+                  <td>{formatHrInputDate(row.period_to)}</td>
+                  <td>
+                    {pdvFormStatusLabel(row.status)}
+                    {row.status === 'in_processing' && row.external_identifier
+                      ? ` · ${row.external_identifier}`
+                      : ''}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
       <dl className="tax-status-grid">
         <div>
           <dt>Verzija prijave</dt>

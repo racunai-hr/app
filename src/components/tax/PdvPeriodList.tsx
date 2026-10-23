@@ -83,9 +83,11 @@ export function PdvPeriodList({ slug, origin, token, role }: Props) {
                     </Link>
                   </td>
                   <td>
-                    {row.correction_in_progress
-                      ? 'Predano + ispravak u pripremi'
-                      : pdvPeriodStatusLabel(row.period_status)}
+                    {row.latest_return_status === 'in_processing'
+                      ? 'Obrazac je u obradi'
+                      : row.correction_in_progress
+                        ? 'Predano + ispravak u pripremi'
+                        : pdvPeriodStatusLabel(row.period_status)}
                   </td>
                   <td>{row.has_ledger ? 'Da' : 'Ne'}</td>
                   <td>

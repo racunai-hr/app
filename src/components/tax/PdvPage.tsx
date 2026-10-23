@@ -12,7 +12,7 @@ type Props = {
   title: string;
   description: string;
   period?: string | null;
-  periodKind?: 'PDV' | 'PDV-S';
+  periodKind?: 'PDV' | 'PDV-S' | 'ZP';
   showSubnav?: boolean;
   children: (ctx: {
     origin: string;

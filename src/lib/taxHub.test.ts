@@ -31,15 +31,16 @@ describe('TAX_HUB_GROUPS', () => {
     expect(vat?.forms.find((form) => form.id === 'oss')?.label).toBe('OSS (EU poslovanje)');
   });
 
-  it('sends PDV and PDV-S to separate form screens', () => {
+  it('sends PDV, PDV-S and ZP to separate form screens', () => {
     const ready = taxHubReadyForms();
-    expect(ready.map((form) => form.id)).toEqual(['pdv', 'pdv-s', 'tz2']);
+    expect(ready.map((form) => form.id)).toEqual(['pdv', 'pdv-ispravak', 'pdv-s', 'zp', 'tz2']);
     expect(ready.find((form) => form.id === 'pdv')?.href?.('finestar')).toBe('/t/finestar/porezi/pdv');
+    expect(ready.find((form) => form.id === 'pdv-ispravak')?.href?.('finestar')).toBe(
+      '/t/finestar/porezi/pdv-ispravak',
+    );
     expect(ready.find((form) => form.id === 'pdv-s')?.href?.('finestar')).toBe('/t/finestar/porezi/pdv-s');
+    expect(ready.find((form) => form.id === 'zp')?.href?.('finestar')).toBe('/t/finestar/porezi/zp');
     expect(ready.find((form) => form.id === 'tz2')?.href?.('finestar')).toBe('/t/finestar/porezi/tz2?year=2026');
     expect(ready.find((form) => form.id === 'pdv-s')?.note).toBeUndefined();
-    expect(TAX_HUB_GROUPS.flatMap((group) => group.forms).some((form) => form.href?.('x')?.includes('/zp'))).toBe(
-      false,
-    );
   });
 });

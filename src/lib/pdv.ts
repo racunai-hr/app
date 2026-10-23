@@ -27,9 +27,30 @@ const RETURN_STATUS_LABELS: Record<string, string> = {
   draft: 'Nacrt',
   generated: 'Generirano',
   signed: 'Potpisano',
+  in_processing: 'Obrazac je u obradi',
   submitted: 'Predano',
   superseded: 'Zamijenjeno',
   imported: 'Importirano',
+};
+
+const FORM_STATUS_LABELS: Record<string, string> = {
+  in_processing: 'Obrazac je u obradi',
+  submitted: 'Obrazac je obrađen',
+  superseded: 'Zamijenjeno',
+};
+
+export type PdvFormRow = {
+  form: string;
+  version: number;
+  status: string;
+  received_at: string | null;
+  period_from: string;
+  period_to: string;
+  external_identifier: string | null;
+};
+
+export type PdvWorkspace = PdvPeriodWorkspace & {
+  forms?: PdvFormRow[];
 };
 
 export function parsePdvPeriod(value: string | null | undefined): string | null {
@@ -52,6 +73,11 @@ export function pdvPeriodStatusLabel(status: string | null | undefined): string 
 export function pdvReturnStatusLabel(status: string | null | undefined): string {
   if (!status) return '—';
   return RETURN_STATUS_LABELS[status] || status;
+}
+
+export function pdvFormStatusLabel(status: string | null | undefined): string {
+  if (!status) return '—';
+  return FORM_STATUS_LABELS[status] || pdvReturnStatusLabel(status);
 }
 
 export function pdvXmlIntegrityLabel(status: string | null | undefined): string {
@@ -80,6 +106,66 @@ export function pdvSHref(slug: string, period: string): string {
 export function pdvSListHref(slug: string): string {
   return `/t/${slug}/porezi/pdv-s`;
 }
+
+export function zpHref(slug: string, period: string): string {
+  return `/t/${slug}/porezi/zp?period=${period}`;
+}
+
+export function zpListHref(slug: string): string {
+  return `/t/${slug}/porezi/zp`;
+}
+
+export function pdvIspravakHref(slug: string): string {
+  return `/t/${slug}/porezi/pdv-ispravak`;
+}
+
+export type PdvIspravakRowInput = {
+  invoice_number: string;
+  invoice_date: string;
+  identifier_kind: number;
+  identifier: string;
+  customer_name: string;
+  base_5: string;
+  vat_5: string;
+  base_13: string;
+  vat_13: string;
+  base_25: string;
+  vat_25: string;
+};
+
+export async function downloadPdvIspravakXml(
+  origin: string,
+  token: string,
+  period: string,
+  rows: PdvIspravakRowInput[],
+): Promise<void> {
+  const response = await authorized(origin, '/api/tax/pdv-ispravak/xml/', token, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/xml' },
+    body: JSON.stringify({ period, rows }),
+  });
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  const disposition = response.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="([^"]+)"/i);
+  triggerBlobDownload(await response.blob(), match?.[1] || `PDV-ispravak_${period}.xml`);
+}
+
+export type ZpPeriod = {
+  period: string;
+  schema_version: string;
+  row_count: number;
+  total_goods: string;
+  total_services: string;
+  rows: Array<{
+    country_code: string;
+    pdv_id: string;
+    goods_value: string;
+    services_value: string;
+  }>;
+  event_uuid: string | null;
+  current_submission: PdvSPeriod['current_submission'];
+  submissions: PdvSPeriod['submissions'];
+};
 
 function moneyCents(value: string | null | undefined): number | null {
   if (value == null || value === '') return null;
@@ -292,6 +378,42 @@ export async function downloadPdvXml(
     `/api/tax/pdv/periods/${period}/xml/`,
     token,
     `PDV_${period}.xml`,
+  );
+}
+
+export async function fetchZpPeriod(
+  origin: string,
+  token: string,
+  period: string,
+): Promise<ZpPeriod> {
+  return readJson(await authorized(origin, `/api/tax/zp/periods/${period}/`, token));
+}
+
+export async function postZpSubmit(
+  origin: string,
+  token: string,
+  period: string,
+  body: { eporezna_identifier: string; submitted_at: string },
+): Promise<SubmissionResult> {
+  return readJson(
+    await authorized(origin, `/api/tax/zp/periods/${period}/submit/`, token, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
+export async function downloadZpXml(
+  origin: string,
+  token: string,
+  period: string,
+): Promise<void> {
+  await downloadXml(
+    origin,
+    `/api/tax/zp/periods/${period}/xml/`,
+    token,
+    `ZP_${period}.xml`,
   );
 }
 

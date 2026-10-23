@@ -454,7 +454,8 @@
   font-size: 0.9rem;
 }
 
-.tax-evidence-form input {
+.tax-evidence-form input,
+.tax-evidence-form select {
   padding: 0.45rem 0.55rem;
   border: 1px solid var(--border);
   border-radius: 8px;
