@@ -6,7 +6,10 @@ import { tenantFetch } from './tenantRequest';
 
 export { tenantApiOrigin };
 
-export type PdvPeriod = components['schemas']['PdvPeriod'];
+export type PdvPeriod = components['schemas']['PdvPeriod'] & {
+  document_currency?: string | null;
+  document_vat_due?: string | null;
+};
 export type PdvPeriodList = components['schemas']['PdvPeriodList'];
 export type PdvPeriodWorkspace = components['schemas']['PdvPeriodWorkspace'];
 export type PdvBoxes = components['schemas']['PdvBoxes'];

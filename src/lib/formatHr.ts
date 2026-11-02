@@ -73,7 +73,7 @@ function amountToLipa(value: string | number): bigint | null {
   if (!/^-?\d+(\.\d+)?$/.test(raw)) return null;
   const negative = raw.startsWith('-');
   const [whole, fraction = ''] = raw.replace('-', '').split('.');
-  const lipa = BigInt(whole) * 100n + BigInt((fraction + '00').slice(0, 2));
+  const lipa = BigInt(whole) * BigInt(100) + BigInt((fraction + '00').slice(0, 2));
   return negative ? -lipa : lipa;
 }
 
@@ -82,15 +82,15 @@ export function hrkToEur(value: string | number | null | undefined): string | nu
   if (value == null || value === '') return null;
   const lipa = amountToLipa(value);
   if (lipa == null) return null;
-  const rate = 753450n;
-  const negative = lipa < 0n;
+  const rate = BigInt(753450);
+  const negative = lipa < BigInt(0);
   const abs = negative ? -lipa : lipa;
-  const numerator = abs * 100000n;
+  const numerator = abs * BigInt(100000);
   const quotient = numerator / rate;
   const remainder = numerator % rate;
-  const rounded = remainder * 2n >= rate ? quotient + 1n : quotient;
-  const euros = rounded / 100n;
-  const cents = rounded % 100n;
+  const rounded = remainder * BigInt(2) >= rate ? quotient + BigInt(1) : quotient;
+  const euros = rounded / BigInt(100);
+  const cents = rounded % BigInt(100);
   const text = `${euros.toString()}.${cents.toString().padStart(2, '0')}`;
   return negative ? `-${text}` : text;
 }

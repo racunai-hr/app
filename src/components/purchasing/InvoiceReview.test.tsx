@@ -147,6 +147,13 @@ function extractedRun(overrides: Record<string, unknown> = {}) {
       iban: 'HR1210010051863000160',
       vat_breakdown: [],
       line_items: [],
+      allocated_lines: [] as Array<{
+        position: number;
+        description: string;
+        net_amount: string;
+        vat_amount: string;
+        gross_amount: string;
+      }>,
     },
     direction: {
       code: 'ok',

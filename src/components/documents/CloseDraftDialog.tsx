@@ -44,7 +44,7 @@ export function CloseDraftDialog({ expenseId, title, origin, onClose, onClosed }
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [paymentId, setPaymentId] = useState<number | null>(null);
-  const [accounts, setAccounts] = useState<Record<number, AccountPick>>({});
+  const [accounts, setAccounts] = useState<Record<number, AccountPick | null>>({});
   const touchedAccounts = useRef(new Set<number>());
   const [remember, setRemember] = useState(false);
   const [search, setSearch] = useState('');
@@ -468,7 +468,7 @@ function LineAccount({
   onPick,
 }: {
   line: CloseDraftLine;
-  picked: AccountPick | undefined;
+  picked: AccountPick | null | undefined;
   active: boolean;
   hits: AccountPick[];
   onSearch: (value: string) => void;
