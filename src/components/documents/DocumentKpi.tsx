@@ -31,8 +31,8 @@ const TILES = [
 ] as const;
 
 export function DocumentKpi({ byCurrency }: Props) {
-  const currencies = Object.keys(byCurrency).sort();
-  if (currencies.length === 0) {
+  const eur = byCurrency.EUR;
+  if (!eur) {
     return <p className="kpi-empty">Nema KPI podataka za trenutni filter.</p>;
   }
   return (
@@ -40,11 +40,7 @@ export function DocumentKpi({ byCurrency }: Props) {
       {TILES.map((tile) => (
         <section key={tile.id} className="kpi-card" aria-label={tile.label}>
           <h3>{tile.label}</h3>
-          {currencies.map((currency) => (
-            <p key={currency} className="kpi-value">
-              {tile.value(byCurrency[currency], currency)}
-            </p>
-          ))}
+          <p className="kpi-value">{tile.value(eur, 'EUR')}</p>
         </section>
       ))}
     </div>

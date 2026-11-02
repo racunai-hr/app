@@ -20,13 +20,14 @@ import {
   TRANSACTION_TYPE_LABELS,
   labelOrRaw,
 } from '@/lib/bankingLabels';
-import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
 import {
   parseSubledgerItemParam,
   reconcileCandidateDocumentLink,
   type ReconcileDocumentLink,
 } from '@/lib/bankingReconcile';
 import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
+import { BookMoney } from '@/components/banking/BookMoney';
 import { OpenItemPickerDialog } from '@/components/banking/OpenItemPickerDialog';
 import { DateField } from '@/components/documents/DateField';
 import { Pagination } from '@/components/ui/Pagination';
@@ -385,7 +386,9 @@ export function TransactionList({ slug, origin, token, basePath, reconcileMode }
                 >
                   <td>{formatHrInputDate(row.transaction_date)}</td>
                   <td>{labelOrRaw(TRANSACTION_TYPE_LABELS, row.transaction_type)}</td>
-                  <td>{formatHrMoney(row.amount, row.currency)}</td>
+                  <td>
+                    <BookMoney amount={row.amount} currency={row.currency} amountEur={row.amount_eur} />
+                  </td>
                   <td>
                     <div className="cell-stack">
                       <span>{row.description || '—'}</span>

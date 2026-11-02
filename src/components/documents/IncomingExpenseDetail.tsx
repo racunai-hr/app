@@ -16,6 +16,7 @@ import {
   newIdempotencyKey,
   rejectIncomingEracun,
   tenantApiOrigin,
+  isEurCurrency,
   type DocumentDetail,
 } from '@/lib/documents';
 import { DOCUMENTS_OPERATIVE_HREFS } from '@/lib/documentListQuery';
@@ -80,6 +81,7 @@ const DOCUMENT_STATUS_LABEL: Record<string, string> = {
   received: 'Zaprimljen',
   cancelled: 'Storniran',
   rejected: 'Odbijen',
+  reversed: 'Stornirano',
 };
 
 const WORKFLOW_STATUS_LABEL: Record<string, string> = {
@@ -116,12 +118,15 @@ const PAYMENT_STATUS_LABEL: Record<string, string> = {
   matched: 'Usklađeno',
   unmatched: 'Neusklađeno',
   suggested: 'Prijedlog',
+  private_cash: 'Gotovina',
+  private_account: 'Privatni račun',
 };
 
 const DOCUMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
   received: 'neutral',
   cancelled: 'danger',
   rejected: 'danger',
+  reversed: 'neutral',
 };
 
 const WORKFLOW_STATUS_TONE: Record<string, ProvenanceTone> = {
@@ -155,12 +160,14 @@ const SETTLEMENT_FROM_SUBLEDGER: Record<string, string> = {
 
 const SETTLEMENT_STATUS_LABEL: Record<string, string> = {
   paid: 'Plaćeno',
+  reversed: 'Stornirano',
   partial: 'Djelomično',
   unpaid: 'Neplaćeno',
 };
 
 const SETTLEMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
   paid: 'success',
+  reversed: 'success',
   partial: 'warning',
   unpaid: 'neutral',
 };
@@ -169,6 +176,8 @@ const PAYMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
   matched: 'success',
   unmatched: 'warning',
   suggested: 'neutral',
+  private_cash: 'success',
+  private_account: 'success',
 };
 
 const REFERENCE_TYPE_LABEL: Record<string, string> = {
@@ -619,9 +628,62 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     detail?.internal_number ||
     `Ulazni #${expenseId}`;
   const currency = detail?.totals?.currency || detail?.amounts?.currency || 'EUR';
+  const bookCurrency = 'EUR';
+  const sameMoney = (left?: string | null, right?: string | null) =>
+    left != null && right != null && Number(left) === Number(right);
+  const documentFaceForBook = (book?: string | null) => {
+    if (!book || isEurCurrency(currency) || !detail?.amounts) return null;
+    if (sameMoney(book, detail.amounts.book_gross)) return detail.amounts.gross;
+    if (sameMoney(book, detail.amounts.book_net)) return detail.amounts.net;
+    if (sameMoney(book, detail.amounts.book_vat)) return detail.amounts.vat;
+    return null;
+  };
+  const dualBook = (book?: string | null) => {
+    const face = documentFaceForBook(book);
+    if (!face) return money(book, bookCurrency);
+    return (
+      <span className="cell-stack">
+        <span>{money(book, bookCurrency)}</span>
+        <span className="muted-inline">{money(face, currency)}</span>
+      </span>
+    );
+  };
+  const faceAndBook = (face?: string | null, book?: string | null) => (
+    <span className="cell-stack">
+      <span>{money(face, currency)}</span>
+      {book && !isEurCurrency(currency) ? (
+        <span className="muted-inline">{money(book, bookCurrency)}</span>
+      ) : null}
+    </span>
+  );
   const supplier = detail?.supplier;
   const meta = detail?.document;
   const lifecycle = detail?.status;
+  const closings = detail?.settlement_trail?.closings ?? [];
+  const privateCashClosings = closings.filter((row) => row.kind === 'private_funds');
+  const stornoClosings = closings.filter((row) => row.kind === 'storno');
+  const privateFundsOnly =
+    privateCashClosings.length > 0 &&
+    closings.every((row) => row.kind === 'private_funds') &&
+    !detail?.payment?.bank_transaction_id;
+  const privateAccountOnly =
+    privateFundsOnly && privateCashClosings.every((row) => row.label === 'Privatni račun');
+  const privateCashOnly = privateFundsOnly && !privateAccountOnly;
+  const stornoOnly =
+    stornoClosings.length > 0 &&
+    closings.every((row) => row.kind === 'storno') &&
+    !detail?.payment?.bank_transaction_id;
+  const stornoMarked = Boolean(
+    detail?.reversal_of || stornoOnly || detail?.operational_status?.value === 'reversed',
+  );
+  const stornoLinks = detail?.reversal_of
+    ? [{ id: detail.reversal_of.id, number: detail.reversal_of.number }]
+    : stornoClosings
+        .filter((row) => row.storno_expense_id != null)
+        .map((row) => ({
+          id: row.storno_expense_id as number,
+          number: row.storno_expense_number || 'Storno',
+        }));
   const integration = detail?.integration;
   const externalUrl = integration?.external_view_url || null;
   const lines = detail?.lines || [];
@@ -662,6 +724,19 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
           <p className="docs-detail-kicker">Detalji ulaznog računa</p>
           <h1 className="docs-heading">{title}</h1>
           {supplier?.name ? <p className="incoming-detail-subtitle">{supplier.name}</p> : null}
+          {stornoMarked ? (
+            <p className="incoming-detail-subtitle">
+              <span className="badge badge-neutral" data-tone="neutral">
+                Stornirano
+              </span>
+              {stornoLinks.map((link) => (
+                <Link key={link.id} href={`/t/${slug}/dokumenti/ulazni/${link.id}`}>
+                  {' '}
+                  {link.number}
+                </Link>
+              ))}
+            </p>
+          ) : null}
         </div>
         <div className="incoming-detail-actions">
           {detail?.pdf_available ? (
@@ -973,6 +1048,12 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                   <dt>Valuta</dt>
                   <dd>{meta?.currency || currency}</dd>
                 </div>
+                {!isEurCurrency(currency) && detail.amounts?.book_gross ? (
+                  <div>
+                    <dt>U eurima</dt>
+                    <dd>{money(detail.amounts.book_gross, 'EUR')}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt>Poslovni proces</dt>
                   <dd>{meta?.business_process || '—'}</dd>
@@ -1001,7 +1082,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                     <StatusBadge
                       map={DOCUMENT_STATUS_LABEL}
                       tones={DOCUMENT_STATUS_TONE}
-                      value={lifecycle?.document}
+                      value={stornoMarked ? 'reversed' : lifecycle?.document}
                     />
                   </dd>
                 </div>
@@ -1048,9 +1129,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                       map={SETTLEMENT_STATUS_LABEL}
                       tones={SETTLEMENT_STATUS_TONE}
                       value={
-                        lifecycle?.subledger
-                          ? (SETTLEMENT_FROM_SUBLEDGER[lifecycle.subledger] ?? null)
-                          : null
+                        stornoMarked
+                          ? 'reversed'
+                          : lifecycle?.subledger
+                            ? (SETTLEMENT_FROM_SUBLEDGER[lifecycle.subledger] ?? null)
+                            : null
                       }
                     />
                   </dd>
@@ -1061,7 +1144,13 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                     <StatusBadge
                       map={PAYMENT_STATUS_LABEL}
                       tones={PAYMENT_STATUS_TONE}
-                      value={lifecycle?.payment}
+                      value={
+                        privateAccountOnly
+                          ? 'private_account'
+                          : privateCashOnly
+                            ? 'private_cash'
+                            : lifecycle?.payment
+                      }
                     />
                   </dd>
                 </div>
@@ -1083,7 +1172,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 <div>
                   <dt>Obveza</dt>
                   <dd>
-                    {money(detail.settlement_trail.totals.obligation, currency)}
+                    {dualBook(detail.settlement_trail.totals.obligation)}
                     {detail.settlement_trail.obligation?.journal_entry_id != null ? (
                       <>
                         {' · '}
@@ -1099,11 +1188,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </div>
                 <div>
                   <dt>Alocirano</dt>
-                  <dd>{money(detail.settlement_trail.totals.allocated, currency)}</dd>
+                  <dd>{dualBook(detail.settlement_trail.totals.allocated)}</dd>
                 </div>
                 <div>
                   <dt>Otvoreno</dt>
-                  <dd>{money(detail.settlement_trail.totals.open, currency)}</dd>
+                  <dd>{dualBook(detail.settlement_trail.totals.open)}</dd>
                 </div>
               </dl>
               {detail.settlement_trail.closings.length > 0 ? (
@@ -1120,8 +1209,16 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                     <tbody>
                       {detail.settlement_trail.closings.map((row) => (
                         <tr key={row.allocation_id}>
-                          <td>{row.label}</td>
-                          <td className="cell-amount">{money(row.amount, currency)}</td>
+                          <td>
+                            {row.kind === 'storno'
+                              ? 'Storno'
+                              : row.kind === 'private_funds'
+                                ? row.label === 'Privatni račun'
+                                  ? 'Privatni račun'
+                                  : 'Gotovina'
+                                : row.label}
+                          </td>
+                          <td className="cell-amount">{dualBook(row.amount)}</td>
                           <td>
                             {row.journal_entry_id != null ? (
                               <Link href={`/t/${slug}/glavna-knjiga/${row.journal_entry_id}`}>
@@ -1148,6 +1245,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                                 ) : null}
                               </span>
                             ) : null}
+                            {row.kind === 'storno' && row.storno_expense_id != null ? (
+                              <Link href={`/t/${slug}/dokumenti/ulazni/${row.storno_expense_id}`}>
+                                {row.storno_expense_number || 'Storno'}
+                              </Link>
+                            ) : null}
                             {row.kind === 'private_funds' ? (
                               <span className="cell-stack">
                                 {row.claim_number ? <span>{row.claim_number}</span> : null}
@@ -1158,6 +1260,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                                 ) : (
                                   row.partner_name || null
                                 )}
+                                <span className="muted-inline">
+                                  {row.label === 'Privatni račun'
+                                    ? 'Sa privatnog računa'
+                                    : 'Svojom gotovinom'}
+                                </span>
                               </span>
                             ) : null}
                             {row.kind === 'other' ? <span>—</span> : null}
@@ -1184,7 +1291,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                           entry.entry_number || '—'
                         )}
                         {' · '}
-                        {money(entry.amount, currency)}
+                        {dualBook(entry.amount)}
                         <span className="muted-inline"> — {entry.note}</span>
                       </li>
                     ))}
@@ -1289,7 +1396,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               <div className="posting-preview-block">
                 <h3>Prijedlog knjiženja</h3>
                 <p className="muted-inline">Linije dolaze s poslužitelja; sučelje ih ne računa.</p>
-                <PostingPreviewLines preview={preview} currency={currency} />
+                <PostingPreviewLines
+                  preview={preview}
+                  currency={bookCurrency}
+                  documentCurrency={isEurCurrency(currency) ? undefined : currency}
+                />
                 {canApprove ? (
                   <div className="posting-approve-row">
                     <button
@@ -1333,11 +1444,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Duguje</dt>
-                <dd>{money(detail.accounting?.debit_total, currency)}</dd>
+                <dd>{dualBook(detail.accounting?.debit_total)}</dd>
               </div>
               <div>
                 <dt>Potražuje</dt>
-                <dd>{money(detail.accounting?.credit_total, currency)}</dd>
+                <dd>{dualBook(detail.accounting?.credit_total)}</dd>
               </div>
             </dl>
             {(detail.accounting?.lines?.length ?? 0) > 0 ? (
@@ -1358,8 +1469,8 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                         <td>{line.account_code || '—'}</td>
                         <td>{line.account_name || '—'}</td>
                         <td>{line.description || '—'}</td>
-                        <td className="cell-amount">{money(line.debit, currency)}</td>
-                        <td className="cell-amount">{money(line.credit, currency)}</td>
+                        <td className="cell-amount">{dualBook(line.debit)}</td>
+                        <td className="cell-amount">{dualBook(line.credit)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1401,11 +1512,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Osnovica</dt>
-                <dd>{money(detail.vat_context?.total_base, currency)}</dd>
+                <dd>{dualBook(detail.vat_context?.total_base)}</dd>
               </div>
               <div>
                 <dt>PDV</dt>
-                <dd>{money(detail.vat_context?.total_vat, currency)}</dd>
+                <dd>{dualBook(detail.vat_context?.total_vat)}</dd>
               </div>
             </dl>
             {(detail.vat_context?.rates?.length ?? 0) > 0 ? (
@@ -1422,8 +1533,8 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                     {(detail.vat_context?.rates || []).map((row) => (
                       <tr key={`vat-ctx-${row.rate}`}>
                         <td>{row.rate != null ? `${row.rate}%` : '—'}</td>
-                        <td className="cell-amount">{money(row.base, currency)}</td>
-                        <td className="cell-amount">{money(row.vat, currency)}</td>
+                        <td className="cell-amount">{dualBook(row.base)}</td>
+                        <td className="cell-amount">{dualBook(row.vat)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1443,15 +1554,15 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Izvorni iznos</dt>
-                <dd>{money(detail.subledger_context?.original_amount, currency)}</dd>
+                <dd>{dualBook(detail.subledger_context?.original_amount)}</dd>
               </div>
               <div>
                 <dt>Alocirano</dt>
-                <dd>{money(detail.subledger_context?.allocated_amount, currency)}</dd>
+                <dd>{dualBook(detail.subledger_context?.allocated_amount)}</dd>
               </div>
               <div>
                 <dt>Otvoreno</dt>
-                <dd>{money(detail.subledger_context?.open_amount, currency)}</dd>
+                <dd>{dualBook(detail.subledger_context?.open_amount)}</dd>
               </div>
               <div>
                 <dt>Dospijeće</dt>
@@ -1483,7 +1594,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                     {(detail.subledger_context?.allocations || []).map((alloc) => (
                       <tr key={alloc.id}>
                         <td>{alloc.id}</td>
-                        <td className="cell-amount">{money(alloc.amount, currency)}</td>
+                        <td className="cell-amount">{dualBook(alloc.amount)}</td>
                         <td>{alloc.journal_entry_id ?? '—'}</td>
                         <td>{formatHrDateTime(alloc.created_at)}</td>
                       </tr>
@@ -1498,34 +1609,140 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
 
           <section className="incoming-card">
             <h2>Plaćanje</h2>
-            <dl className="incoming-dl incoming-dl-inline">
-              <div>
-                <dt>Usklađeno</dt>
-                <dd>
-                  {detail.payment == null ? '—' : detail.payment.matched ? 'Da' : 'Ne'}
-                </dd>
-              </div>
-              <div>
-                <dt>Status</dt>
-                <dd>{statusLabel(PAYMENT_STATUS_LABEL, detail.payment?.reconcile_status)}</dd>
-              </div>
-              <div>
-                <dt>Datum</dt>
-                <dd>{formatHrInputDate(detail.payment?.date)}</dd>
-              </div>
-              <div>
-                <dt>Iznos</dt>
-                <dd>{money(detail.payment?.amount, currency)}</dd>
-              </div>
-              <div>
-                <dt>Račun</dt>
-                <dd>{detail.payment?.account_mask || '—'}</dd>
-              </div>
-              <div>
-                <dt>Referenca</dt>
-                <dd>{detail.payment?.reference || '—'}</dd>
-              </div>
-            </dl>
+            {detail.reversal_of ? (
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Storno</dt>
+                  <dd>
+                    <Link href={`/t/${slug}/dokumenti/ulazni/${detail.reversal_of.id}`}>
+                      {detail.reversal_of.number}
+                    </Link>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>{faceAndBook(detail.amounts?.gross, detail.amounts?.book_gross)}</dd>
+                </div>
+              </dl>
+            ) : stornoOnly ? (
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Način</dt>
+                  <dd>Storno</dd>
+                </div>
+                <div>
+                  <dt>Dokument</dt>
+                  <dd>
+                    <span className="cell-stack">
+                      {stornoClosings.map((row) =>
+                        row.storno_expense_id != null ? (
+                          <Link
+                            key={row.allocation_id}
+                            href={`/t/${slug}/dokumenti/ulazni/${row.storno_expense_id}`}
+                          >
+                            {row.storno_expense_number || 'Storno'}
+                          </Link>
+                        ) : (
+                          <span key={row.allocation_id}>{row.storno_expense_number || 'Storno'}</span>
+                        ),
+                      )}
+                    </span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>
+                    {stornoClosings.length === 1
+                      ? dualBook(stornoClosings[0].amount)
+                      : stornoClosings.map((row) => (
+                          <span key={row.allocation_id}>{dualBook(row.amount)}</span>
+                        ))}
+                  </dd>
+                </div>
+              </dl>
+            ) : privateCashOnly || privateAccountOnly ? (
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Način</dt>
+                  <dd>{privateAccountOnly ? 'Privatni račun' : 'Gotovina'}</dd>
+                </div>
+                <div>
+                  <dt>Platitelj</dt>
+                  <dd>
+                    <span className="cell-stack">
+                      {privateCashClosings.map((row) =>
+                        row.partner_id && row.partner_name ? (
+                          <Link key={row.allocation_id} href={`/t/${slug}/partneri/${row.partner_id}`}>
+                            {row.partner_name}
+                          </Link>
+                        ) : (
+                          <span key={row.allocation_id}>{row.partner_name || '—'}</span>
+                        ),
+                      )}
+                      <span className="muted-inline">
+                        {privateAccountOnly ? 'Sa privatnog računa' : 'Svojom gotovinom'}
+                      </span>
+                    </span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Datum</dt>
+                  <dd>{formatHrInputDate(meta?.issue_date)}</dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>
+                    {privateCashClosings.length === 1
+                      ? dualBook(privateCashClosings[0].amount)
+                      : privateCashClosings.map((row) => (
+                          <span key={row.allocation_id}>{dualBook(row.amount)}</span>
+                        ))}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Usklađeno</dt>
+                  <dd>
+                    {detail.payment == null ? '—' : detail.payment.matched ? 'Da' : 'Ne'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Status</dt>
+                  <dd>{statusLabel(PAYMENT_STATUS_LABEL, detail.payment?.reconcile_status)}</dd>
+                </div>
+                <div>
+                  <dt>Datum</dt>
+                  <dd>{formatHrInputDate(detail.payment?.date)}</dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>
+                    {detail.payment?.book_amount &&
+                    detail.payment.currency &&
+                    !isEurCurrency(detail.payment.currency) ? (
+                      <span className="cell-stack">
+                        <span>{money(detail.payment.book_amount, bookCurrency)}</span>
+                        <span className="muted-inline">
+                          {money(detail.payment.amount, detail.payment.currency)}
+                        </span>
+                      </span>
+                    ) : (
+                      dualBook(detail.payment?.amount)
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Račun</dt>
+                  <dd>{detail.payment?.account_mask || '—'}</dd>
+                </div>
+                <div>
+                  <dt>Referenca</dt>
+                  <dd>{detail.payment?.reference || '—'}</dd>
+                </div>
+              </dl>
+            )}
           </section>
 
           <section className="incoming-card">
@@ -1570,12 +1787,12 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                         <td className="cell-amount">{money(line.unit_price, currency)}</td>
                         <td className="cell-amount">
                           {line.vat_amount
-                            ? money(line.vat_amount, currency)
+                            ? faceAndBook(line.vat_amount, line.book_vat_amount)
                             : line.vat_rate != null
                               ? `${line.vat_rate}%`
                               : '—'}
                         </td>
-                        <td className="cell-amount">{money(line.net_amount, currency)}</td>
+                        <td className="cell-amount">{faceAndBook(line.net_amount, line.book_net_amount)}</td>
                         {hasExpenseLines ? (
                           <td>
                             {line.id != null && canEditPosting ? (
@@ -1661,19 +1878,29 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 {taxSummary.map((row) => (
                   <div key={`tax-${row.rate}`}>
                     <dt>PDV {row.rate != null ? `${row.rate}%` : ''}</dt>
-                    <dd>{money(row.vat, currency)}</dd>
+                    <dd>
+                      {sameMoney(row.vat, detail.amounts?.vat)
+                        ? faceAndBook(row.vat, detail.amounts?.book_vat)
+                        : money(row.vat, currency)}
+                    </dd>
                   </div>
                 ))}
                 {taxSummary.length === 0 ? (
                   <div>
                     <dt>PDV</dt>
-                    <dd>{money(detail.totals?.vat_total, currency)}</dd>
+                    <dd>{faceAndBook(detail.totals?.vat_total, detail.amounts?.book_vat)}</dd>
                   </div>
                 ) : null}
                 <div className="incoming-total-strong">
                   <dt>Sveukupno</dt>
                   <dd>{money(detail.totals?.grand_total, currency)}</dd>
                 </div>
+                {!isEurCurrency(currency) && detail.amounts?.book_gross ? (
+                  <div>
+                    <dt>U eurima</dt>
+                    <dd>{money(detail.amounts.book_gross, 'EUR')}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt>Plaćeno unaprijed</dt>
                   <dd>{money(detail.totals?.prepaid, currency)}</dd>

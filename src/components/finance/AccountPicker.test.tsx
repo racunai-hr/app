@@ -214,7 +214,10 @@ describe('AccountPicker', () => {
     typeSearch('4198');
     await flushSearch();
     expect(input).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('listbox')).toHaveAttribute('id', listboxId);
+    const listbox = screen.getByRole('listbox');
+    expect(listbox).toHaveAttribute('id', listboxId);
+    expect(listbox.parentElement).toBe(document.body);
+    expect(listbox).toHaveStyle({ position: 'fixed' });
     expect(input.getAttribute('aria-activedescendant')).toBeTruthy();
     expect(screen.getByRole('option', { name: /4198/ })).toHaveAttribute('aria-selected', 'true');
   });

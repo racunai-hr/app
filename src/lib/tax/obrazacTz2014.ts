@@ -11,6 +11,7 @@ export const FINESTAR_OBRAZAC_TZ_2018_YEAR = 2018;
 export const FINESTAR_OBRAZAC_TZ_2019_YEAR = 2019;
 export const FINESTAR_OBRAZAC_TZ_2020_YEAR = 2020;
 export const FINESTAR_OBRAZAC_TZ_2021_YEAR = 2021;
+export const FINESTAR_OBRAZAC_TZ_2022_YEAR = 2022;
 
 export type ObrazacTzLine = {
   ordinal: string;
@@ -260,6 +261,41 @@ const OBRAZAC_TZ_NOTICES = [
 ];
 
 const OBRAZAC_TZ_SNAPSHOTS = [
+  {
+    slug: FINESTAR_SLUG,
+    year: FINESTAR_OBRAZAC_TZ_2022_YEAR,
+    currency: 'HRK' as const,
+    periodFrom: '2022-01-01',
+    periodTo: '2022-12-31',
+    taxpayerName: 'FINE STAR d.o.o.',
+    oib: '36619131370',
+    officeName: '3566',
+    formTitle: 'Obrazac TZ 1',
+    formId: 'a2a20de1-1a61-4d35-a0a2-dbb5c4f957fb',
+    composedAt: '2023-03-30T07:57:20+02:00',
+    signedAt: '2023-03-30T07:58:02+02:00',
+    signedBy: 'Zorana Lambaša',
+    lines: FINESTAR_OBRAZAC_TZ_2021_LINES,
+    receiptId: 'dda1db7b-d2fb-47c6-b826-a42f2491b4e7',
+    receivedAt: '2023-03-30T07:58:24+02:00',
+    statuses: [
+      {
+        code: '1.1110.2.0.3.705',
+        text: 'Iznos pod rednim brojem 13. može biti nula samo ako je 31.12. prestanak obveze.',
+        at: '2023-03-30T07:58:24+02:00',
+      },
+      {
+        code: '1.1110.1.0.1.10',
+        text: 'Poslani TZ 1 obrazac uspješno je zaprimljen te čeka obradu.',
+        at: '2023-03-30T07:58:24+02:00',
+      },
+      {
+        code: '2.1024.3.0.1.100',
+        text: 'Obrazac je u obradi.',
+        at: '2023-03-30T07:58:24+02:00',
+      },
+    ],
+  },
   {
     slug: FINESTAR_SLUG,
     year: FINESTAR_OBRAZAC_TZ_2021_YEAR,

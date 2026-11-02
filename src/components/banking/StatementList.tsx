@@ -9,9 +9,10 @@ import { usePageBounds } from '@/components/ui/usePageBounds';
 import { ApiError } from '@/lib/api';
 import { fetchStatements, type Paginated, type StatementDto } from '@/lib/banking';
 import { STATEMENT_STATUS_LABELS, labelOrRaw } from '@/lib/bankingLabels';
-import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
 import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
 
+import { BookMoney } from './BookMoney';
 import { StatementImport } from './StatementImport';
 
 type Props = { slug: string; origin: string; token: string; role: string };
@@ -153,8 +154,20 @@ export function StatementList({ slug, origin, token, role }: Props) {
                   <td>{row.statement_number}</td>
                   <td>{formatHrInputDate(row.statement_date)}</td>
                   <td>{row.bank_account_id}</td>
-                  <td>{formatHrMoney(row.opening_balance, row.currency || 'EUR')}</td>
-                  <td>{formatHrMoney(row.closing_balance, row.currency || 'EUR')}</td>
+                  <td>
+                    <BookMoney
+                      amount={row.opening_balance}
+                      currency={row.currency}
+                      amountEur={row.opening_balance_eur}
+                    />
+                  </td>
+                  <td>
+                    <BookMoney
+                      amount={row.closing_balance}
+                      currency={row.currency}
+                      amountEur={row.closing_balance_eur}
+                    />
+                  </td>
                   <td>
                     <span className="badge badge-neutral">
                       {labelOrRaw(STATEMENT_STATUS_LABELS, row.status)}

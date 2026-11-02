@@ -22,7 +22,7 @@ describe('BalanceCell', () => {
     const onImport = vi.fn();
     render(<BalanceCell balances={[balance()]} canImport onImport={onImport} />);
     const button = screen.getByRole('button', {
-      name: 'Zastarjelo — uvezi novi XML izvadak (camt.053)',
+      name: 'Zastarjelo — uvezi novi izvod (CAMT.053 ili OTP IZV)',
     });
     fireEvent.click(button);
     expect(onImport).toHaveBeenCalledTimes(1);
@@ -32,7 +32,7 @@ describe('BalanceCell', () => {
     render(<BalanceCell balances={[balance()]} />);
     expect(screen.getByText('Zastarjelo').tagName).toBe('SPAN');
     expect(
-      screen.queryByRole('button', { name: /Zastarjelo — uvezi novi XML izvadak/ }),
+      screen.queryByRole('button', { name: /Zastarjelo — uvezi novi izvod/ }),
     ).toBeNull();
   });
 

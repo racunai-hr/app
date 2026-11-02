@@ -76,9 +76,9 @@ describe('Fine Star POD-BIL 2014', () => {
       status: 'snapshot',
       asOf: '2015-12-31',
     });
-    expect(podBilForTenantYear('finestar', 2022)).toEqual({
+    expect(podBilForTenantYear('finestar', 2023)).toEqual({
       status: 'empty',
-      year: 2022,
+      year: 2023,
       scheme: 'from-2016',
     });
     expect(podBilForTenantYear('other', 2014)).toEqual({
@@ -86,7 +86,7 @@ describe('Fine Star POD-BIL 2014', () => {
       year: 2014,
       scheme: 'pre-2016',
     });
-    expect(podBilYears('finestar')).toEqual([2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]);
+    expect(podBilYears('finestar')).toEqual([2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]);
     expect(podBilYears('other')).toEqual([]);
   });
 

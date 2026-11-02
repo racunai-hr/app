@@ -272,6 +272,7 @@ export async function discardInvoiceImport(
 export type EracunImportResult = {
   scanned: number;
   imported: number;
+  merged: number;
   skipped: number;
   failed: number;
   remaining_importable: number;

@@ -16,6 +16,7 @@ describe('GfiReport', () => {
     const year = screen.getByLabelText('Godina');
     expect(year.tagName).toBe('SELECT');
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '2022',
       '2021',
       '2020',
       '2019',
@@ -31,6 +32,14 @@ describe('GfiReport', () => {
     expect(screen.getByText(/Mikro poduzetnik/)).toBeInTheDocument();
     expect(screen.getByText(/Toni Šupe/)).toBeInTheDocument();
     expect(screen.getByText(/Privatno od osnivanja/)).toBeInTheDocument();
+    expect(screen.getByText(/Identifikator 7428243/)).toBeInTheDocument();
+    expect(screen.getByText(/Predano 26\.04\.2023\./)).toBeInTheDocument();
+    expect(screen.getByText(/387\.847\.189,32/)).toBeInTheDocument();
+    expect(screen.getByText(/datoteke 4\.0\.2/)).toBeInTheDocument();
+    expect(screen.getByText(/u prethodnoj godini 0, u tekućoj 1/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Godina'), { target: { value: '2021' } });
+
     expect(screen.getByText(/Identifikator 7122844/)).toBeInTheDocument();
     expect(screen.getByText(/Predano 28\.03\.2022\./)).toBeInTheDocument();
     expect(screen.getByText(/377\.619\.595,69/)).toBeInTheDocument();

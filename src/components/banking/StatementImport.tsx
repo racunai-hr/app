@@ -151,18 +151,18 @@ export function StatementImport({ origin, token, role, onImported }: Props) {
   return (
     <div className="banking-import">
       <label className="filter-field">
-        <span>CAMT XML izvod</span>
+        <span>CAMT XML ili OTP IZV PDF</span>
         <input
           ref={inputRef}
           type="file"
-          accept=".xml,application/xml,text/xml"
+          accept=".xml,.pdf,application/xml,text/xml,application/pdf"
           disabled={busy}
           onChange={(event) => selectFile(event.target.files?.[0] || null)}
         />
       </label>
       <p className="banking-import-file text-muted">{sizeLabel}</p>
       <button type="button" className="btn btn-primary" disabled={busy || !file} onClick={startImport}>
-        Uvezi CAMT izvod
+        Uvezi izvod
       </button>
       {timedOutRunId ? (
         <button type="button" className="btn btn-secondary" disabled={busy} onClick={recheckStatus}>

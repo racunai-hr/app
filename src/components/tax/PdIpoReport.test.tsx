@@ -15,6 +15,7 @@ describe('PdIpoReport', () => {
 
     expect(screen.getByLabelText('Godina')).toBeInTheDocument();
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '2022',
       '2021',
       '2020',
       '2019',
@@ -22,6 +23,15 @@ describe('PdIpoReport', () => {
       '2017',
       '2016',
     ]);
+    expect(screen.getByText(/ŠIEBNIK/)).toBeInTheDocument();
+    expect(screen.getByText(/za pravnu osobu koja nije član uprave ili srodnik/)).toBeInTheDocument();
+    expect(screen.getByText(/Sveukupno obveze: nastanak 459\.315,00/)).toBeInTheDocument();
+    expect(screen.getByText(/kraj 427\.269,79/)).toBeInTheDocument();
+    expect(screen.getAllByText('2,68 %').length).toBeGreaterThan(0);
+    expect(screen.getByText(/344f8b3a-e81c-4148-935f-f66901e65ec6/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Godina'), { target: { value: '2021' } });
+
     expect(screen.getByText(/Šupina Poljica j.d.o.o., OIB 91381354893/)).toBeInTheDocument();
     expect(screen.getAllByText(/Toni Šupe, OIB 63281973348/).length).toBe(2);
     expect(screen.getAllByText('185.600,00').length).toBeGreaterThan(0);

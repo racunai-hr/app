@@ -84,6 +84,16 @@ vi.mock('@/lib/costCenters', async () => {
   };
 });
 
+const fetchImportAccountingReview = vi.hoisted(() => vi.fn());
+
+vi.mock('@/lib/accountingReview', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/accountingReview')>('@/lib/accountingReview');
+  return {
+    ...actual,
+    fetchImportAccountingReview: (...args: unknown[]) => fetchImportAccountingReview(...args),
+  };
+});
+
 import { InvoiceReview } from './InvoiceReview';
 
 function emptyParty() {
@@ -222,6 +232,21 @@ describe('InvoiceReview', () => {
     fetchCostCenters.mockResolvedValue({
       count: 1,
       results: [{ id: 6, code: '110', name: 'Kuhinja', kind: 'location', notes: '', parent: null }],
+    });
+    fetchImportAccountingReview.mockReset();
+    fetchImportAccountingReview.mockResolvedValue({
+      status: 'needs_confirmation',
+      purchase_nature: 'service',
+      posting_profile: 'opex',
+      profile_label: 'Operativni trošak',
+      vehicle: null,
+      decision_source: 'rule',
+      reason: '',
+      explanation: 'Operativni trošak.',
+      questions: [],
+      preview: null,
+      line_accounts: [],
+      document_date: '',
     });
   });
 
@@ -406,6 +431,8 @@ describe('InvoiceReview', () => {
           expense_account_id: null,
           cost_center_id: null,
           remember_category_for_partner: true,
+          vehicle_id: null,
+          answers: {},
         },
       );
     });
@@ -562,5 +589,113 @@ describe('InvoiceReview', () => {
     await waitFor(() => {
       expect(applySupplier).toHaveBeenCalledWith(session.origin, 'token', 9, { source: 'buyer' });
     });
+  });
+
+  function runWithLine() {
+    const run = extractedRun();
+    run.extracted = {
+      ...run.extracted,
+      allocated_lines: [
+        {
+          position: 1,
+          description: 'ED CP',
+          net_amount: '40.00',
+          vat_amount: '10.00',
+          gross_amount: '50.00',
+        },
+      ],
+    };
+    return run;
+  }
+
+  const filledReview = {
+    status: 'resolved',
+    purchase_nature: 'fuel',
+    posting_profile: 'goods_inward_cost',
+    profile_label: 'Zavisni trošak nabave robe',
+    vehicle: {
+      id: 1,
+      name: 'Zaliha',
+      vin: '',
+      registration_plate: 'ZG1001AA',
+      accounting_role: 'inventory_for_resale',
+    },
+    decision_source: 'vehicle',
+    reason: '',
+    explanation: '',
+    questions: [],
+    preview: [{ account_code: '6514', account_name: 'Prijevoz', debit: '40.00', credit: '0.00' }],
+    line_accounts: [
+      { position: 1, account_id: 77, account_code: '6514', account_name: 'Prijevoz', source: 'posting_rule' },
+    ],
+    document_date: '2026-10-01',
+  };
+
+  const askingReview = {
+    ...filledReview,
+    status: 'needs_information',
+    posting_profile: null,
+    vehicle: null,
+    preview: null,
+    line_accounts: [],
+    questions: [
+      {
+        key: 'vehicle_id',
+        type: 'vehicle_select',
+        label: 'Za koje vozilo je ovaj trošak?',
+        required: true,
+        options: [],
+      },
+    ],
+  };
+
+  it('prefills a line from the review and clears only the automatic value', async () => {
+    fetchInvoiceImport.mockResolvedValue(runWithLine());
+    fetchImportAccountingReview.mockResolvedValue(filledReview);
+    render(<InvoiceReview slug="finestar" importId={9} />);
+    const picker = await screen.findByRole('combobox', { name: 'Konto stavke 1' });
+    await waitFor(() => expect(picker).toHaveValue('6514 · Prijevoz'));
+
+    fetchImportAccountingReview.mockResolvedValue(askingReview);
+    fireEvent.click(screen.getByRole('button', { name: 'Promijeni' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Tretman' }), { target: { value: 'opex' } });
+    await waitFor(() => expect(picker).toHaveValue(''));
+  });
+
+  it('keeps a manually chosen line account when the review later needs information', async () => {
+    fetchInvoiceImport.mockResolvedValue(runWithLine());
+    fetchImportAccountingReview.mockResolvedValue(filledReview);
+    render(<InvoiceReview slug="finestar" importId={9} />);
+    const picker = await screen.findByRole('combobox', { name: 'Konto stavke 1' });
+    fireEvent.change(picker, { target: { value: '4100' } });
+    fireEvent.click(await screen.findByRole('option', { name: /4100/ }));
+    expect(picker).toHaveValue('4100 · Najam');
+
+    fetchImportAccountingReview.mockResolvedValue(askingReview);
+    fireEvent.click(screen.getByRole('button', { name: 'Promijeni' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Tretman' }), { target: { value: 'opex' } });
+    await waitFor(() => {
+      const answers = fetchImportAccountingReview.mock.calls.at(-1)?.[3] as { posting_profile?: string };
+      expect(answers?.posting_profile).toBe('opex');
+    });
+    expect(picker).toHaveValue('4100 · Najam');
+  });
+
+  it('shows the passenger split instead of a single line account', async () => {
+    fetchInvoiceImport.mockResolvedValue(runWithLine());
+    fetchImportAccountingReview.mockResolvedValue({
+      ...filledReview,
+      posting_profile: 'company_passenger_vehicle',
+      line_accounts: [],
+      preview: [
+        { account_code: '4075', account_name: 'Priznati', debit: '20.00', credit: '0.00' },
+        { account_code: '4076', account_name: 'Ograničeni', debit: '25.00', credit: '0.00' },
+        { account_code: '1400', account_name: 'Pretporez', debit: '5.00', credit: '0.00' },
+      ],
+    });
+    render(<InvoiceReview slug="finestar" importId={9} />);
+    expect(await screen.findByText(/4075 · Priznati/)).toBeInTheDocument();
+    expect(screen.getByText(/4076 · Ograničeni/)).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Konto stavke 1' })).not.toBeInTheDocument();
   });
 });

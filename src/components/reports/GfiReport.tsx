@@ -50,7 +50,11 @@ export function GfiReport({ slug }: Props) {
             {view.street}, {view.place}. Vrsta izvještaja {view.reportKind}. {view.sizeLabel}.{' '}
             {view.accountingStandard ? `${view.accountingStandard}. ` : ''}
             {view.ownershipLabel}. Domaći kapital {view.domesticCapitalPercent} %, strani{' '}
-            {view.foreignCapitalPercent} %. Zaposleni {view.employees}. Mjeseci poslovanja u
+            {view.foreignCapitalPercent} %. Zaposleni{' '}
+            {view.employeesPrevious != null
+              ? `u prethodnoj godini ${view.employeesPrevious}, u tekućoj ${view.employees}`
+              : view.employees}
+            . Mjeseci poslovanja u
             prethodnoj godini {view.monthsPrevious}, u tekućoj {view.monthsCurrent}. Nema obveze
             revizije. Zastupnik {view.representative}. Verzija Excel datoteke {view.excelVersion}.
           </p>

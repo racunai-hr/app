@@ -3,6 +3,7 @@
 import { FINESTAR_SLUG } from '@/lib/reports/podBil2014';
 
 export { FINESTAR_SLUG };
+export const FINESTAR_PD_IPO_2022_YEAR = 2022;
 export const FINESTAR_PD_IPO_2021_YEAR = 2021;
 export const FINESTAR_PD_IPO_2020_YEAR = 2020;
 export const FINESTAR_PD_IPO_2019_YEAR = 2019;
@@ -21,6 +22,15 @@ export type PdIpoReceivable = {
   interestAtYearEnd: string;
 };
 
+export type PdIpoLoanTotals = {
+  amountAtOrigin: string;
+  openingPrincipal: string;
+  closingPrincipal: string;
+  interestInYear: string;
+  taxBaseIncrease: string;
+  interestAtYearEnd: string;
+};
+
 export type PdIpoPerson = {
   name: string;
   oib: string;
@@ -33,6 +43,8 @@ export type PdIpoPerson = {
   privilegedTaxStatus: false;
   carriedTaxLoss: false;
   receivable: PdIpoReceivable;
+  loans?: PdIpoReceivable[];
+  totals?: PdIpoLoanTotals;
 };
 
 export type PdIpoView =
@@ -54,6 +66,7 @@ export type PdIpoView =
       processedAt?: string;
       person: PdIpoPerson;
       obligations?: PdIpoPerson[];
+      obligationTotals?: PdIpoLoanTotals;
     }
   | { status: 'empty' };
 
@@ -67,7 +80,123 @@ const RELATED_MEMBER = {
   carriedTaxLoss: false as const,
 };
 
+const RELATED_COMPANY = {
+  country: 'Hrvatska',
+  capitalShare: '0.00',
+  votingShare: '0.00',
+  relation: 'P',
+  relationLabel: 'za pravnu osobu koja nije član uprave ili srodnik',
+  privilegedTaxStatus: false as const,
+  carriedTaxLoss: false as const,
+};
+
+function loan(
+  originatedOn: string,
+  amountAtOrigin: string,
+  openingPrincipal: string,
+  closingPrincipal: string,
+  interestInYear = '0.00',
+  interestAtYearEnd = '0.00',
+): PdIpoReceivable {
+  return {
+    originatedOn,
+    amountAtOrigin,
+    openingPrincipal,
+    closingPrincipal,
+    interestRate: '2.68',
+    interestInYear,
+    taxBaseIncrease: '0.00',
+    interestAtYearEnd,
+  };
+}
+
+const SUPINA_LOANS_2022: PdIpoReceivable[] = [
+  loan('2022-01-01', '185600.00', '185600.00', '185600.00', '5032.27', '10182.73'),
+  loan('2022-05-31', '3000.00', '0.00', '3000.00'),
+  loan('2022-06-03', '600.00', '0.00', '600.00'),
+  loan('2022-06-10', '100.00', '0.00', '100.00'),
+];
+
+const TONI_LOANS_2022: PdIpoReceivable[] = [
+  loan('2022-01-05', '80000.00', '0.00', '80000.00'),
+  loan('2022-01-12', '35.00', '0.00', '35.00'),
+  loan('2022-02-24', '42000.00', '0.00', '42000.00'),
+  loan('2022-03-10', '1000.00', '0.00', '1000.00'),
+  loan('2022-03-22', '60000.00', '0.00', '60000.00'),
+  loan('2022-04-11', '23000.00', '0.00', '23000.00'),
+  loan('2022-05-03', '17000.00', '0.00', '17000.00'),
+  loan('2022-05-06', '14000.00', '0.00', '14000.00'),
+  loan('2022-06-21', '3100.00', '0.00', '934.79'),
+  loan('2022-07-13', '4000.00', '0.00', '0.00'),
+  loan('2022-07-15', '22700.00', '0.00', '0.00'),
+  loan('2022-10-05', '3180.00', '0.00', '0.00'),
+];
+
 const PD_IPO_SNAPSHOTS = [
+  {
+    slug: FINESTAR_SLUG,
+    year: FINESTAR_PD_IPO_2022_YEAR,
+    currency: 'HRK' as const,
+    periodFrom: '2022-01-01',
+    periodTo: '2022-12-31',
+    taxpayerName: 'FINE STAR D.O.O.',
+    oib: '36619131370',
+    street: 'Bana Josipa Jelačića 58',
+    place: 'ŠIEBNIK',
+    officeCode: '3383',
+    formId: '344f8b3a-e81c-4148-935f-f66901e65ec6',
+    signedAt: '2023-06-14T12:12:00+02:00',
+    signedBy: 'Zorana Lambaša',
+    obligations: [
+      {
+        name: 'ŠUPINA POLJICA J.D.O.O.',
+        oib: '91381354893',
+        address: 'ŠIBENIK',
+        ...RELATED_COMPANY,
+        receivable: SUPINA_LOANS_2022[0],
+        loans: SUPINA_LOANS_2022,
+        totals: {
+          amountAtOrigin: '189300.00',
+          openingPrincipal: '185600.00',
+          closingPrincipal: '189300.00',
+          interestInYear: '5032.27',
+          taxBaseIncrease: '0.00',
+          interestAtYearEnd: '10182.73',
+        },
+      },
+      {
+        name: 'TONI ŠUPE',
+        oib: '63281973348',
+        address: 'ŠIBENIK',
+        ...RELATED_MEMBER,
+        receivable: TONI_LOANS_2022[0],
+        loans: TONI_LOANS_2022,
+        totals: {
+          amountAtOrigin: '270015.00',
+          openingPrincipal: '0.00',
+          closingPrincipal: '237969.79',
+          interestInYear: '0.00',
+          taxBaseIncrease: '0.00',
+          interestAtYearEnd: '0.00',
+        },
+      },
+    ],
+    obligationTotals: {
+      amountAtOrigin: '459315.00',
+      openingPrincipal: '185600.00',
+      closingPrincipal: '427269.79',
+      interestInYear: '5032.27',
+      taxBaseIncrease: '0.00',
+      interestAtYearEnd: '10182.73',
+    },
+    person: {
+      name: 'TONI ŠUPE',
+      oib: '63281973348',
+      address: 'ŠIBENIK',
+      ...RELATED_MEMBER,
+      receivable: loan('2022-01-01', '17736.25', '17736.25', '0.00', '6.43', '0.00'),
+    },
+  },
   {
     slug: FINESTAR_SLUG,
     year: FINESTAR_PD_IPO_2021_YEAR,

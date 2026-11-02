@@ -27,8 +27,8 @@ export function BalanceCell({ balances, canImport, onImport }: Props) {
                   type="button"
                   className="badge badge-warning banking-stale banking-stale-action"
                   onClick={onImport}
-                  aria-label="Zastarjelo — uvezi novi XML izvadak (camt.053)"
-                  title="Uvezi novi XML izvadak (camt.053)"
+                  aria-label="Zastarjelo — uvezi novi izvod (CAMT.053 ili OTP IZV)"
+                  title="Uvezi novi izvod (CAMT.053 ili OTP IZV)"
                 >
                   Zastarjelo
                 </button>

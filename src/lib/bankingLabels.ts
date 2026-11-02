@@ -66,7 +66,7 @@ export function bankingRoleCapabilityNote(role: string): string {
     return 'Imate pristup samo pregledu bankovnih podataka.';
   }
   if (role === 'accountant' || role === 'owner') {
-    return 'Možete uvesti CAMT izvod. Sinkronizacija i usklađivanje još nisu dostupni u ovom sučelju.';
+    return 'Možete uvesti CAMT izvod ili OTP IZV PDF. Sinkronizacija i usklađivanje još nisu dostupni u ovom sučelju.';
   }
   return 'Prikaz bankovnih podataka ovisi o ulozi na tvrtki; backend potvrđuje ovlasti.';
 }

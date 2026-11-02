@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/link', () => ({
@@ -12,6 +12,16 @@ import { BiljeskeReport } from './BiljeskeReport';
 describe('BiljeskeReport', () => {
   it('shows the 2021 decision and the notes with lipa on the tax block', () => {
     render(<BiljeskeReport slug="finestar" />);
+
+    expect(screen.getByRole('option', { name: '2022' })).toBeInTheDocument();
+    expect(screen.getByText(/Šibenik, 28\.03\.2023\./)).toBeInTheDocument();
+    expect(screen.getAllByText('84.806,75 kn').length).toBeGreaterThan(0);
+    expect(screen.getByText('721,98')).toBeInTheDocument();
+    expect(screen.getByText('85.528,73')).toBeInTheDocument();
+    expect(screen.getByText('93.381,86')).toBeInTheDocument();
+    expect(screen.getByText(/8,00 kn/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Godina'), { target: { value: '2021' } });
 
     expect(screen.getByRole('option', { name: '2021' })).toBeInTheDocument();
     expect(screen.getByText(/Šibenik, 24\.03\.2022\./)).toBeInTheDocument();

@@ -142,7 +142,7 @@ describe('Fine Star Obrazac TZ 2014', () => {
   });
 
   it('lists filed years and the 2017 notice', () => {
-    expect(obrazacTzYears('finestar')).toEqual([2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]);
+    expect(obrazacTzYears('finestar')).toEqual([2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]);
     expect(obrazacTzYears('alma-cizmic')).toEqual([]);
     expect(obrazacTzHref('finestar')).toBe('/t/finestar/porezi/tz');
     const view = obrazacTzForTenantYear('finestar', 2014);

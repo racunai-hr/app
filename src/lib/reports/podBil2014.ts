@@ -6,6 +6,7 @@ import { FINESTAR_POD_BIL_2018 } from './podBil2018';
 import { FINESTAR_POD_BIL_2019 } from './podBil2019';
 import { FINESTAR_POD_BIL_2020 } from './podBil2020';
 import { FINESTAR_POD_BIL_2021 } from './podBil2021';
+import { FINESTAR_POD_BIL_2022 } from './podBil2022';
 
 export const POD_BIL_SCHEME_FROM_YEAR = 2016;
 export const FINESTAR_POD_BIL_YEAR = 2014;
@@ -16,6 +17,7 @@ export const FINESTAR_POD_BIL_2018_YEAR = 2018;
 export const FINESTAR_POD_BIL_2019_YEAR = 2019;
 export const FINESTAR_POD_BIL_2020_YEAR = 2020;
 export const FINESTAR_POD_BIL_2021_YEAR = 2021;
+export const FINESTAR_POD_BIL_2022_YEAR = 2022;
 export const FINESTAR_SLUG = 'finestar';
 
 export type PodBilKind = 'banner' | 'section' | 'group' | 'line' | 'total';
@@ -215,6 +217,14 @@ export function formatPodBilAmount(value: number): string {
 }
 
 const POD_BIL_SNAPSHOTS = [
+  {
+    slug: FINESTAR_SLUG,
+    year: FINESTAR_POD_BIL_2022_YEAR,
+    scheme: 'from-2016' as const,
+    currency: 'HRK' as const,
+    asOf: '2022-12-31',
+    rows: FINESTAR_POD_BIL_2022,
+  },
   {
     slug: FINESTAR_SLUG,
     year: FINESTAR_POD_BIL_2021_YEAR,

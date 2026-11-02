@@ -22,6 +22,7 @@ describe('DocumentTable', () => {
     expect(screen.getByText('Status dokumenta: Poslan')).toBeInTheDocument();
     expect(screen.getByText('Razdoblje: 2026-03')).toBeInTheDocument();
     expect(screen.getByText('125,00 EUR')).toBeInTheDocument();
+    expect(screen.getByText('Otvoreno: 120,00 EUR')).toBeInTheDocument();
     expect(screen.queryByText('OIB')).toBeNull();
     expect(container.querySelector('a')).toBeNull();
     expect(container.querySelector('.badge-success')).toBeNull();
@@ -107,5 +108,58 @@ describe('DocumentTable', () => {
     expect(unknown.className).not.toContain('badge-success');
     expect(screen.getByText('Status dokumenta: Plaćen')).toBeInTheDocument();
     expect(container.querySelector('.badge-success')).toBeNull();
+  });
+
+  it('turns a received draft status into a close button and leaves a paid row as text', () => {
+    const onCloseDraft = vi.fn();
+    render(
+      <DocumentTable
+        canCloseDraft
+        onCloseDraft={onCloseDraft}
+        rows={[
+          sampleDocument({
+            id: 9,
+            direction: 'incoming',
+            document_status: { value: 'draft', reason: null, source: 'test' },
+            operational_status: { value: 'received', reason: null, source: 'test' },
+          }),
+          sampleDocument({
+            id: 10,
+            direction: 'incoming',
+            document_status: { value: 'paid', reason: null, source: 'test' },
+            operational_status: { value: 'paid', reason: null, source: 'test' },
+          }),
+        ]}
+      />,
+    );
+    const button = screen.getByRole('button', { name: /Zaprimljen/ });
+    expect(button).toHaveTextContent('Status dokumenta: Nacrt');
+    fireEvent.click(button);
+    expect(onCloseDraft).toHaveBeenCalledWith(expect.objectContaining({ id: 9 }));
+    expect(screen.getByText('Status dokumenta: Plaćen')).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+
+  it('shows the document currency and the EUR book amount', () => {
+    const base = sampleDocument();
+    render(
+      <DocumentTable
+        rows={[
+          sampleDocument({
+            direction: 'incoming',
+            amounts: {
+              ...base.amounts,
+              currency: 'DKK',
+              gross: '731.11',
+              book_gross: '99.79',
+            },
+            subledger: { state: base.subledger.state, open_amount: { value: '0.00', reason: null, source: 'test' } },
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByText('731,11 DKK')).toBeInTheDocument();
+    expect(screen.getByText('99,79 EUR')).toBeInTheDocument();
+    expect(screen.getByText('Otvoreno: 0,00 EUR')).toBeInTheDocument();
   });
 });

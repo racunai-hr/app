@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   formatAccountOption,
@@ -45,6 +46,7 @@ export function AccountPicker({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [highlight, setHighlight] = useState(-1);
+  const [box, setBox] = useState<{ top: number; left: number; width: number } | null>(null);
   const trimmed = searchText.trim();
   const canSearch = trimmed.length >= 1;
 
@@ -156,6 +158,22 @@ export function AccountPicker({
 
   const optionId = (index: number) => `${listboxId}-option-${index}`;
   const showList = open && canSearch;
+
+  useLayoutEffect(() => {
+    if (!showList) return;
+    function place() {
+      const rect = inputRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setBox({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+    place();
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    return () => {
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
+  }, [showList, results, loading, error]);
   const truncated = totalCount > results.length;
   const empty = showList && !loading && !error && results.length === 0;
 
@@ -204,12 +222,14 @@ export function AccountPicker({
           </button>
         ) : null}
       </div>
+      {showList && box
+        ? createPortal(
       <div
         id={listboxId}
         role="listbox"
         className="account-picker-list"
-        hidden={!showList}
         aria-labelledby={labelId}
+        style={{ position: 'fixed', top: box.top, left: box.left, width: box.width }}
       >
         {loading ? (
           <div className="account-picker-status" role="status">
@@ -247,7 +267,10 @@ export function AccountPicker({
             Prikazano prvih {results.length} od {totalCount} — suzite pretragu
           </div>
         ) : null}
-      </div>
+      </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

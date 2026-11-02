@@ -45,15 +45,15 @@ export function StatementImportDialog({
           event.stopPropagation();
         }}
       >
-        <h2 id="banking-import-title">Uvezi novi XML izvadak (camt.053)</h2>
+        <h2 id="banking-import-title">Uvezi izvod (CAMT.053 ili OTP IZV)</h2>
         <p className="banking-import-account">
           <strong>
             Račun: {account.account_name} · {formatIban(account.iban)}
           </strong>
         </p>
         <p>
-          Odaberite CAMT.053 XML izvadak za ovaj račun. Račun se pri uvozu automatski određuje
-          prema IBAN-u navedenom u XML datoteci.
+          Odaberite CAMT.053 XML ili OTP IZV PDF. Račun se pri uvozu automatski određuje
+          prema IBAN-u navedenom u datoteci.
         </p>
         <StatementImport origin={origin} token={token} role={role} onImported={onImported} />
         <div className="banking-import-dialog-actions">

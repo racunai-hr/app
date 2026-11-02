@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { parsePdvPeriod, razdobljaHref } from '@/lib/pdv';
+import { parsePdvFilingKey, razdobljaHref } from '@/lib/pdv';
 
 /** Fail-closed period gate for PDV Prijava / Kontrolni pregledi. Missing period → PDV Razdoblja. */
 export function RequirePdvPeriod({
@@ -15,7 +15,7 @@ export function RequirePdvPeriod({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const period = parsePdvPeriod(searchParams.get('period'));
+  const period = parsePdvFilingKey(searchParams.get('period'));
 
   useEffect(() => {
     if (!period) router.replace(razdobljaHref(slug));

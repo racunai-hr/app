@@ -69,6 +69,26 @@ describe('StatementList after import', () => {
     expect(replace).toHaveBeenCalledWith('/t/finestar/bankarstvo/izvodi?status=imported');
   });
 
+  it('shows kuna balances and the euro equivalent', async () => {
+    fetchStatements.mockResolvedValue({
+      ...page,
+      results: [
+        {
+          ...page.results[0],
+          opening_balance: '0.00',
+          opening_balance_eur: '0.00',
+          closing_balance: '81.44',
+          closing_balance_eur: '10.81',
+          currency: 'HRK',
+        },
+      ],
+    });
+    render(<StatementList slug="finestar" origin="https://x" token="t" role="owner" />);
+    await waitFor(() => expect(screen.getByText('81,44 HRK')).toBeInTheDocument());
+    expect(screen.getByText('10,81 EUR')).toBeInTheDocument();
+    expect(screen.getByText('0,00 HRK')).toBeInTheDocument();
+  });
+
   it('refetches even when already on page 1', async () => {
     searchParams.delete('page');
     render(<StatementList slug="finestar" origin="https://x" token="t" role="accountant" />);

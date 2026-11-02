@@ -2,10 +2,19 @@
 
 type Props = {
   busy: boolean;
+  title?: string;
+  note?: string;
+  buttonLabel?: string;
   onSubmit: (submittedXml: File) => void;
 };
 
-export function PdvSubmitEvidenceForm({ busy, onSubmit }: Props) {
+export function PdvSubmitEvidenceForm({
+  busy,
+  title = 'Uvezi predani XML',
+  note = 'XML obrasca skinut s ePorezne nakon predaje. Portal često vraća obrazac bez XML potpisa — to je u redu.',
+  buttonLabel = 'Uvezi XML',
+  onSubmit,
+}: Props) {
   return (
     <form
       className="tax-evidence-form"
@@ -16,17 +25,14 @@ export function PdvSubmitEvidenceForm({ busy, onSubmit }: Props) {
         if (file) onSubmit(file);
       }}
     >
-      <h2>Uvezi predani XML</h2>
-      <p className="app-placeholder-note">
-        XML obrasca skinut s ePorezne nakon predaje. Portal često vraća obrazac bez
-        XML potpisa — to je u redu.
-      </p>
+      <h2>{title}</h2>
+      <p className="app-placeholder-note">{note}</p>
       <label>
         Predani XML obrazac
         <input name="submitted_xml" type="file" accept=".xml,application/xml,text/xml" required />
       </label>
       <button type="submit" className="btn" disabled={busy}>
-        {busy ? 'Uvoz…' : 'Uvezi XML'}
+        {busy ? 'Uvoz…' : buttonLabel}
       </button>
     </form>
   );

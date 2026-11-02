@@ -445,6 +445,33 @@ describe('TransactionList search filter', () => {
     );
   });
 
+  it('shows kuna and the euro equivalent on an HRK line', async () => {
+    fetchTransactions.mockResolvedValue({
+      as_of: '2026-08-19T10:00:00Z',
+      count: 1,
+      page: 1,
+      page_size: 20,
+      results: [
+        tx({
+          amount: '3180.00',
+          currency: 'HRK',
+          amount_eur: '422.06',
+          description: 'Pozajmica',
+        }),
+      ],
+    });
+    render(
+      <TransactionList
+        slug="finestar"
+        origin="https://x"
+        token="t"
+        basePath="/t/finestar/bankarstvo/transakcije"
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('3.180,00 HRK')).toBeInTheDocument());
+    expect(screen.getByText('422,06 EUR')).toBeInTheDocument();
+  });
+
   it('omits empty search from URL and fetch query', async () => {
     searchParams.set('search', 'Telecom26');
     render(

@@ -16,6 +16,7 @@ describe('PodRdgReport', () => {
     const year = screen.getByLabelText('Godina');
     expect(year.tagName).toBe('SELECT');
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '2022',
       '2021',
       '2020',
       '2019',
@@ -25,6 +26,15 @@ describe('PodRdgReport', () => {
       '2015',
       '2014',
     ]);
+    expect(
+      screen.getByText(/Razdoblje od 01\.01\.2022\. do 31\.12\.2022\. Obrazac POD-RDG, raspored od 2016\./),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('−84.807').length).toBe(2);
+    expect(screen.getAllByText('722').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('85.529').length).toBeGreaterThan(0);
+
+    fireEvent.change(screen.getByLabelText('Godina'), { target: { value: '2021' } });
+
     expect(
       screen.getByText(/Razdoblje od 01\.01\.2021\. do 31\.12\.2021\. Obrazac POD-RDG, raspored od 2016\./),
     ).toBeInTheDocument();

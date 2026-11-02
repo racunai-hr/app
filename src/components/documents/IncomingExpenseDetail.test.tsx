@@ -464,11 +464,294 @@ describe('IncomingExpenseDetail', () => {
       'href',
       '/t/finestar/partneri/24',
     );
+    expect(screen.getAllByText('Svojom gotovinom').length).toBeGreaterThan(0);
     expect(screen.getByRole('heading', { name: 'Sistemska knjiženja' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '202607-0013' })).toHaveAttribute(
       'href',
       '/t/finestar/glavna-knjiga/72',
     );
+  });
+
+  it('shows private cash paid by the partner on the payment card', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        document: {
+          issue_date: '2022-01-12',
+          delivery_date: null,
+          due_date: '2022-01-12',
+          received_at: '2022-01-12T13:12:00+01:00',
+          currency: 'HRK',
+          business_process: null,
+          source_label: 'manual',
+          format: null,
+          primary_reference: null,
+        },
+        status: {
+          document: 'received',
+          workflow: 'approved',
+          integration: null,
+          posting: 'posted',
+          vat: 'absent',
+          subledger: 'closed',
+          payment: null,
+        },
+        amounts: {
+          currency: 'HRK',
+          net: '30.00',
+          vat: '5.00',
+          gross: '35.00',
+          book_gross: '4.65',
+          book_net: '3.99',
+          book_vat: '0.66',
+          fx_rate: { value: null, reason: 'not_recorded', source: null },
+        },
+        totals: {
+          line_net: '30.00',
+          charges_total: null,
+          allowances_total: null,
+          vat_total: '5.00',
+          grand_total: '35.00',
+          prepaid: null,
+          payable: '0.00',
+          currency: 'HRK',
+        },
+        payment: {
+          matched: false,
+          date: null,
+          amount: null,
+          account_mask: null,
+          reference: null,
+          reconcile_status: null,
+          bank_transaction_id: null,
+        },
+        settlement_trail: {
+          obligation: {
+            amount: '4.65',
+            journal_entry_id: 402,
+            entry_number: '202201-0003',
+            entry_date: '2022-01-12',
+          },
+          closings: [
+            {
+              kind: 'private_funds',
+              amount: '4.65',
+              journal_entry_id: 408,
+              entry_number: '202201-0008',
+              allocation_id: 103,
+              bank_transaction_id: null,
+              bank_statement_id: null,
+              counterparty_name: null,
+              private_funds_claim_id: 41,
+              claim_number: 'PFC-202611-0002',
+              partner_id: 24,
+              partner_name: 'Ante Vrcan',
+              label: 'Privatna sredstva',
+            },
+          ],
+          system_entries: [],
+          warnings: [],
+          totals: { obligation: '4.65', allocated: '4.65', open: '0.00' },
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={400} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Plaćanje' })).toBeInTheDocument();
+    });
+    const payment = screen.getByRole('heading', { name: 'Plaćanje' }).closest('section');
+    expect(payment).not.toBeNull();
+    expect(within(payment as HTMLElement).getByText('Gotovina')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).getByText('Svojom gotovinom')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).getByRole('link', { name: 'Ante Vrcan' })).toHaveAttribute(
+      'href',
+      '/t/finestar/partneri/24',
+    );
+    expect(within(payment as HTMLElement).getByText('12.01.2022.')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).getByText('4,65 EUR')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).getByText('35,00 HRK')).toBeInTheDocument();
+    expect(screen.getAllByText('Gotovina').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Neusklađeno')).toBeNull();
+    expect(screen.queryByText('Usklađeno')).toBeNull();
+  });
+
+  it('shows a private account payment by the partner on the payment card', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        document: {
+          issue_date: '2022-01-22',
+          delivery_date: null,
+          due_date: null,
+          received_at: '2022-01-22T00:00:00+01:00',
+          currency: 'HRK',
+          business_process: null,
+          source_label: 'manual',
+          format: null,
+          primary_reference: null,
+        },
+        amounts: {
+          currency: 'HRK',
+          net: '11929.91',
+          vat: '0.00',
+          gross: '11929.91',
+          book_gross: '1583.37',
+          book_net: '1583.37',
+          book_vat: '0.00',
+          fx_rate: { value: null, reason: 'not_recorded', source: null },
+        },
+        totals: {
+          line_net: '11929.91',
+          charges_total: null,
+          allowances_total: null,
+          vat_total: '0.00',
+          grand_total: '11929.91',
+          prepaid: null,
+          payable: '0.00',
+          currency: 'HRK',
+        },
+        payment: {
+          matched: false,
+          date: null,
+          amount: null,
+          account_mask: null,
+          reference: null,
+          reconcile_status: null,
+          bank_transaction_id: null,
+        },
+        settlement_trail: {
+          obligation: {
+            amount: '1583.37',
+            journal_entry_id: 410,
+            entry_number: '202201-0014',
+            entry_date: '2022-01-22',
+          },
+          closings: [
+            {
+              kind: 'private_funds',
+              amount: '1583.37',
+              journal_entry_id: 411,
+              entry_number: '202201-0015',
+              allocation_id: 110,
+              bank_transaction_id: null,
+              bank_statement_id: null,
+              counterparty_name: null,
+              private_funds_claim_id: 42,
+              claim_number: 'PFC-202611-0003',
+              partner_id: 24,
+              partner_name: 'Ante Vrcan',
+              label: 'Privatni račun',
+            },
+          ],
+          system_entries: [],
+          warnings: [],
+          totals: { obligation: '1583.37', allocated: '1583.37', open: '0.00' },
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={407} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Plaćanje' })).toBeInTheDocument();
+    });
+    const payment = screen.getByRole('heading', { name: 'Plaćanje' }).closest('section');
+    expect(payment).not.toBeNull();
+    expect(within(payment as HTMLElement).getByText('Privatni račun')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).getByText('Sa privatnog računa')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).getByRole('link', { name: 'Ante Vrcan' })).toHaveAttribute(
+      'href',
+      '/t/finestar/partneri/24',
+    );
+    expect(within(payment as HTMLElement).getByText('22.01.2022.')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).getByText('1.583,37 EUR')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).getByText('11.929,91 HRK')).toBeInTheDocument();
+    expect(screen.queryByText('Svojom gotovinom')).toBeNull();
+    expect(screen.queryByText('Gotovina')).toBeNull();
+  });
+
+  it('shows a storno as a closing of the advance and a link back to it', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        reversal_of: { id: 402, number: '22-00023' },
+        payment: {
+          matched: false,
+          date: null,
+          amount: null,
+          account_mask: null,
+          reference: null,
+          reconcile_status: null,
+          bank_transaction_id: null,
+        },
+      }),
+    );
+    const { unmount } = render(<IncomingExpenseDetail slug="finestar" expenseId={409} />);
+    await waitFor(() => {
+      expect(screen.getAllByRole('link', { name: '22-00023' }).length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByRole('link', { name: '22-00023' })[0]).toHaveAttribute(
+      'href',
+      '/t/finestar/dokumenti/ulazni/402',
+    );
+    expect(screen.getAllByText('Stornirano').length).toBeGreaterThan(0);
+    unmount();
+
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        payment: {
+          matched: false,
+          date: null,
+          amount: null,
+          account_mask: null,
+          reference: null,
+          reconcile_status: null,
+          bank_transaction_id: null,
+        },
+        settlement_trail: {
+          obligation: {
+            amount: '4758.11',
+            journal_entry_id: 406,
+            entry_number: '202201-0006',
+            entry_date: '2022-01-18',
+          },
+          closings: [
+            {
+              kind: 'storno',
+              amount: '4758.11',
+              journal_entry_id: 420,
+              entry_number: '202202-0004',
+              allocation_id: 200,
+              bank_transaction_id: null,
+              bank_statement_id: null,
+              counterparty_name: null,
+              private_funds_claim_id: null,
+              claim_number: null,
+              partner_id: null,
+              partner_name: null,
+              storno_expense_id: 409,
+              storno_expense_number: '22-00087',
+              label: 'Storno',
+            },
+          ],
+          system_entries: [],
+          warnings: [],
+          totals: { obligation: '4758.11', allocated: '4758.11', open: '0.00' },
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={402} />);
+    await waitFor(() => {
+      expect(screen.getAllByText('Stornirano').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByRole('link', { name: '22-00087' })[0]).toHaveAttribute(
+      'href',
+      '/t/finestar/dokumenti/ulazni/409',
+    );
+    const payment = screen.getByRole('heading', { name: 'Plaćanje' }).closest('section');
+    expect(within(payment as HTMLElement).getByRole('link', { name: '22-00087' })).toHaveAttribute(
+      'href',
+      '/t/finestar/dokumenti/ulazni/409',
+    );
+    expect(within(payment as HTMLElement).getByText('Storno')).toBeInTheDocument();
+    expect(within(payment as HTMLElement).queryByText('Usklađeno')).toBeNull();
   });
 
   it('links settlement_trail journal_entry_id=123 to tenant-scoped JE detail', async () => {
@@ -1068,6 +1351,173 @@ describe('IncomingExpenseDetail', () => {
     render(<IncomingExpenseDetail slug="finestar" expenseId={30} />);
     await screen.findByRole('heading', { name: '26210-H120-5154' });
     expect(screen.queryByRole('button', { name: 'Odobri' })).not.toBeInTheDocument();
+  });
+
+  it('shows book amounts in EUR when the invoice is in DKK', async () => {
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        document: {
+          issue_date: '2026-10-23',
+          delivery_date: null,
+          due_date: '2026-10-24',
+          received_at: null,
+          currency: 'DKK',
+          business_process: null,
+          source_label: 'Ručno',
+          format: null,
+          primary_reference: '2292520058',
+        },
+        totals: {
+          line_net: null,
+          charges_total: null,
+          allowances_total: null,
+          vat_total: '0.00',
+          grand_total: '731.11',
+          prepaid: null,
+          payable: null,
+          currency: 'DKK',
+        },
+        lines: [],
+        charges: [],
+        tax_summary: [],
+        status: {
+          document: 'received',
+          workflow: 'approved',
+          integration: null,
+          posting: 'posted',
+          vat: 'absent',
+          subledger: 'closed',
+          payment: 'matched',
+        },
+        accounting: {
+          journal_entry_id: 328,
+          entry_number: '202610-0014',
+          entry_date: '2026-10-23',
+          status: 'posted',
+          debit_total: '99.79',
+          credit_total: '99.79',
+          lines: [
+            {
+              account_code: '4063',
+              account_name: 'Dizelsko gorivo, benzin i motorno ulje (za stroj. i sl.)',
+              partner_name: null,
+              debit: '99.79',
+              credit: '0.00',
+              description: 'Odobren trošak — rashod / dobavljač',
+            },
+            {
+              account_code: '2201-P00103',
+              account_name: "GO'ON GRUPPEN A/S",
+              partner_name: "GO'ON GRUPPEN A/S",
+              debit: '0.00',
+              credit: '99.79',
+              description: 'Odobren trošak — rashod / dobavljač',
+            },
+          ],
+        },
+        subledger_context: {
+          item_id: 146,
+          state: 'closed',
+          original_amount: '99.79',
+          allocated_amount: '99.79',
+          open_amount: '0.00',
+          due_date: '2026-10-24',
+          allocations: [
+            {
+              id: 86,
+              amount: '99.79',
+              created_at: '2026-10-31T08:48:00+01:00',
+              journal_entry_id: 329,
+              status: 'posted',
+            },
+          ],
+        },
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={379} />);
+    expect(await screen.findByText('731,11 DKK')).toBeInTheDocument();
+    const journal = screen.getByRole('heading', { name: 'Knjiženje' }).closest('section');
+    expect(journal).not.toBeNull();
+    expect(within(journal as HTMLElement).getAllByText('99,79 EUR').length).toBeGreaterThan(0);
+    expect(within(journal as HTMLElement).queryByText(/DKK/)).toBeNull();
+    const subledger = screen.getByRole('heading', { name: 'Saldakonto' }).closest('section');
+    expect(subledger).not.toBeNull();
+    expect(within(subledger as HTMLElement).getAllByText('99,79 EUR').length).toBeGreaterThan(0);
+    expect(within(subledger as HTMLElement).queryByText(/DKK/)).toBeNull();
+  });
+
+  it('shows a kuna invoice in HRK and the statutory euro amount', async () => {
+    const preview = samplePostingPreview();
+    fetchExpensePostingPreview.mockResolvedValue({
+      ...preview,
+      lines: [
+        { ...preview.lines[0], amount: '191.12', document_amount: '1440.00' },
+        { ...preview.lines[1], amount: '47.78', document_amount: '360.00' },
+      ],
+    });
+    fetchDocument.mockResolvedValue(
+      sampleIncomingDetail({
+        document: {
+          issue_date: '2021-04-01',
+          delivery_date: null,
+          due_date: null,
+          received_at: null,
+          currency: 'HRK',
+          business_process: null,
+          source_label: 'Ručno',
+          format: null,
+          primary_reference: '505-1-2021',
+        },
+        totals: {
+          line_net: '1440.00',
+          charges_total: null,
+          allowances_total: null,
+          vat_total: '360.00',
+          grand_total: '1800.00',
+          prepaid: null,
+          payable: '1800.00',
+          currency: 'HRK',
+        },
+        amounts: {
+          currency: 'HRK',
+          net: '1440.00',
+          vat: '360.00',
+          gross: '1800.00',
+          book_gross: '238.90',
+          book_net: '191.12',
+          book_vat: '47.78',
+          fx_rate: { value: '7.53450', reason: null, source: 'statutory' },
+        },
+        lines: [
+          {
+            id: 21,
+            position: 1,
+            classification: null,
+            name: 'Knjigovodstvene usluge',
+            description: null,
+            unit: null,
+            quantity: null,
+            unit_price: null,
+            vat_rate: '25',
+            net_amount: '1440.00',
+            vat_amount: '360.00',
+            gross_amount: '1800.00',
+            book_net_amount: '191.12',
+            book_vat_amount: '47.78',
+            book_gross_amount: '238.90',
+            posting_account: null,
+          },
+        ],
+      }),
+    );
+    render(<IncomingExpenseDetail slug="finestar" expenseId={386} />);
+    expect((await screen.findAllByText('1.800,00 HRK')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('238,90 EUR').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('1.440,00 HRK').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('191,12 EUR').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('360,00 HRK').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('47,78 EUR').length).toBeGreaterThan(0);
+    expect(screen.queryByText('1.800,00 EUR')).toBeNull();
   });
 
   it('hides Odobri on posted expenses', async () => {

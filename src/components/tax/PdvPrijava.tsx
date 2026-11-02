@@ -9,6 +9,7 @@ import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/format
 import {
   canWriteTax,
   downloadPdvXml,
+  downloadSubmissionConfirmation,
   fetchPdvBoxes,
   fetchPdvWorkspace,
   pdvBoxRows,
@@ -17,6 +18,7 @@ import {
   pdvXmlIntegrityLabel,
   postPdvCorrection,
   postPdvDraft,
+  postPdvProcessed,
   postPdvSubmit,
   postSubmissionConfirmation,
   razdobljaHref,
@@ -40,13 +42,14 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
   const load = useCallback(async () => {
     setError('');
     try {
-      const [nextWorkspace, nextBoxes] = await Promise.all([
-        fetchPdvWorkspace(origin, token, period),
-        fetchPdvBoxes(origin, token, period),
-      ]);
+      const nextWorkspace = await fetchPdvWorkspace(origin, token, period);
       setWorkspace(nextWorkspace);
-      setBoxes(nextBoxes);
       setHasConfirmation(Boolean(nextWorkspace.has_confirmation));
+      if (nextWorkspace.return_source === 'imported') {
+        setBoxes(null);
+        return;
+      }
+      setBoxes(await fetchPdvBoxes(origin, token, period));
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         clearTokens();
@@ -78,7 +81,58 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
   }
 
   if (error && !workspace) return <div className="error">{error}</div>;
-  if (!workspace || !boxes) return <div className="loading">Učitavanje…</div>;
+  if (!workspace) return <div className="loading">Učitavanje…</div>;
+  if (workspace.return_source === 'imported') {
+    return (
+      <div className="tax-workflow">
+        <dl className="tax-status-grid">
+          <div>
+            <dt>Prijava</dt>
+            <dd>
+              {Number(workspace.document_vat_due) === 0
+                ? `Nulta prijava · ${pdvReturnStatusLabel(workspace.return_status)}`
+                : pdvReturnStatusLabel(workspace.return_status)}
+            </dd>
+          </div>
+          <div>
+            <dt>Razdoblje</dt>
+            <dd>
+              {formatHrInputDate(workspace.period_from)} – {formatHrInputDate(workspace.period_to)}
+            </dd>
+          </div>
+          <div>
+            <dt>Iznos na obrascu</dt>
+            <dd>{formatHrMoney(workspace.document_vat_due, workspace.document_currency || 'HRK')}</dd>
+          </div>
+          <div>
+            <dt>Zaprimljeno</dt>
+            <dd>{formatHrDateTime(workspace.submitted_at)}</dd>
+          </div>
+          <div>
+            <dt>Identifikator zaprimanja</dt>
+            <dd>{workspace.external_identifier || '—'}</dd>
+          </div>
+        </dl>
+        {workspace.has_confirmation && workspace.event_uuid ? (
+          <div className="tax-action-row">
+            <button
+              type="button"
+              className="btn"
+              disabled={Boolean(busy)}
+              onClick={() =>
+                void run('confirm-download', () =>
+                  downloadSubmissionConfirmation(origin, token, workspace.event_uuid as string),
+                )
+              }
+            >
+              {busy === 'confirm-download' ? 'Preuzimanje…' : 'Potvrda zaprimanja'}
+            </button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+  if (!boxes) return <div className="loading">Učitavanje…</div>;
 
   const boxRows = pdvBoxRows(boxes.fields).filter(
     (row) => row.value !== '' && row.value !== '0.00' && row.value !== 'Ne',
@@ -122,9 +176,7 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
                   <td>{formatHrInputDate(row.period_to)}</td>
                   <td>
                     {pdvFormStatusLabel(row.status)}
-                    {row.status === 'in_processing' && row.external_identifier
-                      ? ` · ${row.external_identifier}`
-                      : ''}
+                    {row.external_identifier ? ` · ${row.external_identifier}` : ''}
                   </td>
                 </tr>
               ))}
@@ -228,6 +280,27 @@ export function PdvPrijava({ slug, period, origin, token, role }: Props) {
         <p className="app-placeholder-note">
           Na ePoreznoj u Napomeni upišite razlog ponovnog slanja. racunAI ne šalje obrazac na portal.
         </p>
+      ) : null}
+
+      {inProcessing && writable && workspace.latest_return_version != null ? (
+        <PdvSubmitEvidenceForm
+          busy={busy === 'processed'}
+          title="Učitaj obrađeni XML"
+          note="XML koji je ePorezna obradila. Boxovi moraju biti isti kao na zaprimljenom ispravku."
+          buttonLabel="Učitaj XML"
+          onSubmit={(submittedXml) =>
+            void run('processed', async () => {
+              await postPdvProcessed(
+                origin,
+                token,
+                period,
+                { return_version: workspace.latest_return_version as number },
+                submittedXml,
+              );
+              await load();
+            })
+          }
+        />
       ) : null}
 
       {canSubmit ? (

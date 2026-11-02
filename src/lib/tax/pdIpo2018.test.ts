@@ -4,7 +4,7 @@ import { pdIpoForTenantYear, pdIpoHref, pdIpoYears } from './pdIpo2018';
 
 describe('Fine Star PD-IPO 2018', () => {
   it('keeps the 2021 loans to Šupina Poljica and Toni Šupe', () => {
-    expect(pdIpoYears('finestar')).toEqual([2021, 2020, 2019, 2018, 2017, 2016]);
+    expect(pdIpoYears('finestar')).toEqual([2022, 2021, 2020, 2019, 2018, 2017, 2016]);
     const view = pdIpoForTenantYear('finestar', 2021);
     expect(view.status).toBe('snapshot');
     if (view.status !== 'snapshot') return;
@@ -36,7 +36,7 @@ describe('Fine Star PD-IPO 2018', () => {
   });
 
   it('keeps the 2020 loan with interest and an unchanged principal', () => {
-    expect(pdIpoYears('finestar')).toEqual([2021, 2020, 2019, 2018, 2017, 2016]);
+    expect(pdIpoYears('finestar')).toEqual([2022, 2021, 2020, 2019, 2018, 2017, 2016]);
     const view = pdIpoForTenantYear('finestar', 2020);
     expect(view.status).toBe('snapshot');
     if (view.status !== 'snapshot') return;
@@ -83,7 +83,7 @@ describe('Fine Star PD-IPO 2018', () => {
   });
 
   it('keeps the filed loan to Martina Banović', () => {
-    expect(pdIpoYears('finestar')).toEqual([2021, 2020, 2019, 2018, 2017, 2016]);
+    expect(pdIpoYears('finestar')).toEqual([2022, 2021, 2020, 2019, 2018, 2017, 2016]);
     expect(pdIpoYears('other')).toEqual([]);
     expect(pdIpoHref('finestar')).toBe('/t/finestar/porezi/pd-ipo');
     const view = pdIpoForTenantYear('finestar', 2018);

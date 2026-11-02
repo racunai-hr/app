@@ -45,6 +45,70 @@ export function formatHrMoney(value: string | number | null | undefined, currenc
   return `${formatHrAmount(value)} ${currency}`;
 }
 
+/** Fixed conversion rate from 1.1.2023. One euro is 7,53450 kuna. */
+export const HRK_PER_EUR = '7.53450';
+
+/** Payroll month before the euro. The salary month decides, not the payment date. */
+export function payrollPeriodIsHrk(year: number, month: number): boolean {
+  if (month < 1 || month > 12) return false;
+  return year < 2023;
+}
+
+/** Contracted gross follows the contract start date, compared as YYYY-MM-DD text. */
+export function contractSalaryIsHrk(startDate: string | null | undefined): boolean {
+  const match = /^(\d{4})-(\d{2})-\d{2}$/.exec(startDate ?? '');
+  if (!match) return false;
+  return payrollPeriodIsHrk(Number(match[1]), Number(match[2]));
+}
+
+/** JOPPD period key `YYYY-MM`. */
+export function payrollPeriodKeyIsHrk(period: string | null | undefined): boolean {
+  const match = /^(\d{4})-(\d{2})$/.exec(period ?? '');
+  if (!match) return false;
+  return payrollPeriodIsHrk(Number(match[1]), Number(match[2]));
+}
+
+function amountToLipa(value: string | number): bigint | null {
+  const raw = (typeof value === 'number' ? value.toFixed(2) : String(value).trim()).replace(',', '.');
+  if (!/^-?\d+(\.\d+)?$/.test(raw)) return null;
+  const negative = raw.startsWith('-');
+  const [whole, fraction = ''] = raw.replace('-', '').split('.');
+  const lipa = BigInt(whole) * 100n + BigInt((fraction + '00').slice(0, 2));
+  return negative ? -lipa : lipa;
+}
+
+/** Book amount in EUR for a kuna document amount. Half-up to two decimals. */
+export function hrkToEur(value: string | number | null | undefined): string | null {
+  if (value == null || value === '') return null;
+  const lipa = amountToLipa(value);
+  if (lipa == null) return null;
+  const rate = 753450n;
+  const negative = lipa < 0n;
+  const abs = negative ? -lipa : lipa;
+  const numerator = abs * 100000n;
+  const quotient = numerator / rate;
+  const remainder = numerator % rate;
+  const rounded = remainder * 2n >= rate ? quotient + 1n : quotient;
+  const euros = rounded / 100n;
+  const cents = rounded % 100n;
+  const text = `${euros.toString()}.${cents.toString().padStart(2, '0')}`;
+  return negative ? `-${text}` : text;
+}
+
+/** Document amount, plus the euro equivalent when the payroll month is still in kuna. */
+export function payrollMoneyParts(
+  value: string | number | null | undefined,
+  hrk: boolean,
+): { document: string; eur: string | null } {
+  if (value == null || value === '') return { document: '—', eur: null };
+  if (!hrk) return { document: formatHrMoney(value, 'EUR'), eur: null };
+  const eur = hrkToEur(value);
+  return {
+    document: formatHrMoney(value, 'kn'),
+    eur: eur == null ? null : formatHrMoney(eur, 'EUR'),
+  };
+}
+
 function isValidCalendarYmd(year: number, month: number, day: number): boolean {
   if (month < 1 || month > 12 || day < 1 || day > 31) return false;
   const probe = new Date(Date.UTC(year, month - 1, day));

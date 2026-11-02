@@ -51,8 +51,9 @@ describe('camt import helpers', () => {
   });
 
   it('validates xml file constraints without reading CAMT', () => {
-    expect(validateImportFile(null)).toMatch(/jednu XML/i);
-    expect(validateImportFile(xmlFile('note.txt'))).toMatch(/\.xml/i);
+    expect(validateImportFile(null)).toMatch(/XML ili PDF/i);
+    expect(validateImportFile(xmlFile('note.txt'))).toMatch(/\.xml ili \.pdf/i);
+    expect(validateImportFile(xmlFile('izvod.pdf'))).toBeNull();
     expect(validateImportFile(new File([], 'a.xml'))).toMatch(/prazna/i);
     const huge = xmlFile('a.xml');
     Object.defineProperty(huge, 'size', { value: BANKING_IMPORT_MAX_BYTES + 1 });

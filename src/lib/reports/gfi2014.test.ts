@@ -6,7 +6,7 @@ import { gfiForTenantYear, gfiYears } from './gfi2014';
 
 describe('Fine Star GFI 2014', () => {
   it('keeps both registry receipts and the cover, without statement lines', () => {
-    expect(gfiYears('finestar')).toEqual([2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013]);
+    expect(gfiYears('finestar')).toEqual([2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013]);
     expect(gfiYears('alma-cizmic')).toEqual([]);
     const view = gfiForTenantYear('finestar', 2014);
     expect(view.status).toBe('snapshot');

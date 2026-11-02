@@ -80,15 +80,15 @@ describe('BankingOverview', () => {
     fetchBankingOverview.mockResolvedValue(overviewPayload(true));
     render(<BankingOverview origin="https://x" token="t" role="accountant" />);
     await waitFor(() => expect(screen.getByText('Zastarjelo')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /Zastarjelo — uvezi novi XML izvadak/ }));
-    expect(screen.getByRole('dialog', { name: 'Uvezi novi XML izvadak (camt.053)' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Zastarjelo — uvezi novi izvod/ }));
+    expect(screen.getByRole('dialog', { name: 'Uvezi izvod (CAMT.053 ili OTP IZV)' })).toBeInTheDocument();
   });
 
   it('closes the dialog and refetches after a successful import', async () => {
     fetchBankingOverview.mockResolvedValue(overviewPayload(true));
     render(<BankingOverview origin="https://x" token="t" role="owner" />);
     await waitFor(() => expect(screen.getByText('Zastarjelo')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /Zastarjelo — uvezi novi XML izvadak/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Zastarjelo — uvezi novi izvod/ }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'fake-import' }));
     expect(screen.queryByRole('dialog')).toBeNull();

@@ -4,11 +4,70 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 import { formatHrAmount, formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
-import { pdIpoForTenantYear, pdIpoYears, type PdIpoPerson } from '@/lib/tax/pdIpo2018';
+import {
+  pdIpoForTenantYear,
+  pdIpoYears,
+  type PdIpoLoanTotals,
+  type PdIpoPerson,
+  type PdIpoReceivable,
+} from '@/lib/tax/pdIpo2018';
 
 type Props = { slug: string };
 
+function LoanRows({ loan }: { loan: PdIpoReceivable }) {
+  return (
+    <>
+      <tr>
+        <td>Datum nastanka</td>
+        <td className="cell-amount">{formatHrInputDate(loan.originatedOn)}</td>
+      </tr>
+      <tr>
+        <td>Iznos na dan nastanka</td>
+        <td className="cell-amount">{formatHrAmount(loan.amountAtOrigin)}</td>
+      </tr>
+      <tr>
+        <td>Glavnica na prvi dan</td>
+        <td className="cell-amount">{formatHrAmount(loan.openingPrincipal)}</td>
+      </tr>
+      <tr>
+        <td>Glavnica na zadnji dan</td>
+        <td className="cell-amount">{formatHrAmount(loan.closingPrincipal)}</td>
+      </tr>
+      <tr>
+        <td>Kamatna stopa</td>
+        <td className="cell-amount">{formatHrAmount(loan.interestRate)} %</td>
+      </tr>
+      <tr>
+        <td>Kamata tijekom razdoblja</td>
+        <td className="cell-amount">{formatHrAmount(loan.interestInYear)}</td>
+      </tr>
+      <tr>
+        <td>Povećanje porezne osnovice</td>
+        <td className="cell-amount">{formatHrAmount(loan.taxBaseIncrease)}</td>
+      </tr>
+      <tr>
+        <td>Kamata na zadnji dan</td>
+        <td className="cell-amount">{formatHrAmount(loan.interestAtYearEnd)}</td>
+      </tr>
+    </>
+  );
+}
+
+function TotalsRow({ totals }: { totals: PdIpoLoanTotals }) {
+  return (
+    <tr>
+      <td>Ukupno</td>
+      <td className="cell-amount">{formatHrAmount(totals.amountAtOrigin)}</td>
+      <td className="cell-amount">{formatHrAmount(totals.openingPrincipal)}</td>
+      <td className="cell-amount">{formatHrAmount(totals.closingPrincipal)}</td>
+      <td className="cell-amount">{formatHrAmount(totals.interestInYear)}</td>
+      <td className="cell-amount">{formatHrAmount(totals.interestAtYearEnd)}</td>
+    </tr>
+  );
+}
+
 function PartyBlock({ heading, person }: { heading: string; person: PdIpoPerson }) {
+  const loans = person.loans ?? [];
   return (
     <>
       <h2>{heading}</h2>
@@ -19,42 +78,39 @@ function PartyBlock({ heading, person }: { heading: string; person: PdIpoPerson 
         Preneseni porezni gubitak ne.
       </p>
       <div className="table-wrap">
-        <table className="docs-table">
-          <tbody>
-            <tr>
-              <td>Datum nastanka</td>
-              <td className="cell-amount">{formatHrInputDate(person.receivable.originatedOn)}</td>
-            </tr>
-            <tr>
-              <td>Iznos na dan nastanka</td>
-              <td className="cell-amount">{formatHrAmount(person.receivable.amountAtOrigin)}</td>
-            </tr>
-            <tr>
-              <td>Glavnica na prvi dan</td>
-              <td className="cell-amount">{formatHrAmount(person.receivable.openingPrincipal)}</td>
-            </tr>
-            <tr>
-              <td>Glavnica na zadnji dan</td>
-              <td className="cell-amount">{formatHrAmount(person.receivable.closingPrincipal)}</td>
-            </tr>
-            <tr>
-              <td>Kamatna stopa</td>
-              <td className="cell-amount">{formatHrAmount(person.receivable.interestRate)} %</td>
-            </tr>
-            <tr>
-              <td>Kamata tijekom razdoblja</td>
-              <td className="cell-amount">{formatHrAmount(person.receivable.interestInYear)}</td>
-            </tr>
-            <tr>
-              <td>Povećanje porezne osnovice</td>
-              <td className="cell-amount">{formatHrAmount(person.receivable.taxBaseIncrease)}</td>
-            </tr>
-            <tr>
-              <td>Kamata na zadnji dan</td>
-              <td className="cell-amount">{formatHrAmount(person.receivable.interestAtYearEnd)}</td>
-            </tr>
-          </tbody>
-        </table>
+        {loans.length > 1 ? (
+          <table className="docs-table">
+            <thead>
+              <tr>
+                <th>Datum nastanka</th>
+                <th>Iznos na dan nastanka</th>
+                <th>Glavnica na prvi dan</th>
+                <th>Glavnica na zadnji dan</th>
+                <th>Kamata tijekom razdoblja</th>
+                <th>Kamata na zadnji dan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loans.map((item) => (
+                <tr key={item.originatedOn}>
+                  <td>{formatHrInputDate(item.originatedOn)}</td>
+                  <td className="cell-amount">{formatHrAmount(item.amountAtOrigin)}</td>
+                  <td className="cell-amount">{formatHrAmount(item.openingPrincipal)}</td>
+                  <td className="cell-amount">{formatHrAmount(item.closingPrincipal)}</td>
+                  <td className="cell-amount">{formatHrAmount(item.interestInYear)}</td>
+                  <td className="cell-amount">{formatHrAmount(item.interestAtYearEnd)}</td>
+                </tr>
+              ))}
+              {person.totals ? <TotalsRow totals={person.totals} /> : null}
+            </tbody>
+          </table>
+        ) : (
+          <table className="docs-table">
+            <tbody>
+              <LoanRows loan={person.receivable} />
+            </tbody>
+          </table>
+        )}
       </div>
     </>
   );
@@ -105,6 +161,15 @@ export function PdIpoReport({ slug }: Props) {
             <PartyBlock key={`${obligation.oib}-obveza-${obligation.receivable.originatedOn}`} heading="Obveza prema povezanoj osobi" person={obligation} />
           ))}
           <PartyBlock heading="Potraživanje od povezane osobe" person={view.person} />
+          {view.obligationTotals ? (
+            <p>
+              Sveukupno obveze: nastanak {formatHrAmount(view.obligationTotals.amountAtOrigin)}, početak{' '}
+              {formatHrAmount(view.obligationTotals.openingPrincipal)}, kraj{' '}
+              {formatHrAmount(view.obligationTotals.closingPrincipal)}, kamata u godini{' '}
+              {formatHrAmount(view.obligationTotals.interestInYear)}, kamata na kraju{' '}
+              {formatHrAmount(view.obligationTotals.interestAtYearEnd)}.
+            </p>
+          ) : null}
           <h2>Potvrda zaprimanja</h2>
           <p>
             Identifikator {view.formId}.

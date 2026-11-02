@@ -32,8 +32,11 @@ export function isTransientPollError(err: unknown): boolean {
 }
 
 export function validateImportFile(file: File | null): string | null {
-  if (!file) return 'Odaberite točno jednu XML datoteku.';
-  if (!file.name.toLowerCase().endsWith('.xml')) return 'Datoteka mora imati nastavak .xml.';
+  if (!file) return 'Odaberite točno jednu datoteku (XML ili PDF).';
+  const name = file.name.toLowerCase();
+  if (!name.endsWith('.xml') && !name.endsWith('.pdf')) {
+    return 'Datoteka mora imati nastavak .xml ili .pdf.';
+  }
   if (file.size <= 0) return 'Datoteka je prazna.';
   if (file.size > BANKING_IMPORT_MAX_BYTES) {
     return 'Datoteka je veća od 20 MB.';
@@ -59,7 +62,7 @@ export function importNoticeFromRun(run: ImportRunNotice): string {
   const firstError = sanitizeImportText(run.errors?.[0]);
   const warningCount = run.warnings?.length || 0;
   if (run.status === 'rejected') {
-    return firstError || 'Format nije podržan ili datoteka nije valjani CAMT.';
+    return firstError || 'Format nije podržan ili datoteka nije valjani CAMT ili OTP IZV.';
   }
   if (run.status === 'failed') {
     const extra = warningCount ? ` · ${warningCount} upozorenja` : '';
@@ -83,7 +86,7 @@ export function uploadFailureMessage(err: unknown): string {
       return 'Ovaj zahtjev je u konfliktu s prethodnim uvozom. Odaberite datoteku ponovno i pokrenite uvoz ispočetka.';
     }
     if (err.status === 422) {
-      return sanitizeImportText(err.message) || 'Format nije podržan ili datoteka nije valjani CAMT.';
+      return sanitizeImportText(err.message) || 'Format nije podržan ili datoteka nije valjani CAMT ili OTP IZV.';
     }
     if (err.status === 404) {
       return 'Datoteka nije zaprimljena.';

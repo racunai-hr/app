@@ -101,7 +101,78 @@ const FINESTAR_BILJESKE_2021: BiljeskeSnapshot = {
   ],
 };
 
-const BILJESKE_SNAPSHOTS = [FINESTAR_BILJESKE_2021];
+const FINESTAR_BILJESKE_2022: BiljeskeSnapshot = {
+  slug: FINESTAR_SLUG,
+  year: 2022,
+  currency: 'HRK',
+  place: 'Šibenik',
+  street: 'Bana Josipa Jelačića 58',
+  decidedOn: '2023-03-28',
+  approvedOn: '2023-03-28',
+  foundedYear: 2013,
+  mbs: '080885494',
+  nkd: '4690',
+  representative: 'Toni Šupe',
+  cash: '8.00',
+  decision: [
+    { label: 'Gubitak nakon oporezivanja', amount: '84806.75' },
+    { label: 'Iz zadržane dobiti', amount: '0.00' },
+    { label: 'Iz rezervi', amount: '0.00' },
+    { label: 'Prijenos na nepokrivene gubitke', amount: '84806.75' },
+  ],
+  assets: [
+    { label: 'Zemljište', previous: 664768, current: 1156508 },
+    { label: 'Materijalna imovina u pripremi', previous: 0, current: 177288 },
+    { label: 'Trgovačka roba', previous: 0, current: 73543 },
+    { label: 'Predujmovi za zalihe', previous: 0, current: 165421 },
+    { label: 'Potraživanja od države', previous: 605, current: 79919 },
+    { label: 'Dani zajmovi, depoziti i slično', previous: 21544, current: 0 },
+    { label: 'Novac u banci i blagajni', previous: 9604, current: 8 },
+    { label: 'Ukupno aktiva', previous: 696521, current: 1652687 },
+  ],
+  capital: [
+    { label: 'Temeljni kapital', previous: 20000, current: 20000 },
+    { label: 'Zadržana dobit ili preneseni gubitak', previous: -2020, current: -10795 },
+    { label: 'Dobit ili gubitak poslovne godine', previous: -8775, current: -84807 },
+    { label: 'Kapital i rezerve', previous: 9205, current: -75602 },
+  ],
+  liabilities: [
+    { label: 'Obveze za zajmove, depozite i slično', previous: 364954, current: 770177 },
+    { label: 'Obveze prema dobavljačima', previous: 317443, current: 901117 },
+    { label: 'Obveze prema zaposlenicima', previous: 0, current: 42000 },
+    { label: 'Obveze za poreze, doprinose i slična davanja', previous: 4919, current: 14794 },
+    { label: 'Ostale obveze', previous: 0, current: 200 },
+    { label: 'Kratkoročne obveze', previous: 687316, current: 1728288 },
+  ],
+  income: [
+    { label: 'Materijalni troškovi', previous: 1440, current: 17870 },
+    { label: 'Troškovi osoblja', previous: 0, current: 61163 },
+    { label: 'Ostali troškovi', previous: 1728, current: 833 },
+    { label: 'Poslovni rashodi', previous: 3168, current: 79866 },
+    { label: 'Kamate', previous: 534, current: 7 },
+    { label: 'Ostali financijski prihodi', previous: 3275, current: 715 },
+    { label: 'Financijski prihodi', previous: 3809, current: 722 },
+    { label: 'Kamate u rashodima', previous: 5500, current: 5358 },
+    { label: 'Tečajne razlike', previous: 371, current: 105 },
+    { label: 'Ostali financijski rashodi', previous: 3545, current: 200 },
+    { label: 'Financijski rashodi', previous: 9416, current: 5663 },
+    { label: 'Ukupni prihodi', previous: 3809, current: 722 },
+    { label: 'Ukupni rashodi', previous: 12584, current: 85529 },
+    { label: 'Dobit ili gubitak prije oporezivanja', previous: -8775, current: -84807 },
+  ],
+  tax: [
+    { label: 'Prihodi', amount: '721.98' },
+    { label: 'Rashodi', amount: '85528.73' },
+    { label: 'Gubitak', amount: '84806.75' },
+    { label: 'Povećanje dobiti', amount: '200.00' },
+    { label: 'Preneseni gubitak', amount: '8775.11' },
+    { label: 'Porezna osnovica', amount: '93381.86' },
+    { label: 'Stopa', amount: '10' },
+    { label: 'Porez', amount: '0.00' },
+  ],
+};
+
+const BILJESKE_SNAPSHOTS = [FINESTAR_BILJESKE_2022, FINESTAR_BILJESKE_2021];
 
 export function biljeskeYears(slug: string): number[] {
   return BILJESKE_SNAPSHOTS.filter((snapshot) => snapshot.slug === slug)

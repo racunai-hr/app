@@ -9,7 +9,7 @@ import { clearTokens } from '@/lib/auth';
 import { formatHrDateTime, formatHrMoney } from '@/lib/formatHr';
 import {
   fetchPdvPeriods,
-  formatPdvPeriodLabel,
+  formatPdvFilingLabel,
   pdvKontrolniHref,
   pdvPeriodStatusLabel,
   pdvPrijavaHref,
@@ -79,7 +79,7 @@ export function PdvPeriodList({ slug, origin, token, role }: Props) {
                 <tr key={row.period}>
                   <td>
                     <Link href={pdvPrijavaHref(slug, row.period)}>
-                      {formatPdvPeriodLabel(row.period)}
+                      {formatPdvFilingLabel(row)}
                     </Link>
                   </td>
                   <td>
@@ -95,7 +95,12 @@ export function PdvPeriodList({ slug, origin, token, role }: Props) {
                       ? `v${row.return_version} · ${pdvReturnStatusLabel(row.return_status)}`
                       : '—'}
                   </td>
-                  <td className="cell-amount">{formatHrMoney(row.vat_due, 'EUR')}</td>
+                  <td className="cell-amount">
+                    {formatHrMoney(
+                      row.document_vat_due != null ? row.document_vat_due : row.vat_due,
+                      row.document_currency || 'EUR',
+                    )}
+                  </td>
                   <td>{formatHrDateTime(row.submitted_at)}</td>
                   <td className="banking-col-action">
                     <Link href={pdvKontrolniHref(slug, row.period)}>Pregledi</Link>

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { fetchCostCenters, type CostCenterRef } from '@/lib/costCenters';
 import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
@@ -32,6 +32,16 @@ import {
 import { pollInvoiceImport } from '@/lib/purchasingImport';
 import { DOCUMENTS_OPERATIVE_HREFS } from '@/lib/documentListQuery';
 import { formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { AccountingReviewPanel } from '@/components/documents/AccountingReviewPanel';
+import {
+  applyReviewedAccounts,
+  fetchImportAccountingReview,
+  isAccountLockedProfile,
+  isVehiclePostingProfile,
+  type AccountingReview,
+  type ReviewAnswers,
+  type ReviewLine,
+} from '@/lib/accountingReview';
 
 import { usePurchasingSession } from './usePurchasingSession';
 
@@ -104,6 +114,12 @@ function reviewLines(extracted: IncomingInvoiceImport['extracted']): Array<{
     }));
 }
 
+function splitPreviewLabel(preview: ReviewLine[] | null): string {
+  const rows = (preview || []).filter((row) => Number(row.debit) > 0);
+  if (!rows.length) return '—';
+  return rows.map((row) => `${row.account_code} · ${row.account_name}`).join(', ');
+}
+
 export function InvoiceReview({ slug, importId }: Props) {
   const { session, loading, error: sessionError } = usePurchasingSession(slug);
   const [run, setRun] = useState<IncomingInvoiceImport | null>(null);
@@ -119,6 +135,9 @@ export function InvoiceReview({ slug, importId }: Props) {
   const [costCenterId, setCostCenterId] = useState<number | null>(null);
   const [expenseAccount, setExpenseAccount] = useState<AccountRef | null>(null);
   const [lineAccounts, setLineAccounts] = useState<Record<number, AccountRef | null>>({});
+  const touchedLines = useRef(new Set<number>());
+  const [accountingReview, setAccountingReview] = useState<AccountingReview | null>(null);
+  const [reviewAnswers, setReviewAnswers] = useState<ReviewAnswers>({});
   const [remember, setRemember] = useState(false);
   const [preview, setPreview] = useState<ExpensePostingPreview | null>(null);
 
@@ -189,8 +208,34 @@ export function InvoiceReview({ slug, importId }: Props) {
   }, [session]);
 
   useEffect(() => {
+    touchedLines.current = new Set();
     setLineAccounts({});
+    setReviewAnswers({});
   }, [run?.id]);
+
+  useEffect(() => {
+    if (!session || run?.status !== 'extracted') return;
+    let cancelled = false;
+    fetchImportAccountingReview(session.origin, session.token, run.id, reviewAnswers)
+      .then((next) => {
+        if (cancelled) return;
+        setAccountingReview(next);
+        setLineAccounts((current) =>
+          applyReviewedAccounts(current, next, touchedLines.current, (line) => ({
+            id: line.account_id,
+            code: line.account_code,
+            name: line.account_name,
+            active: true,
+          })),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setAccountingReview(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, run?.id, run?.status, reviewAnswers]);
 
   useEffect(() => {
     if (!session || !run?.confirmed_expense_id) {
@@ -309,7 +354,14 @@ export function InvoiceReview({ slug, importId }: Props) {
         expense_account_id: expenseAccount?.id ?? null,
         cost_center_id: costCenterId,
         remember_category_for_partner: remember,
-        ...(lines.length
+        ...(reviewAnswers.posting_profile
+          ? { posting_profile: String(reviewAnswers.posting_profile) }
+          : {}),
+        vehicle_id: accountingReview?.vehicle?.id ?? null,
+        answers: reviewAnswers,
+        ...(lines.length &&
+        !isAccountLockedProfile(accountingReview?.posting_profile) &&
+        !(isVehiclePostingProfile(accountingReview?.posting_profile) && touchedLines.current.size === 0)
           ? {
               line_accounts: lines.map((line) => ({
                 position: line.position,
@@ -442,7 +494,8 @@ export function InvoiceReview({ slug, importId }: Props) {
     run?.duplicate.kind === 'hard' ||
     unresolved ||
     (overrideRequired && !directionOverride) ||
-    mixedLineAccounts;
+    mixedLineAccounts ||
+    accountingReview?.status === 'needs_information';
 
   return (
     <section className="docs-shell">
@@ -572,11 +625,14 @@ export function InvoiceReview({ slug, importId }: Props) {
                             {item.gross_amount ? formatHrMoney(item.gross_amount, extracted.currency) : '—'}
                           </td>
                           <td>
-                            {canAct ? (
+                            {isAccountLockedProfile(accountingReview?.posting_profile) ? (
+                              <span>{splitPreviewLabel(accountingReview?.preview ?? null)}</span>
+                            ) : canAct ? (
                               <AccountPicker
                                 label={`Konto stavke ${item.position}`}
                                 value={lineAccounts[item.position] ?? null}
                                 onChange={(next) => {
+                                  touchedLines.current.add(item.position);
                                   setLineAccounts((current) => ({
                                     ...current,
                                     [item.position]: next,
@@ -850,6 +906,14 @@ export function InvoiceReview({ slug, importId }: Props) {
               Potvrđujem da je izdavatelj stvarni dobavljač
             </label>
           )}
+
+          <AccountingReviewPanel
+            review={accountingReview}
+            answers={reviewAnswers}
+            currency={extracted?.currency || 'EUR'}
+            busy={busy}
+            onAnswers={setReviewAnswers}
+          />
 
           {confirmed && (
             <div className="ocr-success">

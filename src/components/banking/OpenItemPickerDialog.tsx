@@ -122,7 +122,11 @@ export function OpenItemPickerDialog({
             <h2 id="banking-picker-title">Odaberi otvorenu stavku</h2>
             <p className="banking-role-note">
               Transakcija #{transaction.id} · {formatHrInputDate(transaction.transaction_date)} ·{' '}
-              {formatHrMoney(transaction.amount, transaction.currency)} · {counterparty} · {pnb}.
+              {formatHrMoney(transaction.amount, transaction.currency)}
+              {transaction.currency && transaction.currency !== 'EUR' && transaction.amount_eur
+                ? ` (${formatHrMoney(transaction.amount_eur, 'EUR')})`
+                : ''}{' '}
+              · {counterparty} · {pnb}.
               Bankovni račun dolazi iz izvoda.
             </p>
           </div>

@@ -1,18 +1,29 @@
 import Link from 'next/link';
 
 import { controlLabel, noticeLabel, DIRECTION_LABELS, statusLabel } from '@/lib/documentLabels';
-import type { DocumentDirection, DocumentSummary } from '@/lib/documents';
-import { formatHrAmount, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { isEurCurrency, type DocumentDirection, type DocumentSummary } from '@/lib/documents';
+import { formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { provenanceText } from '@/lib/provenance';
 import { ProvenanceBadge } from './ProvenanceBadge';
 
 type Props = {
   rows: DocumentSummary[];
   slug?: string;
+  canCloseDraft?: boolean;
+  onCloseDraft?: (row: DocumentSummary) => void;
   onOpenDocument?: (selection: { direction: DocumentDirection; id: number }) => void;
 };
 
-export function DocumentTable({ rows, slug, onOpenDocument }: Props) {
+function canCloseReceivedDraft(row: DocumentSummary, enabled: boolean): boolean {
+  return (
+    enabled &&
+    row.direction === 'incoming' &&
+    row.document_status.value === 'draft' &&
+    row.operational_status.value === 'received'
+  );
+}
+
+export function DocumentTable({ rows, slug, canCloseDraft = false, onCloseDraft, onOpenDocument }: Props) {
   if (rows.length === 0) {
     return <p className="table-empty">Nema dokumenata za odabrani filter.</p>;
   }
@@ -86,22 +97,46 @@ export function DocumentTable({ rows, slug, onOpenDocument }: Props) {
                 </td>
                 <td className="cell-amount">
                   <div className="cell-stack">
-                    <span>{formatHrMoney(row.amounts.gross, row.amounts.currency)}</span>
+                    <span>
+                      {formatHrMoney(
+                        row.amounts.gross,
+                        isEurCurrency(row.amounts.currency) ? 'EUR' : row.amounts.currency,
+                      )}
+                    </span>
+                    {!isEurCurrency(row.amounts.currency) && row.amounts.book_gross ? (
+                      <span>{formatHrMoney(row.amounts.book_gross, 'EUR')}</span>
+                    ) : null}
                     <span className="muted-inline">
                       Otvoreno:{' '}
                       {provenanceText(row.subledger.open_amount, (value) =>
-                        formatHrAmount(typeof value === 'number' || typeof value === 'string' ? value : String(value)),
+                        formatHrMoney(
+                          typeof value === 'number' || typeof value === 'string' ? value : String(value),
+                          'EUR',
+                        ),
                       )}
                     </span>
                   </div>
                 </td>
                 <td>
-                  <div className="cell-stack">
-                    <ProvenanceBadge field={row.operational_status} />
-                    {rawStatus != null && (
-                      <span className="raw-status">Status dokumenta: {statusLabel(rawStatus)}</span>
-                    )}
-                  </div>
+                  {canCloseReceivedDraft(row, canCloseDraft) ? (
+                    <button
+                      type="button"
+                      className="status-close-button"
+                      onClick={() => onCloseDraft?.(row)}
+                    >
+                      <ProvenanceBadge field={row.operational_status} />
+                      {rawStatus != null && (
+                        <span className="raw-status">Status dokumenta: {statusLabel(rawStatus)}</span>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="cell-stack">
+                      <ProvenanceBadge field={row.operational_status} />
+                      {rawStatus != null && (
+                        <span className="raw-status">Status dokumenta: {statusLabel(rawStatus)}</span>
+                      )}
+                    </div>
+                  )}
                 </td>
                 <td>
                   <div className="cell-stack">

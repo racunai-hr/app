@@ -8,6 +8,7 @@ import { FINESTAR_POD_RDG_2018 } from './podRdg2018';
 import { FINESTAR_POD_RDG_2019 } from './podRdg2019';
 import { FINESTAR_POD_RDG_2020 } from './podRdg2020';
 import { FINESTAR_POD_RDG_2021 } from './podRdg2021';
+import { FINESTAR_POD_RDG_2022 } from './podRdg2022';
 
 export const FINESTAR_POD_RDG_YEAR = 2014;
 export const FINESTAR_POD_RDG_2015_YEAR = 2015;
@@ -17,6 +18,7 @@ export const FINESTAR_POD_RDG_2018_YEAR = 2018;
 export const FINESTAR_POD_RDG_2019_YEAR = 2019;
 export const FINESTAR_POD_RDG_2020_YEAR = 2020;
 export const FINESTAR_POD_RDG_2021_YEAR = 2021;
+export const FINESTAR_POD_RDG_2022_YEAR = 2022;
 
 export type PodRdgKind = 'banner' | 'section' | 'group' | 'line' | 'total';
 
@@ -154,6 +156,15 @@ export function podRdgAmount(aop: string, rows: PodRdgRow[] = FINESTAR_POD_RDG_2
 export const formatPodRdgAmount = formatPodBilAmount;
 
 const POD_RDG_SNAPSHOTS = [
+  {
+    slug: FINESTAR_SLUG,
+    year: FINESTAR_POD_RDG_2022_YEAR,
+    scheme: 'from-2016' as const,
+    currency: 'HRK' as const,
+    periodFrom: '2022-01-01',
+    periodTo: '2022-12-31',
+    rows: FINESTAR_POD_RDG_2022,
+  },
   {
     slug: FINESTAR_SLUG,
     year: FINESTAR_POD_RDG_2021_YEAR,

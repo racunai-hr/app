@@ -1,5 +1,6 @@
 import { ApiError, parseError as parseApiError } from './api';
 import { tenantApiOrigin, triggerBlobDownload } from './documents';
+import { formatHrInputDate } from './formatHr';
 import type { components } from './openapi/generated';
 import { tenantFetch } from './tenantRequest';
 
@@ -16,6 +17,7 @@ export type SubmissionResult = components['schemas']['SubmissionResult'];
 export type ConfirmationResult = components['schemas']['ConfirmationResult'];
 
 const PERIOD_RE = /^(\d{4})-(0[1-9]|1[0-2])$/;
+const SPAN_RE = /^(\d{4})-(0[1-9]|1[0-2])\.\.(\d{4})-(0[1-9]|1[0-2])$/;
 
 const PERIOD_STATUS_LABELS: Record<string, string> = {
   open: 'Otvoreno',
@@ -58,11 +60,38 @@ export function parsePdvPeriod(value: string | null | undefined): string | null 
   return PERIOD_RE.test(value) ? value : null;
 }
 
+/** Calendar month or a multi-month filing key (`YYYY-MM..YYYY-MM`). */
+export function parsePdvFilingKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (PERIOD_RE.test(value) || SPAN_RE.test(value)) return value;
+  return null;
+}
+
 export function formatPdvPeriodLabel(period: string | null | undefined): string {
   const parsed = parsePdvPeriod(period);
-  if (!parsed) return '—';
-  const [, year, month] = PERIOD_RE.exec(parsed)!;
-  return `${month}/${year}`;
+  if (parsed) {
+    const [, year, month] = PERIOD_RE.exec(parsed)!;
+    return `${month}/${year}`;
+  }
+  const span = period ? SPAN_RE.exec(period) : null;
+  if (!span) return '—';
+  return `${span[2]}/${span[1]} – ${span[4]}/${span[3]}`;
+}
+
+/** Monthly stays MM/YYYY. A filing that crosses months shows the calendar span. */
+export function formatPdvFilingLabel(row: {
+  period: string;
+  period_from?: string | null;
+  period_to?: string | null;
+}): string {
+  const from = row.period_from || '';
+  const to = row.period_to || '';
+  if (from.slice(0, 7) && from.slice(0, 7) !== to.slice(0, 7)) {
+    const start = formatHrInputDate(from);
+    const end = formatHrInputDate(to);
+    if (start !== '—' && end !== '—') return `${start} – ${end}`;
+  }
+  return formatPdvPeriodLabel(row.period);
 }
 
 export function pdvPeriodStatusLabel(status: string | null | undefined): string {
@@ -314,6 +343,24 @@ export async function postPdvSubmit(
   );
 }
 
+export async function postPdvProcessed(
+  origin: string,
+  token: string,
+  period: string,
+  body: { return_version: number },
+  submittedXml: File,
+): Promise<SubmissionResult> {
+  const data = new FormData();
+  data.append('return_version', String(body.return_version));
+  data.append('submitted_xml', submittedXml);
+  return readJson(
+    await authorized(origin, `/api/tax/pdv/periods/${period}/processed/`, token, {
+      method: 'POST',
+      body: data,
+    }),
+  );
+}
+
 export async function fetchPdvSPeriod(
   origin: string,
   token: string,
@@ -351,6 +398,20 @@ export async function postSubmissionConfirmation(
       body,
     }),
   );
+}
+
+export async function downloadSubmissionConfirmation(
+  origin: string,
+  token: string,
+  eventUuid: string,
+): Promise<void> {
+  const response = await authorized(origin, `/api/tax/submissions/${eventUuid}/confirmation/`, token, {
+    headers: { Accept: 'application/pdf' },
+  });
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  const disposition = response.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="([^"]+)"/i);
+  triggerBlobDownload(await response.blob(), match?.[1] || 'potvrda.pdf');
 }
 
 async function downloadXml(

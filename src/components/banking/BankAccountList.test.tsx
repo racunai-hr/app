@@ -70,14 +70,14 @@ describe('BankAccountList', () => {
   it('opens the CAMT import dialog from a stale badge for a write role', async () => {
     render(<BankAccountList slug="finestar" origin="https://x" token="t" role="accountant" />);
     await waitFor(() => expect(screen.getByText('Zastarjelo')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /Zastarjelo — uvezi novi XML izvadak/ }));
-    expect(screen.getByRole('dialog', { name: 'Uvezi novi XML izvadak (camt.053)' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Zastarjelo — uvezi novi izvod/ }));
+    expect(screen.getByRole('dialog', { name: 'Uvezi izvod (CAMT.053 ili OTP IZV)' })).toBeInTheDocument();
   });
 
   it('closes the dialog and refetches after a successful import', async () => {
     render(<BankAccountList slug="finestar" origin="https://x" token="t" role="owner" />);
     await waitFor(() => expect(screen.getByText('Zastarjelo')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /Zastarjelo — uvezi novi XML izvadak/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Zastarjelo — uvezi novi izvod/ }));
     fireEvent.click(screen.getByRole('button', { name: 'fake-import' }));
     expect(screen.queryByRole('dialog')).toBeNull();
     await waitFor(() => expect(fetchBankAccounts).toHaveBeenCalledTimes(2));
@@ -87,6 +87,6 @@ describe('BankAccountList', () => {
     render(<BankAccountList slug="finestar" origin="https://x" token="t" role="viewer" />);
     await waitFor(() => expect(screen.getByText('Zastarjelo')).toBeInTheDocument());
     expect(screen.getByText('Zastarjelo').tagName).toBe('SPAN');
-    expect(screen.queryByRole('button', { name: /Zastarjelo — uvezi novi XML izvadak/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Zastarjelo — uvezi novi izvod/ })).toBeNull();
   });
 });

@@ -33,10 +33,10 @@ function renderDialog(onClose = vi.fn(), onImported = vi.fn()) {
 describe('StatementImportDialog', () => {
   it('renders the title, account context and IBAN-from-file note', () => {
     renderDialog();
-    expect(screen.getByRole('dialog', { name: 'Uvezi novi XML izvadak (camt.053)' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Uvezi izvod (CAMT.053 ili OTP IZV)' })).toBeInTheDocument();
     expect(screen.getByText(/Račun: Fine Star EUR — OTP · HR6124070001100204771/)).toBeInTheDocument();
     expect(
-      screen.getByText(/Račun se pri uvozu automatski određuje prema IBAN-u navedenom u XML datoteci/),
+      screen.getByText(/Račun se pri uvozu automatski određuje prema IBAN-u navedenom u datoteci/),
     ).toBeInTheDocument();
   });
 

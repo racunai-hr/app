@@ -10,6 +10,7 @@ export type DocumentDirectionFilter = DocumentDirection | typeof INCOMING_GROUP_
 
 /** Incoming/outgoing detail payload — OpenAPI SSOT (PR A fields included). */
 export type DocumentDetail = components['schemas']['DocumentDetail'] & {
+  amounts?: components['schemas']['AmountsBlock'] & { book_gross?: string | null };
   related_fixed_asset_id?: number | null;
   official_kind?: string;
   posting_profile_id?: number | null;
@@ -29,6 +30,9 @@ export type DocumentDetail = components['schemas']['DocumentDetail'] & {
   lines?: Array<
     components['schemas']['IncomingLine'] & {
       id?: number | null;
+      book_net_amount?: string | null;
+      book_vat_amount?: string | null;
+      book_gross_amount?: string | null;
       posting_account?: {
         id: number;
         code: string;
@@ -51,8 +55,16 @@ export type DocumentAmounts = {
   net: string | null;
   vat: string | null;
   gross: string | null;
+  book_gross?: string | null;
+  book_net?: string | null;
+  book_vat?: string | null;
   fx_rate: Provenance;
 };
+
+export function isEurCurrency(code: string | null | undefined): boolean {
+  const text = (code || 'EUR').trim().toUpperCase();
+  return text === 'EUR' || text === '€' || text === 'EURO';
+}
 
 export type DocumentSummary = {
   id: number;

@@ -16,6 +16,7 @@ describe('ObrazacTzReport', () => {
     const year = screen.getByLabelText('Godina');
     expect(year.tagName).toBe('SELECT');
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '2022',
       '2021',
       '2020',
       '2019',
@@ -26,6 +27,14 @@ describe('ObrazacTzReport', () => {
       '2014',
     ]);
     expect(screen.getByRole('heading', { name: 'Obrazac TZ 1' })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Obrazac TZ 1\. Obračun od 01\.01\.2022\. do 31\.12\.2022\. FINE STAR d\.o\.o\./),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/dda1db7b-d2fb-47c6-b826-a42f2491b4e7/)).toBeInTheDocument();
+    expect(screen.getByText(/Zaprimljeno 30\.03\.2023\. 07:58/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Godina'), { target: { value: '2021' } });
+
     expect(
       screen.getByText(/Obrazac TZ 1\. Obračun od 01\.01\.2021\. do 31\.12\.2021\. FINE STAR d\.o\.o\./),
     ).toBeInTheDocument();

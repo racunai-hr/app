@@ -7,15 +7,21 @@ import {
   type ExpensePostingPreview,
 } from '@/lib/expensePosting';
 
+type PreviewLine = ExpensePostingPreview['lines'][number] & {
+  document_amount?: string | null;
+};
+
 type Props = {
   preview: ExpensePostingPreview | null;
   currency?: string;
+  documentCurrency?: string;
   emptyLabel?: string;
 };
 
 export function PostingPreviewLines({
   preview,
   currency = 'EUR',
+  documentCurrency,
   emptyLabel = 'Nema prijedloga knjiženja.',
 }: Props) {
   const lines = preview?.lines ?? [];
@@ -36,7 +42,9 @@ export function PostingPreviewLines({
           </tr>
         </thead>
         <tbody>
-          {lines.map((line, index) => (
+          {lines.map((line, index) => {
+            const face = (line as PreviewLine).document_amount;
+            return (
             <tr key={`${line.amount_field}-${line.debit.code}-${index}`}>
               <td>{line.amount_field}</td>
               <td>{line.description || '—'}</td>
@@ -49,9 +57,17 @@ export function PostingPreviewLines({
                   ?? null,
                 )}
               </td>
-              <td className="cell-amount">{formatHrMoney(line.amount, currency)}</td>
+              <td className="cell-amount">
+                <div className="cell-stack">
+                  <span>{formatHrMoney(line.amount, currency)}</span>
+                  {face && documentCurrency ? (
+                    <span className="muted-inline">{formatHrMoney(face, documentCurrency)}</span>
+                  ) : null}
+                </div>
+              </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

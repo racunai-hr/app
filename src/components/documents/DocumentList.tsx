@@ -16,6 +16,7 @@ import {
   parseDocumentListQuery,
   patchDirectionTab,
 } from '@/lib/documentListQuery';
+import { canWriteFinance } from '@/lib/finance';
 import { canWritePurchasing } from '@/lib/purchasing';
 import {
   exportDocuments,
@@ -30,6 +31,7 @@ import {
 } from '@/lib/documents';
 import { pageCountOf } from '@/lib/pagination';
 
+import { CloseDraftDialog } from './CloseDraftDialog';
 import { DateField } from './DateField';
 import { DocumentDetailPanel } from './DocumentDetailPanel';
 import { DocumentKpi } from './DocumentKpi';
@@ -75,6 +77,7 @@ export function DocumentList({
     direction: DocumentDirection;
     id: number;
   } | null>(null);
+  const [closeDraft, setCloseDraft] = useState<DocumentListResponse['results'][number] | null>(null);
 
   const replaceQuery = useCallback(
     (next: Partial<DocumentListQuery>) => {
@@ -288,9 +291,29 @@ export function DocumentList({
           <DocumentTable
             rows={data.results}
             slug={slug}
+            canCloseDraft={Boolean(tenant && canWriteFinance(tenant.role))}
+            onCloseDraft={setCloseDraft}
             onOpenDocument={(next) => {
               if (next.direction !== 'deposit') return;
               setSelection(next);
+            }}
+          />
+        )}
+
+        {closeDraft && tenant && (
+          <CloseDraftDialog
+            expenseId={closeDraft.id}
+            title={
+              closeDraft.source_number ||
+              closeDraft.internal_number ||
+              closeDraft.partner_name ||
+              'Ulazni nacrt'
+            }
+            origin={tenantApiOrigin(tenant.admin_url)}
+            onClose={() => setCloseDraft(null)}
+            onClosed={() => {
+              setCloseDraft(null);
+              setEpoch((value) => value + 1);
             }}
           />
         )}

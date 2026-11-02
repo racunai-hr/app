@@ -23,6 +23,7 @@ function result(overrides: Record<string, unknown> = {}) {
   return {
     scanned: 1,
     imported: 1,
+    merged: 0,
     skipped: 0,
     failed: 0,
     remaining_importable: 0,
@@ -51,6 +52,19 @@ describe('EracunSyncButton', () => {
       expect(screen.getByRole('status')).toHaveTextContent('Uvezeno 2, preskočeno 3.');
     });
     expect(importInboundEracun).toHaveBeenCalledWith('https://api.test', 'token');
+    expect(onImported).toHaveBeenCalledTimes(1);
+  });
+
+  it('refetches the list when a duplicate was merged', async () => {
+    const onImported = vi.fn();
+    importInboundEracun.mockResolvedValue(result({ imported: 0, merged: 1, skipped: 1 }));
+    render(<EracunSyncButton origin="https://api.test" onImported={onImported} />);
+
+    fireEvent.click(screen.getByRole('button', { name: IMPORT }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent('Uvezeno 0, spojeno 1, preskočeno 1.');
+    });
     expect(onImported).toHaveBeenCalledTimes(1);
   });
 

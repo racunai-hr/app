@@ -11,6 +11,7 @@ export const FINESTAR_GFI_2018_YEAR = 2018;
 export const FINESTAR_GFI_2019_YEAR = 2019;
 export const FINESTAR_GFI_2020_YEAR = 2020;
 export const FINESTAR_GFI_2021_YEAR = 2021;
+export const FINESTAR_GFI_2022_YEAR = 2022;
 export const FINESTAR_GFI_INACTIVE_YEAR = 2013;
 
 export type GfiDocument = {
@@ -53,6 +54,7 @@ type GfiCover = {
   domesticCapitalPercent: string;
   foreignCapitalPercent: string;
   employees: string;
+  employeesPrevious?: string;
   monthsPrevious: string;
   monthsCurrent: string;
   auditRequired: false;
@@ -129,6 +131,19 @@ const FINESTAR_GFI_2021_DOCUMENTS: GfiDocument[] = FINESTAR_GFI_DOCUMENTS.map((d
   if (document.label.startsWith('Odluka o raspodjeli')) return { ...document, note: 'odluka' as const };
   return document;
 });
+
+const FINESTAR_GFI_2022_FILINGS: GfiFiling[] = [
+  {
+    id: 'statistika-i-javna-objava',
+    kind: 'statistika-i-javna-objava',
+    title: 'Statistika i javna objava',
+    purpose: 'Predaja i za statističke svrhe i za javnu objavu',
+    receiptId: '7428243',
+    filedOn: '2023-04-26',
+    controlNumber: '387847189.32',
+    documents: FINESTAR_GFI_2021_DOCUMENTS,
+  },
+];
 
 const FINESTAR_GFI_2021_FILINGS: GfiFiling[] = [
   {
@@ -464,6 +479,32 @@ const GFI_SNAPSHOTS = [
     excelVersion: '4.0.1',
     accountingStandard: 'HSFI',
     filings: FINESTAR_GFI_2021_FILINGS,
+  },
+  {
+    slug: FINESTAR_SLUG,
+    kind: 'filed' as const,
+    year: FINESTAR_GFI_2022_YEAR,
+    taxpayerName: 'FINE STAR d.o.o. za usluge',
+    oib: '36619131370',
+    mb: '04139828',
+    mbs: '080885494',
+    nkd: '4690',
+    place: 'Šibenik',
+    street: 'Bana Josipa Jelačića 58',
+    reportKind: '10',
+    sizeLabel: 'Mikro poduzetnik',
+    ownershipLabel: 'Privatno od osnivanja',
+    domesticCapitalPercent: '100',
+    foreignCapitalPercent: '0',
+    employees: '1',
+    employeesPrevious: '0',
+    monthsPrevious: '12',
+    monthsCurrent: '12',
+    auditRequired: false as const,
+    representative: 'Toni Šupe',
+    excelVersion: '4.0.2',
+    accountingStandard: 'HSFI',
+    filings: FINESTAR_GFI_2022_FILINGS,
   },
 ];
 

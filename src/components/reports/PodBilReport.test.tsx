@@ -16,6 +16,7 @@ describe('PodBilReport', () => {
     const year = screen.getByLabelText('Godina');
     expect(year.tagName).toBe('SELECT');
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '2022',
       '2021',
       '2020',
       '2019',
@@ -25,6 +26,14 @@ describe('PodBilReport', () => {
       '2015',
       '2014',
     ]);
+    expect(screen.getByText(/Stanje na dan 31\.12\.2022\. Obrazac POD-BIL, raspored od 2016\./)).toBeInTheDocument();
+    expect(screen.getAllByText('1.652.687').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('1.652.686').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('−75.602').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('−84.807').length).toBeGreaterThan(0);
+
+    fireEvent.change(screen.getByLabelText('Godina'), { target: { value: '2021' } });
+
     expect(screen.getByText(/Stanje na dan 31\.12\.2021\. Obrazac POD-BIL, raspored od 2016\./)).toBeInTheDocument();
     expect(screen.getAllByText('696.521').length).toBeGreaterThan(0);
     expect(screen.getAllByText('9.205').length).toBeGreaterThan(0);

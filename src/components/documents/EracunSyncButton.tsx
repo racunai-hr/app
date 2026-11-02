@@ -59,10 +59,12 @@ function IconRefresh({ spinning }: { spinning: boolean }) {
 }
 
 function summarize(result: EracunImportResult): string {
-  if (result.imported === 0 && result.skipped === 0 && result.failed === 0) {
+  const merged = result.merged ?? 0;
+  if (result.imported === 0 && merged === 0 && result.skipped === 0 && result.failed === 0) {
     return 'Nema novih eRačuna u pretincu.';
   }
   const parts = [`Uvezeno ${result.imported}`];
+  if (merged) parts.push(`spojeno ${merged}`);
   if (result.skipped) parts.push(`preskočeno ${result.skipped}`);
   if (result.failed) parts.push(`neuspješno ${result.failed}`);
   const base = `${parts.join(', ')}.`;
@@ -101,7 +103,7 @@ export function EracunSyncButton({ origin, onImported }: Props) {
           onClick={() =>
             void run('import', async (token) => {
               const result = await importInboundEracun(origin, token);
-              if (result.imported > 0) onImported();
+              if (result.imported > 0 || (result.merged ?? 0) > 0) onImported();
               return summarize(result);
             })
           }

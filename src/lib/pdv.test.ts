@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  formatPdvFilingLabel,
   formatPdvPeriodLabel,
+  parsePdvFilingKey,
   parsePdvPeriod,
   pdvBoxRows,
   pdvPrijavaHref,
@@ -21,6 +23,33 @@ describe('formatPdvPeriodLabel', () => {
     expect(formatPdvPeriodLabel('july')).toBe('—');
     expect(formatPdvPeriodLabel('2026-13')).toBe('—');
   });
+
+  it('labels a multi-month filing from its key', () => {
+    expect(formatPdvPeriodLabel('2014-01..2014-03')).toBe('01/2014 – 03/2014');
+    expect(formatPdvPeriodLabel('2014-01..2014-12')).toBe('01/2014 – 12/2014');
+  });
+});
+
+describe('formatPdvFilingLabel', () => {
+  it('keeps a calendar month as MM/YYYY', () => {
+    expect(
+      formatPdvFilingLabel({
+        period: '2026-07',
+        period_from: '2026-07-01',
+        period_to: '2026-07-31',
+      }),
+    ).toBe('07/2026');
+  });
+
+  it('shows a quarterly span as Croatian calendar dates', () => {
+    expect(
+      formatPdvFilingLabel({
+        period: '2014-01',
+        period_from: '2014-01-01',
+        period_to: '2014-03-31',
+      }),
+    ).toBe('01.01.2014. – 31.03.2014.');
+  });
 });
 
 describe('parsePdvPeriod', () => {
@@ -30,6 +59,15 @@ describe('parsePdvPeriod', () => {
     expect(parsePdvPeriod('2026-8')).toBeNull();
     expect(parsePdvPeriod('2026-13')).toBeNull();
     expect(parsePdvPeriod('')).toBeNull();
+    expect(parsePdvPeriod('2014-01..2014-03')).toBeNull();
+  });
+});
+
+describe('parsePdvFilingKey', () => {
+  it('accepts a month and a span', () => {
+    expect(parsePdvFilingKey('2014-07')).toBe('2014-07');
+    expect(parsePdvFilingKey('2014-01..2014-03')).toBe('2014-01..2014-03');
+    expect(parsePdvFilingKey('2014-01..2014-13')).toBeNull();
   });
 });
 

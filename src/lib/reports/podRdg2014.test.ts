@@ -67,7 +67,7 @@ describe('Fine Star POD-RDG 2014', () => {
       periodFrom: '2014-01-01',
       periodTo: '2014-12-31',
     });
-    expect(podRdgYears('finestar')).toEqual([2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]);
+    expect(podRdgYears('finestar')).toEqual([2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]);
     expect(podRdgYears('other')).toEqual([]);
     expect(podRdgForTenantYear('other', 2014)).toEqual({
       status: 'empty',
@@ -141,9 +141,9 @@ describe('Fine Star POD-RDG 2014', () => {
       periodFrom: '2017-01-01',
       periodTo: '2017-12-31',
     });
-    expect(podRdgForTenantYear('finestar', 2022)).toEqual({
+    expect(podRdgForTenantYear('finestar', 2023)).toEqual({
       status: 'empty',
-      year: 2022,
+      year: 2023,
       scheme: 'from-2016',
     });
   });
