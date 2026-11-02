@@ -8,6 +8,7 @@ import {
   fetchDeposits,
   type DepositDto,
 } from '@/lib/finance';
+import { formatHrAmount, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 
 type Props = {
   origin: string;
@@ -76,12 +77,10 @@ export function PartnerDepositsPanel({ origin, token, partnerId }: Props) {
               rows.map((row) => (
                 <tr key={row.id}>
                   <td>{row.number}</td>
-                  <td>{row.deposit_date || '—'}</td>
-                  <td>
-                    {row.amount} {row.currency}
-                  </td>
+                  <td>{formatHrInputDate(row.deposit_date)}</td>
+                  <td>{formatHrMoney(row.amount, row.currency)}</td>
                   <td>{depositWorkflowLabel(row.workflow_status)}</td>
-                  <td>{row.open_amount}</td>
+                  <td>{formatHrAmount(row.open_amount)}</td>
                 </tr>
               ))
             )}

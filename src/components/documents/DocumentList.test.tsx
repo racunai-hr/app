@@ -95,12 +95,31 @@ describe('DocumentList', () => {
     expect(screen.getByText('Plaćen bez saldakonta')).toBeInTheDocument();
     expect(screen.getByText('nije dokazivo')).toHaveAttribute('data-tone', 'unknown');
     expect(screen.getByText('Status dokumenta: Poslan')).toBeInTheDocument();
-    expect(screen.getByText('19. 8. 2026. u 12:00')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Detalji računa Izlazni · R-100' })).toBeInTheDocument();
+    expect(screen.getByText('19.08.2026. 12:00')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Detalji računa Izlazni · R-100' })).toHaveAttribute(
+      'href',
+      '/t/finestar/dokumenti/izlazni/4',
+    );
+    expect(screen.getByRole('link', { name: 'Detalji računa Izlazni · R-100' })).toHaveAttribute(
+      'target',
+      '_blank',
+    );
     expect(container.querySelector('a[href*="/saldakonti/"]')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Detalji računa Izlazni · R-100' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Učitaj račun' })).toBeNull();
     expect(screen.queryByRole('button', { name: /spremi|obriši|pošalji/i })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull();
     expect(screen.queryByText('Otvori admin')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Uvezi nove eRačune iz pretinca' })).toBeNull();
+  });
+
+  it('uses dokumenti base path and omits its own heading when wrapped by DocumentsPage', async () => {
+    render(<DocumentList slug="finestar" basePath="dokumenti" showHeader={false} />);
+    await waitFor(() => {
+      expect(screen.getByTestId('document-kpi')).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.getByRole('button', { name: 'CSV' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Učitaj račun' })).toBeNull();
   });
 });

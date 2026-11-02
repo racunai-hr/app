@@ -1,4 +1,5 @@
 import { ApiError, parseError as parseApiError } from './api';
+import { tenantFetch } from './tenantRequest';
 
 export type DepositDto = {
   id: number;
@@ -46,12 +47,144 @@ export function canWriteFinance(role: string): boolean {
   return role === 'owner' || role === 'accountant';
 }
 
+export type OfficialDocumentDto = {
+  id: number;
+  official_kind: 'tax_decision' | 'other';
+  issuer_id: number;
+  issuer_name: string;
+  document_number: string;
+  reference: string;
+  issue_date: string | null;
+  due_date: string | null;
+  amount: string;
+  currency: string;
+  status: string;
+  workflow_status: string;
+  original_filename: string;
+  has_file: boolean;
+  related_fixed_asset_id: number | null;
+  posting_profile_id: number | null;
+  posting_profile_code: string | null;
+  posting_profile_name: string | null;
+  notes: string;
+};
+
+export type OfficialDocumentPostingProfileDto = {
+  id: number;
+  code: string;
+  name: string;
+  economic_effect: 'capitalize' | 'expense';
+  allowed_kinds: string[];
+  requires_fixed_asset: boolean;
+  is_active: boolean;
+};
+
+export async function createOfficialDocument(
+  origin: string,
+  token: string,
+  body: FormData,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(origin, '/api/finance/official-documents/', token, {
+    method: 'POST',
+    body,
+  });
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function cancelOfficialDocument(
+  origin: string,
+  token: string,
+  documentId: number,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/official-documents/${documentId}/cancel/`,
+    token,
+    { method: 'POST' },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function linkOfficialDocumentJournal(
+  origin: string,
+  token: string,
+  documentId: number,
+  journalEntryId: number,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/official-documents/${documentId}/link-journal/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ journal_entry_id: journalEntryId }),
+    },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function fetchOfficialDocumentPostingProfiles(
+  origin: string,
+  token: string,
+): Promise<OfficialDocumentPostingProfileDto[]> {
+  const response = await authorized(
+    origin,
+    '/api/finance/official-document-posting-profiles/',
+    token,
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function setOfficialDocumentPostingProfile(
+  origin: string,
+  token: string,
+  documentId: number,
+  postingProfileId: number,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/official-documents/${documentId}/posting-profile/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ posting_profile_id: postingProfileId }),
+    },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function postOfficialDocument(
+  origin: string,
+  token: string,
+  documentId: number,
+  idempotencyKey: string,
+): Promise<OfficialDocumentDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/official-documents/${documentId}/post/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
+    },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
 export function newIdempotencyKey(): string {
   return crypto.randomUUID();
 }
 
 async function authorized(origin: string, path: string, token: string, init?: RequestInit): Promise<Response> {
-  return fetch(`${origin}${path}`, {
+  return tenantFetch(`${origin}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -131,6 +264,78 @@ export function reverseDeposit(origin: string, token: string, depositId: number,
 
 export function cancelDeposit(origin: string, token: string, depositId: number) {
   return depositAction(origin, token, depositId, 'cancel', null);
+}
+
+export type PrivateFundsClaimDto = {
+  id: number;
+  number: string;
+  claim_type: string;
+  partner_id: number;
+  partner_name: string;
+  amount: string;
+  currency: string;
+  claim_date: string | null;
+  status: string;
+  operational_status: string;
+  open_amount: string;
+  reference: string;
+  notes: string;
+  related_type: string;
+  related_id: number;
+  journal_entry_id: number | null;
+  created_at: string | null;
+};
+
+export type CreatePrivateFundsClaimInput = {
+  partner_id: number;
+  claim_type: 'supplier_payment' | 'deposit_funding';
+  amount: string;
+  currency?: string;
+  claim_date: string;
+  related_type: 'expense' | 'deposit';
+  related_id: number;
+  reference?: string;
+  notes?: string;
+};
+
+export async function createPrivateFundsClaim(
+  origin: string,
+  token: string,
+  body: CreatePrivateFundsClaimInput,
+  idempotencyKey: string,
+): Promise<PrivateFundsClaimDto> {
+  const response = await authorized(origin, '/api/finance/private-funds-claims/', token, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: JSON.stringify({
+      currency: 'EUR',
+      ...body,
+    }),
+  });
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
+}
+
+export async function postPrivateFundsClaim(
+  origin: string,
+  token: string,
+  claimId: number,
+  idempotencyKey: string,
+): Promise<PrivateFundsClaimDto> {
+  const response = await authorized(
+    origin,
+    `/api/finance/private-funds-claims/${claimId}/post/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
+    },
+  );
+  if (!response.ok) throw new ApiError(await parseApiError(response), response.status);
+  return response.json();
 }
 
 export function depositWorkflowLabel(status: string): string {

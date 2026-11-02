@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ApiError } from '@/lib/api';
@@ -19,12 +20,21 @@ import {
   TRANSACTION_TYPE_LABELS,
   labelOrRaw,
 } from '@/lib/bankingLabels';
-import { formatHrMoney, formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrDateTime, formatHrInputDate } from '@/lib/formatHr';
+import {
+  parseSubledgerItemParam,
+  reconcileCandidateDocumentLink,
+  type ReconcileDocumentLink,
+} from '@/lib/bankingReconcile';
+import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
+import { BookMoney } from '@/components/banking/BookMoney';
+import { OpenItemPickerDialog } from '@/components/banking/OpenItemPickerDialog';
 import { DateField } from '@/components/documents/DateField';
-
-import { BankingPager } from './BankingPager';
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 
 type Props = {
+  slug: string;
   origin: string;
   token: string;
   /** Base path for URL filters, e.g. /t/x/bankarstvo/transakcije */
@@ -54,34 +64,6 @@ function IconLink({ className }: { className?: string }) {
   );
 }
 
-function IconCheck({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M20 6 9 17l-5-5"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconClose({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M18 6 6 18M6 6l12 12"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function matchTone(status: string): string {
   if (status === 'matched') return 'success';
   if (status === 'suggested') return 'warning';
@@ -97,12 +79,13 @@ function queryFromSearch(params: URLSearchParams, reconcileMode?: boolean) {
     transaction_type: params.get('transaction_type') || '',
     date_from: params.get('date_from') || '',
     date_to: params.get('date_to') || '',
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
+    search: params.get('search') || '',
+    page: parsePage(params.get('page')),
+    page_size: parsePageSize(params.get('page_size')),
   };
 }
 
-export function TransactionList({ origin, token, basePath, reconcileMode }: Props) {
+export function TransactionList({ slug, origin, token, basePath, reconcileMode }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchKey = searchParams.toString();
@@ -110,6 +93,8 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
     () => queryFromSearch(searchParams, reconcileMode),
     [searchKey, searchParams, reconcileMode],
   );
+  const highlightTxId = Number(searchParams.get('tx') || '') || null;
+  const highlightSubledgerItemId = parseSubledgerItemParam(searchParams);
   const [data, setData] = useState<Paginated<TransactionDto> | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -117,24 +102,33 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
   const [candidates, setCandidates] = useState<OpenItemCandidate[]>([]);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [reconcileSuccess, setReconcileSuccess] = useState<ReconcileDocumentLink | null>(null);
+  const pickerTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   function reload() {
     return fetchTransactions(origin, token, query).then((list) => setData(list));
   }
 
-  function replaceQuery(next: Partial<typeof query>) {
-    const merged = { ...query, ...next };
-    const params = new URLSearchParams();
-    if (merged.bank_account) params.set('bank_account', merged.bank_account);
-    if (merged.statement) params.set('statement', merged.statement);
-    if (merged.match_status) params.set('match_status', merged.match_status);
-    if (merged.transaction_type) params.set('transaction_type', merged.transaction_type);
-    if (merged.date_from) params.set('date_from', merged.date_from);
-    if (merged.date_to) params.set('date_to', merged.date_to);
-    if (merged.page > 1) params.set('page', String(merged.page));
-    const qs = params.toString();
-    router.replace(qs ? `${basePath}?${qs}` : basePath);
-  }
+  const replaceQuery = useCallback(
+    (next: Partial<typeof query>) => {
+      const merged = { ...query, ...next };
+      const params = new URLSearchParams();
+      if (merged.bank_account) params.set('bank_account', merged.bank_account);
+      if (merged.statement) params.set('statement', merged.statement);
+      if (merged.match_status) params.set('match_status', merged.match_status);
+      if (merged.transaction_type) params.set('transaction_type', merged.transaction_type);
+      if (merged.date_from) params.set('date_from', merged.date_from);
+      if (merged.date_to) params.set('date_to', merged.date_to);
+      if (merged.search) params.set('search', merged.search);
+      writePageParams(params, merged.page, merged.page_size);
+      const subledgerItem = searchParams.get('subledger_item');
+      if (subledgerItem) params.set('subledger_item', subledgerItem);
+      const qs = params.toString();
+      router.replace(qs ? `${basePath}?${qs}` : basePath);
+    },
+    [basePath, query, router, searchParams],
+  );
+  const onPage = useCallback((page: number) => replaceQuery({ page }), [replaceQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -157,6 +151,23 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
     };
   }, [origin, token, searchKey, query]);
 
+  useEffect(() => {
+    if (highlightTxId == null || !data?.results.some((row) => row.id === highlightTxId)) {
+      return;
+    }
+    const node = document.getElementById(`tx-${highlightTxId}`);
+    if (node && typeof node.scrollIntoView === 'function') {
+      node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [data, highlightTxId]);
+
+  function clearSubledgerItemParam() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('subledger_item');
+    const qs = params.toString();
+    router.replace(qs ? `${basePath}?${qs}` : basePath);
+  }
+
   function handleFilter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -169,28 +180,52 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
       transaction_type: String(form.get('transaction_type') || ''),
       date_from: String(form.get('date_from') || ''),
       date_to: String(form.get('date_to') || ''),
+      search: String(form.get('search') || ''),
       page: 1,
     });
   }
 
-  async function openPicker(txId: number) {
+  const loadCandidates = useCallback(
+    async (txId: number, q?: string) => {
+      setCandidatesLoading(true);
+      setError('');
+      try {
+        const list = await fetchOpenItemCandidates(origin, token, txId, q);
+        setCandidates(list.results);
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : 'Kandidati nisu učitani.');
+        setActiveTxId(null);
+        setCandidates([]);
+      } finally {
+        setCandidatesLoading(false);
+      }
+    },
+    [origin, token],
+  );
+
+  function openPicker(txId: number, trigger: HTMLButtonElement | null) {
+    pickerTriggerRef.current = trigger;
     setActiveTxId(txId);
     setCandidates([]);
-    setCandidatesLoading(true);
-    setError('');
-    try {
-      const list = await fetchOpenItemCandidates(origin, token, txId);
-      setCandidates(list.results);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Kandidati nisu učitani.');
-      setActiveTxId(null);
-    } finally {
-      setCandidatesLoading(false);
-    }
+    void loadCandidates(txId);
   }
 
+  function closePicker() {
+    setActiveTxId(null);
+    setCandidates([]);
+    pickerTriggerRef.current?.focus();
+  }
+
+  const searchCandidates = useCallback(
+    (q: string) => {
+      if (activeTxId == null) return;
+      void loadCandidates(activeTxId, q);
+    },
+    [activeTxId, loadCandidates],
+  );
+
   async function confirmReconcile(item: OpenItemCandidate) {
-    if (activeTxId == null) return;
+    if (activeTxId == null || item.item_id == null) return;
     setBusy(true);
     setError('');
     try {
@@ -203,6 +238,9 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
       );
       setActiveTxId(null);
       setCandidates([]);
+      setReconcileSuccess(reconcileCandidateDocumentLink(slug, item));
+      clearSubledgerItemParam();
+      pickerTriggerRef.current?.focus();
       await reload();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Usklađivanje nije uspjelo.');
@@ -211,7 +249,14 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
     }
   }
 
-  const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
+  const activeTx = data?.results.find((row) => row.id === activeTxId) ?? null;
+  const pageCount = data ? pageCountOf(data.count, query.page_size) : 1;
+  usePageBounds({
+    page: query.page,
+    pageCount,
+    ready: Boolean(data) && !loading && !error,
+    onPage,
+  });
   const statusTabs = [
     { value: 'unmatched', label: 'Neusklađeno' },
     { value: 'suggested', label: 'Prijedlozi' },
@@ -236,6 +281,14 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
       )}
 
       <form className="filter-bar banking-filter-bar" onSubmit={handleFilter} key={searchKey}>
+        <label className="filter-field">
+          <span>Pretraži</span>
+          <input
+            name="search"
+            defaultValue={query.search}
+            placeholder="Opis, protustrana, PNB…"
+          />
+        </label>
         <label className="filter-field">
           <span>ID računa</span>
           <input name="bank_account" defaultValue={query.bank_account} inputMode="numeric" />
@@ -280,11 +333,28 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
 
       {data && (
         <p className="as-of">
-          Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time> · {data.count}{' '}
+          Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time> · {data.count}{' '}
           transakcija
         </p>
       )}
       {error && <div className="error">{error}</div>}
+      {reconcileSuccess && (
+        <div className="banking-reconcile-success" role="status">
+          <p>Transakcija je uspješno usklađena.</p>
+          <div className="export-actions">
+            <Link className="btn btn-secondary" href={reconcileSuccess.href}>
+              Povratak na dokument: {reconcileSuccess.label}
+            </Link>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setReconcileSuccess(null)}
+            >
+              Zatvori
+            </button>
+          </div>
+        </div>
+      )}
       {loading && !data && <div className="loading">Učitavanje…</div>}
       {data && data.results.length === 0 && (
         <p className="table-empty">Nema transakcija za odabrani filter.</p>
@@ -307,11 +377,18 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
               {data.results.map((row) => (
                 <tr
                   key={row.id}
-                  className={activeTxId === row.id ? 'banking-row-active' : undefined}
+                  id={highlightTxId === row.id ? `tx-${row.id}` : undefined}
+                  className={
+                    activeTxId === row.id || highlightTxId === row.id
+                      ? 'banking-row-active'
+                      : undefined
+                  }
                 >
-                  <td>{row.transaction_date}</td>
+                  <td>{formatHrInputDate(row.transaction_date)}</td>
                   <td>{labelOrRaw(TRANSACTION_TYPE_LABELS, row.transaction_type)}</td>
-                  <td>{formatHrMoney(row.amount, row.currency)}</td>
+                  <td>
+                    <BookMoney amount={row.amount} currency={row.currency} amountEur={row.amount_eur} />
+                  </td>
                   <td>
                     <div className="cell-stack">
                       <span>{row.description || '—'}</span>
@@ -325,9 +402,19 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
                     </div>
                   </td>
                   <td>
-                    <span className={`badge badge-${matchTone(row.match_status)}`}>
-                      {labelOrRaw(MATCH_STATUS_LABELS, row.match_status)}
-                    </span>
+                    <div className="cell-stack">
+                      <span className={`badge badge-${matchTone(row.match_status)}`}>
+                        {labelOrRaw(MATCH_STATUS_LABELS, row.match_status)}
+                      </span>
+                      {row.match_status === 'matched' && row.matched_journal_entry_id != null ? (
+                        <Link
+                          className="banking-je-link"
+                          href={`/t/${slug}/glavna-knjiga/${row.matched_journal_entry_id}`}
+                        >
+                          Temeljnica
+                        </Link>
+                      ) : null}
+                    </div>
                   </td>
                   {reconcileMode ? (
                     <td className="banking-col-action">
@@ -340,7 +427,7 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
                               : 'banking-icon-btn'
                           }
                           disabled={busy || candidatesLoading}
-                          onClick={() => openPicker(row.id)}
+                          onClick={(event) => openPicker(row.id, event.currentTarget)}
                           title="Poveži s otvorenom stavkom"
                           aria-label={`Poveži transakciju ${row.id}`}
                           aria-pressed={activeTxId === row.id}
@@ -361,72 +448,29 @@ export function TransactionList({ origin, token, basePath, reconcileMode }: Prop
         </div>
       )}
 
-      {reconcileMode && activeTxId != null && (
-        <div className="banking-reconcile-panel">
-          <div className="banking-reconcile-panel-head">
-            <div>
-              <h2>Odaberi otvorenu stavku</h2>
-              <p className="banking-role-note">
-                Transakcija #{activeTxId}. Bankovni račun dolazi iz izvoda.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="banking-icon-btn"
-              disabled={busy}
-              onClick={() => setActiveTxId(null)}
-              title="Zatvori"
-              aria-label="Zatvori odabir stavke"
-            >
-              <IconClose />
-            </button>
-          </div>
-          {candidatesLoading && <div className="loading">Učitavanje kandidata…</div>}
-          {!candidatesLoading && candidates.length === 0 && (
-            <p className="table-empty">Nema otvorenih stavki istog iznosa i smjera.</p>
-          )}
-          {candidates.length > 0 && (
-            <div className="table-wrap">
-              <table className="docs-table">
-                <thead>
-                  <tr>
-                    <th>Partner</th>
-                    <th>Dokument</th>
-                    <th>Otvoreno</th>
-                    <th className="banking-col-action">Akcija</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {candidates.map((item) => (
-                    <tr key={item.item_id}>
-                      <td>{item.partner_name || '—'}</td>
-                      <td>
-                        {item.source_type} · {item.source_label}
-                      </td>
-                      <td>{item.open_amount}</td>
-                      <td className="banking-col-action">
-                        <button
-                          type="button"
-                          className="banking-action-btn"
-                          disabled={busy}
-                          onClick={() => confirmReconcile(item)}
-                          title={item.action_label}
-                        >
-                          <IconCheck />
-                          <span>{item.action_label}</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+      {reconcileMode && activeTx != null && (
+        <OpenItemPickerDialog
+          slug={slug}
+          transaction={activeTx}
+          candidates={candidates}
+          loading={candidatesLoading}
+          busy={busy}
+          highlightSubledgerItemId={highlightSubledgerItemId}
+          onClose={closePicker}
+          onSearch={searchCandidates}
+          onConfirm={confirmReconcile}
+        />
       )}
 
-      {data && data.count > data.page_size && (
-        <BankingPager page={data.page} pageCount={pageCount} onPage={(page) => replaceQuery({ page })} />
+      {data && (
+        <Pagination
+          page={query.page}
+          pageCount={pageCount}
+          count={data.count}
+          pageSize={query.page_size}
+          onPage={onPage}
+          onPageSize={(page_size) => replaceQuery({ page_size, page: 1 })}
+        />
       )}
     </>
   );

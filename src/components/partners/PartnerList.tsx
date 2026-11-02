@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 import { ApiError } from '@/lib/api';
+import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
 import { clearTokens } from '@/lib/auth';
 import {
   canWritePartners,
@@ -47,21 +50,26 @@ export function PartnerList({ slug }: Props) {
   const filter = searchParams.get('filter') || '';
   const jurisdiction = (searchParams.get('jurisdiction') || '') as '' | 'HR' | 'EU' | 'NON_EU';
   const search = searchParams.get('search') || '';
-  const page = Math.max(1, Number(searchParams.get('page') || 1));
+  const page = parsePage(searchParams.get('page'));
+  const pageSize = parsePageSize(searchParams.get('page_size'));
 
   const setQuery = useCallback(
     (patch: Record<string, string>) => {
       const next = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(patch)) {
+        if (key === 'page' || key === 'page_size') continue;
         if (!value) next.delete(key);
         else next.set(key, value);
       }
-      if (!('page' in patch)) next.delete('page');
+      const nextPage = 'page' in patch ? parsePage(patch.page) : 1;
+      const nextPageSize = 'page_size' in patch ? parsePageSize(patch.page_size) : pageSize;
+      writePageParams(next, nextPage, nextPageSize);
       const qs = next.toString();
       router.replace(qs ? `/t/${slug}/partneri?${qs}` : `/t/${slug}/partneri`);
     },
-    [router, searchParams, slug],
+    [pageSize, router, searchParams, slug],
   );
+  const onPage = useCallback((nextPage: number) => setQuery({ page: String(nextPage) }), [setQuery]);
 
   useEffect(() => {
     if (!session) return;
@@ -76,6 +84,7 @@ export function PartnerList({ slug }: Props) {
             jurisdiction,
             search,
             page,
+            page_size: pageSize,
           }
         : {
             filter: (filter === 'all' || filter === 'inactive' ? filter : '') as
@@ -85,6 +94,7 @@ export function PartnerList({ slug }: Props) {
             jurisdiction,
             search,
             page,
+            page_size: pageSize,
           };
     fetchPartners(session.origin, session.token, query)
       .then((data) => {
@@ -107,10 +117,15 @@ export function PartnerList({ slug }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [session, filter, jurisdiction, search, page, router]);
+  }, [session, filter, jurisdiction, search, page, pageSize, router]);
 
-  const pageSize = 20;
-  const totalPages = Math.max(1, Math.ceil(count / pageSize));
+  const totalPages = pageCountOf(count, pageSize);
+  usePageBounds({
+    page,
+    pageCount: totalPages,
+    ready: Boolean(session) && !sessionLoading && !sessionError && !loading && !error,
+    onPage,
+  });
 
   return (
     <section className="docs-shell">
@@ -214,28 +229,15 @@ export function PartnerList({ slug }: Props) {
         </div>
       )}
 
-      {count > pageSize && (
-        <div className="filter-bar">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={page <= 1}
-            onClick={() => setQuery({ page: String(page - 1) })}
-          >
-            Prethodna
-          </button>
-          <span>
-            Stranica {page} / {totalPages}
-          </span>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={page >= totalPages}
-            onClick={() => setQuery({ page: String(page + 1) })}
-          >
-            Sljedeća
-          </button>
-        </div>
+      {session && (
+        <Pagination
+          page={page}
+          pageCount={totalPages}
+          count={count}
+          pageSize={pageSize}
+          onPage={onPage}
+          onPageSize={(size) => setQuery({ page: '1', page_size: String(size) })}
+        />
       )}
     </section>
   );

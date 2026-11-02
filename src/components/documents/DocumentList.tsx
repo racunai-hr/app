@@ -2,84 +2,90 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 import { ApiError, fetchMe, type TenantInfo } from '@/lib/api';
 import { clearTokens, getAccessToken } from '@/lib/auth';
 import { SYSTEM_VIEWS } from '@/lib/documentLabels';
-import { formatHrSnapshot } from '@/lib/formatHr';
+import { formatHrDateTime } from '@/lib/formatHr';
+import {
+  documentListUrl,
+  mergeDocumentListQuery,
+  parseDocumentListQuery,
+  patchDirectionTab,
+} from '@/lib/documentListQuery';
+import { canWriteFinance } from '@/lib/finance';
+import { canWritePurchasing } from '@/lib/purchasing';
 import {
   exportDocuments,
   fetchDocuments,
+  INCOMING_GROUP_DIRECTION,
   tenantApiOrigin,
   triggerBlobDownload,
   type DocumentDirection,
+  type DocumentDirectionFilter,
   type DocumentListQuery,
   type DocumentListResponse,
 } from '@/lib/documents';
-import { canWritePurchasing } from '@/lib/purchasing';
+import { pageCountOf } from '@/lib/pagination';
 
+import { CloseDraftDialog } from './CloseDraftDialog';
 import { DateField } from './DateField';
 import { DocumentDetailPanel } from './DocumentDetailPanel';
 import { DocumentKpi } from './DocumentKpi';
 import { DocumentTable } from './DocumentTable';
+import { EracunSyncButton } from './EracunSyncButton';
 
-const TABS: { value: '' | DocumentDirection; label: string }[] = [
+const TABS: { value: DocumentDirectionFilter; label: string }[] = [
   { value: '', label: 'Svi' },
   { value: 'outgoing', label: 'Izlazni' },
-  { value: 'incoming', label: 'Ulazni' },
+  { value: INCOMING_GROUP_DIRECTION, label: 'Ulazni' },
   { value: 'deposit', label: 'Kaucije' },
 ];
 
-function queryFromSearch(params: URLSearchParams): DocumentListQuery {
-  const direction = params.get('direction');
-  return {
-    direction:
-      direction === 'incoming' || direction === 'outgoing' || direction === 'deposit'
-        ? direction
-        : '',
-    view: params.get('view') || '',
-    search: params.get('search') || '',
-    year: params.get('year') || '',
-    month: params.get('month') || '',
-    status: params.get('status') || '',
-    date_from: params.get('date_from') || '',
-    date_to: params.get('date_to') || '',
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
-  };
+function isDirectionTabActive(direction: DocumentDirectionFilter | undefined, tab: DocumentDirectionFilter): boolean {
+  if (tab === INCOMING_GROUP_DIRECTION) {
+    return direction === 'incoming' || direction === INCOMING_GROUP_DIRECTION;
+  }
+  return direction === tab;
 }
 
-export function DocumentList({ slug }: { slug: string }) {
+type DocumentListProps = {
+  slug: string;
+  basePath?: 'dokumenti' | 'saldakonti';
+  showHeader?: boolean;
+};
+
+export function DocumentList({
+  slug,
+  basePath = 'dokumenti',
+  showHeader = true,
+}: DocumentListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchKey = searchParams.toString();
-  const query = useMemo(() => queryFromSearch(searchParams), [searchKey, searchParams]);
+  const query = useMemo(() => parseDocumentListQuery(searchParams), [searchKey, searchParams]);
   const [tenant, setTenant] = useState<TenantInfo | null>(null);
   const [data, setData] = useState<DocumentListResponse | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<'csv' | 'xlsx' | null>(null);
+  const [epoch, setEpoch] = useState(0);
   const [selection, setSelection] = useState<{
     direction: DocumentDirection;
     id: number;
   } | null>(null);
+  const [closeDraft, setCloseDraft] = useState<DocumentListResponse['results'][number] | null>(null);
 
-  function replaceQuery(next: Partial<DocumentListQuery>) {
-    const merged = { ...query, ...next };
-    const params = new URLSearchParams();
-    if (merged.direction) params.set('direction', merged.direction);
-    if (merged.view) params.set('view', merged.view);
-    if (merged.search) params.set('search', merged.search);
-    if (merged.year) params.set('year', merged.year);
-    if (merged.month) params.set('month', merged.month);
-    if (merged.status) params.set('status', merged.status);
-    if (merged.date_from) params.set('date_from', merged.date_from);
-    if (merged.date_to) params.set('date_to', merged.date_to);
-    if (merged.page && merged.page > 1) params.set('page', String(merged.page));
-    const qs = params.toString();
-    router.replace(qs ? `/t/${slug}/saldakonti?${qs}` : `/t/${slug}/saldakonti`);
-  }
+  const replaceQuery = useCallback(
+    (next: Partial<DocumentListQuery>) => {
+      router.replace(documentListUrl(slug, basePath, mergeDocumentListQuery(query, next)));
+    },
+    [basePath, query, router, slug],
+  );
+  const onPage = useCallback((page: number) => replaceQuery({ page }), [replaceQuery]);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -121,7 +127,7 @@ export function DocumentList({ slug }: { slug: string }) {
     };
     // URL query is the source of truth; avoid depending on router identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- searchKey encodes filters
-  }, [searchKey, slug]);
+  }, [searchKey, slug, epoch]);
 
   async function handleExport(format: 'csv' | 'xlsx') {
     const token = getAccessToken();
@@ -157,47 +163,67 @@ export function DocumentList({ slug }: { slug: string }) {
     });
   }
 
-  const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
+  const pageCount = data ? pageCountOf(data.count, query.page_size || 20) : 1;
+  usePageBounds({
+    page: query.page || 1,
+    pageCount,
+    ready: Boolean(data) && !loading && !error,
+    onPage,
+  });
 
-  return (
-    <section className="docs-shell">
-        <header className="docs-heading">
-          <div>
-            <h1>Saldakonti{tenant ? ` — ${tenant.name}` : ''}</h1>
-            <p>Pregled ulaznih i izlaznih računa te otvorenih stavaka.</p>
-          </div>
-          <div className="export-actions">
-            {query.direction === 'incoming' && tenant && canWritePurchasing(tenant.role) && (
-              <Link className="btn btn-primary" href={`/t/${slug}/ulazni-racuni/ucitaj`}>
-                Učitaj račun
-              </Link>
+  const exportActions = (
+    <div className="export-actions">
+      {showHeader &&
+        (query.direction === 'incoming' || query.direction === INCOMING_GROUP_DIRECTION) &&
+        tenant &&
+        canWritePurchasing(tenant.role) && (
+        <Link className="btn btn-primary" href={`/t/${slug}/ulazni-racuni/ucitaj`}>
+          Učitaj račun
+        </Link>
+      )}
+      <button
+        type="button"
+        className="btn btn-secondary"
+        disabled={!tenant || Boolean(exporting)}
+        onClick={() => handleExport('csv')}
+      >
+        {exporting === 'csv' ? 'CSV…' : 'CSV'}
+      </button>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        disabled={!tenant || Boolean(exporting)}
+        onClick={() => handleExport('xlsx')}
+      >
+        {exporting === 'xlsx' ? 'XLSX…' : 'XLSX'}
+      </button>
+    </div>
+  );
+
+  const listBody = (
+    <>
+        {!showHeader && (
+          <div className="docs-list-toolbar">
+            {tenant && canWritePurchasing(tenant.role) && (
+              <EracunSyncButton
+                origin={tenantApiOrigin(tenant.admin_url)}
+                onImported={() => {
+                  replaceQuery({ page: 1 });
+                  setEpoch((value) => value + 1);
+                }}
+              />
             )}
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={!tenant || Boolean(exporting)}
-              onClick={() => handleExport('csv')}
-            >
-              {exporting === 'csv' ? 'CSV…' : 'CSV'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={!tenant || Boolean(exporting)}
-              onClick={() => handleExport('xlsx')}
-            >
-              {exporting === 'xlsx' ? 'XLSX…' : 'XLSX'}
-            </button>
+            {exportActions}
           </div>
-        </header>
+        )}
 
         <nav className="tabs" aria-label="Smjer dokumenata">
           {TABS.map((tab) => (
             <button
               key={tab.label}
               type="button"
-              className={query.direction === tab.value ? 'tab tab-active' : 'tab'}
-              onClick={() => replaceQuery({ direction: tab.value, page: 1 })}
+              className={isDirectionTabActive(query.direction, tab.value) ? 'tab tab-active' : 'tab'}
+              onClick={() => replaceQuery(patchDirectionTab(query, tab.value))}
             >
               {tab.label}
             </button>
@@ -248,7 +274,7 @@ export function DocumentList({ slug }: { slug: string }) {
 
         {data && (
           <p className="as-of">
-            Presjek <time dateTime={data.as_of}>{formatHrSnapshot(data.as_of)}</time> · {data.count}{' '}
+            Presjek <time dateTime={data.as_of}>{formatHrDateTime(data.as_of)}</time> · {data.count}{' '}
             dokumenata
           </p>
         )}
@@ -265,44 +291,69 @@ export function DocumentList({ slug }: { slug: string }) {
           <DocumentTable
             rows={data.results}
             slug={slug}
+            canCloseDraft={Boolean(tenant && canWriteFinance(tenant.role))}
+            onCloseDraft={setCloseDraft}
             onOpenDocument={(next) => {
-              if (next.direction === 'incoming') return;
+              if (next.direction !== 'deposit') return;
               setSelection(next);
             }}
           />
         )}
 
-        {selection && selection.direction !== 'incoming' && tenant && (
+        {closeDraft && tenant && (
+          <CloseDraftDialog
+            expenseId={closeDraft.id}
+            title={
+              closeDraft.source_number ||
+              closeDraft.internal_number ||
+              closeDraft.partner_name ||
+              'Ulazni nacrt'
+            }
+            origin={tenantApiOrigin(tenant.admin_url)}
+            onClose={() => setCloseDraft(null)}
+            onClosed={() => {
+              setCloseDraft(null);
+              setEpoch((value) => value + 1);
+            }}
+          />
+        )}
+
+        {selection && selection.direction === 'deposit' && tenant && (
           <DocumentDetailPanel
             selection={selection}
             origin={tenantApiOrigin(tenant.admin_url)}
             onClose={() => setSelection(null)}
+            slug={slug}
           />
         )}
 
-        {data && data.count > data.page_size && (
-          <nav className="pager" aria-label="Paginacija">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={data.page <= 1}
-              onClick={() => replaceQuery({ page: data.page - 1 })}
-            >
-              Prethodna
-            </button>
-            <span>
-              Stranica {data.page} / {pageCount}
-            </span>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={data.page >= pageCount}
-              onClick={() => replaceQuery({ page: data.page + 1 })}
-            >
-              Sljedeća
-            </button>
-          </nav>
+        {data && (
+          <Pagination
+            page={query.page || 1}
+            pageCount={pageCount}
+            count={data.count}
+            pageSize={query.page_size}
+            onPage={onPage}
+            onPageSize={(page_size) => replaceQuery({ page_size, page: 1 })}
+          />
         )}
+    </>
+  );
+
+  if (!showHeader) {
+    return listBody;
+  }
+
+  return (
+    <section className="docs-shell">
+      <header className="docs-heading">
+        <div>
+          <h1>Saldakonti{tenant ? ` — ${tenant.name}` : ''}</h1>
+          <p>Pregled ulaznih i izlaznih računa te otvorenih stavaka.</p>
+        </div>
+        {exportActions}
+      </header>
+      {listBody}
     </section>
   );
 }

@@ -22,7 +22,7 @@ export function BankingOverviewRoute() {
       title="Bankarstvo"
       description="Pregled računa, salda i stanja usklađivanja. Salda se ne zbrajaju preko različitih valuta."
     >
-      {({ origin, token }) => <BankingOverview origin={origin} token={token} />}
+      {({ origin, token, role }) => <BankingOverview origin={origin} token={token} role={role} />}
     </BankingPage>
   );
 }
@@ -35,8 +35,8 @@ export function BankingAccountsRoute() {
       title="Računi"
       description="Poslovni bankovni računi s proveniencijom salda (izvor, vrijeme, svježina)."
     >
-      {({ origin, token }) => (
-        <BankAccountList slug={params.slug} origin={origin} token={token} />
+      {({ origin, token, role }) => (
+        <BankAccountList slug={params.slug} origin={origin} token={token} role={role} />
       )}
     </BankingPage>,
   );
@@ -67,7 +67,7 @@ export function BankingTransactionsRoute() {
       description="Stavke bankovnih izvoda s filterima i statusom usklađivanja."
     >
       {({ origin, token }) => (
-        <TransactionList origin={origin} token={token} basePath={basePath} />
+        <TransactionList slug={params.slug} origin={origin} token={token} basePath={basePath} />
       )}
     </BankingPage>,
   );
@@ -83,7 +83,7 @@ export function BankingReconciliationRoute() {
       description="Eksplicitno povezivanje bankovnih stavki s otvorenim saldakontom ili kaucijom."
     >
       {({ origin, token }) => (
-        <TransactionList origin={origin} token={token} basePath={basePath} reconcileMode />
+        <TransactionList slug={params.slug} origin={origin} token={token} basePath={basePath} reconcileMode />
       )}
     </BankingPage>,
   );

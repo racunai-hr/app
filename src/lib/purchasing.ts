@@ -1,5 +1,7 @@
 import { ApiError, parseError as parseApiError } from './api';
 import { tenantApiOrigin } from './documents';
+import type { ConfirmInvoiceImportRequest } from './expensePosting';
+import { tenantFetch } from './tenantRequest';
 
 export { tenantApiOrigin };
 
@@ -14,6 +16,41 @@ export type PartnerDiff = {
   extracted: string;
 };
 
+export type OcrParty = {
+  name: string;
+  oib: string;
+  vat_number: string;
+  address: string;
+  city: string;
+  postal_code: string;
+  country: string;
+  country_code: string;
+  iban: string;
+};
+
+export type PartyCandidate = OcrParty & {
+  role: 'issuer' | 'buyer' | string;
+  is_own_company: boolean;
+  suspected_own_company: boolean;
+  blank: boolean;
+};
+
+export type InvoiceDirection = {
+  code: string;
+  supplier_source: string;
+  override_required: boolean;
+  unresolved: boolean;
+  party_candidates: PartyCandidate[];
+};
+
+export type AllocatedOcrLine = {
+  position: number;
+  description: string;
+  net_amount: string;
+  vat_amount: string;
+  gross_amount: string;
+};
+
 export type IncomingInvoiceImport = {
   id: number;
   status: string;
@@ -26,17 +63,9 @@ export type IncomingInvoiceImport = {
   ocr_schema_version: string;
   ocr_extracted_at: string | null;
   extracted: {
-    supplier: {
-      name: string;
-      oib: string;
-      vat_number: string;
-      address: string;
-      city: string;
-      postal_code: string;
-      country: string;
-      country_code: string;
-      iban: string;
-    };
+    supplier: OcrParty;
+    issuer: OcrParty;
+    buyer: OcrParty;
     invoice_number: string;
     issue_date: string;
     due_date: string | null;
@@ -47,7 +76,9 @@ export type IncomingInvoiceImport = {
     iban: string;
     vat_breakdown: Array<Record<string, string>>;
     line_items: Array<Record<string, string | null>>;
+    allocated_lines?: AllocatedOcrLine[];
   };
+  direction: InvoiceDirection;
   warnings: string[];
   partner: {
     match: string;
@@ -87,7 +118,7 @@ async function authorized(
   token: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  return fetch(`${origin}${path}`, {
+  return tenantFetch(`${origin}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
@@ -191,11 +222,31 @@ export async function applyPartnerUpdates(
   return response.json();
 }
 
+export async function applySupplier(
+  origin: string,
+  token: string,
+  id: number,
+  payload: { source: 'issuer' | 'buyer' | 'manual'; supplier?: Record<string, string> },
+): Promise<IncomingInvoiceImport> {
+  const response = await authorized(
+    origin,
+    `/api/purchasing/invoices/import/${id}/apply-supplier/`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+  );
+  if (!response.ok) throw await parsePurchasingError(response);
+  return response.json();
+}
+
 export async function confirmInvoiceImport(
   origin: string,
   token: string,
   id: number,
-  payload: Record<string, unknown>,
+  payload: ConfirmInvoiceImportRequest,
 ): Promise<IncomingInvoiceImport> {
   const response = await authorized(origin, `/api/purchasing/invoices/import/${id}/confirm/`, token, {
     method: 'POST',
@@ -213,6 +264,46 @@ export async function discardInvoiceImport(
 ): Promise<IncomingInvoiceImport> {
   const response = await authorized(origin, `/api/purchasing/invoices/import/${id}/discard/`, token, {
     method: 'POST',
+  });
+  if (!response.ok) throw await parsePurchasingError(response);
+  return response.json();
+}
+
+export type EracunImportResult = {
+  scanned: number;
+  imported: number;
+  merged: number;
+  skipped: number;
+  failed: number;
+  remaining_importable: number;
+  errors: Array<{ invoice_guid?: string; document_id?: string; detail: string }>;
+};
+
+export type EracunRefreshResult = {
+  reconciliation_id: string;
+  status: string;
+  detail: string;
+};
+
+export async function importInboundEracun(
+  origin: string,
+  token: string,
+): Promise<EracunImportResult> {
+  const response = await authorized(origin, '/api/purchasing/eracun/inbound-import/', token, {
+    method: 'POST',
+  });
+  if (!response.ok) throw await parsePurchasingError(response);
+  return response.json();
+}
+
+export async function refreshInboundEracunInbox(
+  origin: string,
+  token: string,
+  idempotencyKey: string,
+): Promise<EracunRefreshResult> {
+  const response = await authorized(origin, '/api/purchasing/eracun/inbox-refresh/', token, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey },
   });
   if (!response.ok) throw await parsePurchasingError(response);
   return response.json();

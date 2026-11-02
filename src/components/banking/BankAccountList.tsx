@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { Pagination } from '@/components/ui/Pagination';
+import { usePageBounds } from '@/components/ui/usePageBounds';
 import { ApiError } from '@/lib/api';
 import {
   fetchBankAccounts,
@@ -10,20 +12,22 @@ import {
   type BankAccountDto,
   type Paginated,
 } from '@/lib/banking';
+import { canShowCamtImport } from '@/lib/bankingImport';
+import { pageCountOf, parsePage, parsePageSize, writePageParams } from '@/lib/pagination';
 
 import { BalanceCell } from './BalanceCell';
-import { BankingPager } from './BankingPager';
+import { StatementImportDialog } from './StatementImportDialog';
 
-type Props = { slug: string; origin: string; token: string };
+type Props = { slug: string; origin: string; token: string; role: string };
 
 function queryFromSearch(params: URLSearchParams) {
   return {
-    page: Number(params.get('page') || '1') || 1,
-    page_size: 20,
+    page: parsePage(params.get('page')),
+    page_size: parsePageSize(params.get('page_size')),
   };
 }
 
-export function BankAccountList({ slug, origin, token }: Props) {
+export function BankAccountList({ slug, origin, token, role }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchKey = searchParams.toString();
@@ -31,14 +35,21 @@ export function BankAccountList({ slug, origin, token }: Props) {
   const [data, setData] = useState<Paginated<BankAccountDto> | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [importAccount, setImportAccount] = useState<BankAccountDto | null>(null);
+  const [epoch, setEpoch] = useState(0);
+  const canImport = canShowCamtImport(role);
 
-  function replaceQuery(next: { page?: number }) {
-    const params = new URLSearchParams();
-    const page = next.page ?? query.page;
-    if (page > 1) params.set('page', String(page));
-    const qs = params.toString();
-    router.replace(qs ? `/t/${slug}/bankarstvo/racuni?${qs}` : `/t/${slug}/bankarstvo/racuni`);
-  }
+  const replaceQuery = useCallback(
+    (next: Partial<typeof query>) => {
+      const merged = { ...query, ...next };
+      const params = new URLSearchParams();
+      writePageParams(params, merged.page, merged.page_size);
+      const qs = params.toString();
+      router.replace(qs ? `/t/${slug}/bankarstvo/racuni?${qs}` : `/t/${slug}/bankarstvo/racuni`);
+    },
+    [query, router, slug],
+  );
+  const onPage = useCallback((page: number) => replaceQuery({ page }), [replaceQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,9 +70,15 @@ export function BankAccountList({ slug, origin, token }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [origin, token, searchKey, query]);
+  }, [origin, token, searchKey, query, epoch]);
 
-  const pageCount = data ? Math.max(1, Math.ceil(data.count / data.page_size)) : 1;
+  const pageCount = data ? pageCountOf(data.count, query.page_size) : 1;
+  usePageBounds({
+    page: query.page,
+    pageCount,
+    ready: Boolean(data) && !loading && !error,
+    onPage,
+  });
 
   return (
     <>
@@ -92,7 +109,11 @@ export function BankAccountList({ slug, origin, token }: Props) {
                   <td>{row.currency}</td>
                   <td>{row.connection ? row.connection.status : '—'}</td>
                   <td>
-                    <BalanceCell balances={row.balances} />
+                    <BalanceCell
+                      balances={row.balances}
+                      canImport={canImport}
+                      onImport={() => setImportAccount(row)}
+                    />
                   </td>
                 </tr>
               ))}
@@ -100,8 +121,28 @@ export function BankAccountList({ slug, origin, token }: Props) {
           </table>
         </div>
       )}
-      {data && data.count > data.page_size && (
-        <BankingPager page={data.page} pageCount={pageCount} onPage={(page) => replaceQuery({ page })} />
+      {importAccount ? (
+        <StatementImportDialog
+          origin={origin}
+          token={token}
+          role={role}
+          account={importAccount}
+          onClose={() => setImportAccount(null)}
+          onImported={() => {
+            setImportAccount(null);
+            setEpoch((value) => value + 1);
+          }}
+        />
+      ) : null}
+      {data && (
+        <Pagination
+          page={query.page}
+          pageCount={pageCount}
+          count={data.count}
+          pageSize={query.page_size}
+          onPage={onPage}
+          onPageSize={(page_size) => replaceQuery({ page_size, page: 1 })}
+        />
       )}
     </>
   );

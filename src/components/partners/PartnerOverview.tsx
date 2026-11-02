@@ -6,9 +6,9 @@ import {
   jurisdictionFromCountryCode,
   PARTNER_COUNTRY_OPTIONS,
 } from '@/lib/partnerCountries';
+import { PartnerFinancialSummaryStrip } from '@/components/partners/PartnerFinancialSummaryStrip';
 import {
   canWritePartners,
-  fetchPartnerFinancialSummary,
   getPartnerConflict,
   getPartnerFieldError,
   partnerErrorMessage,
@@ -20,8 +20,8 @@ import {
   patchPartner,
   pickDirtyFields,
   type PartnerDto,
-  type PartnerFinancialSummary,
 } from '@/lib/partners';
+import { formatHrAmount } from '@/lib/formatHr';
 
 type Props = {
   origin: string;
@@ -93,9 +93,6 @@ function draftFromPartner(partner: PartnerDto): OverviewDraft {
   };
 }
 
-function formatMoney(value: string, currency: string) {
-  return `${value} ${currency}`;
-}
 
 function mapPartnerSaveError(err: unknown): { field?: string; message: string } {
   const conflict = getPartnerConflict(err);
@@ -113,8 +110,6 @@ function mapPartnerSaveError(err: unknown): { field?: string; message: string } 
 }
 
 export function PartnerOverview({ origin, token, role, partner, onSaved }: Props) {
-  const [summary, setSummary] = useState<PartnerFinancialSummary | null>(null);
-  const [summaryError, setSummaryError] = useState('');
   const [draft, setDraft] = useState<OverviewDraft>(() => draftFromPartner(partner));
   const [baseline, setBaseline] = useState<OverviewDraft>(() => draftFromPartner(partner));
   const [saving, setSaving] = useState(false);
@@ -136,57 +131,13 @@ export function PartnerOverview({ origin, token, role, partner, onSaved }: Props
     setMessage('');
   }, [partner]);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchPartnerFinancialSummary(origin, token, partner.id)
-      .then((data) => {
-        if (!cancelled) setSummary(data);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setSummaryError(err instanceof Error ? err.message : 'Sažetak nije dostupan.');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [origin, token, partner.id]);
-
   const setField = <K extends keyof OverviewDraft>(key: K, value: OverviewDraft[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
     <div>
-      {summaryError && <div className="error">{summaryError}</div>}
-      {summary && (
-        <div className="table-wrap" style={{ marginBottom: '1.5rem' }}>
-          <table className="docs-table">
-            <thead>
-              <tr>
-                <th>Potraživanja</th>
-                <th>Obveze</th>
-                <th>Dospjelo (AR)</th>
-                <th>Dospjelo (AP)</th>
-                <th>Saldo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{formatMoney(summary.receivables_open, summary.currency)}</td>
-                <td>{formatMoney(summary.payables_open, summary.currency)}</td>
-                <td>{formatMoney(summary.receivables_overdue, summary.currency)}</td>
-                <td>{formatMoney(summary.payables_overdue, summary.currency)}</td>
-                <td>{formatMoney(summary.net_balance, summary.currency)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p className="banking-role-note">
-            Financijski sažetak je projekcija Finance domene (as of {summary.as_of_date}). Pozitivan
-            saldo = partner duguje nama.
-          </p>
-        </div>
-      )}
+      <PartnerFinancialSummaryStrip origin={origin} token={token} partnerId={partner.id} />
 
       {!writable && (
         <div className="table-wrap" style={{ marginBottom: '1.5rem' }}>
@@ -241,7 +192,7 @@ export function PartnerOverview({ origin, token, role, partner, onSaved }: Props
               </tr>
               <tr>
                 <th>Kreditni limit</th>
-                <td>{partner.credit_limit}</td>
+                <td>{formatHrAmount(partner.credit_limit)}</td>
               </tr>
             </tbody>
           </table>

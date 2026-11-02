@@ -22,12 +22,13 @@ describe('DocumentTable', () => {
     expect(screen.getByText('Status dokumenta: Poslan')).toBeInTheDocument();
     expect(screen.getByText('Razdoblje: 2026-03')).toBeInTheDocument();
     expect(screen.getByText('125,00 EUR')).toBeInTheDocument();
+    expect(screen.getByText('Otvoreno: 120,00 EUR')).toBeInTheDocument();
     expect(screen.queryByText('OIB')).toBeNull();
     expect(container.querySelector('a')).toBeNull();
     expect(container.querySelector('.badge-success')).toBeNull();
   });
 
-  it('opens outgoing detail via button; incoming uses dokumenti/ulazni link', () => {
+  it('opens outgoing and incoming detail in a new tab via dokumenti routes', () => {
     const onOpenDocument = vi.fn();
     render(
       <DocumentTable
@@ -44,12 +45,51 @@ describe('DocumentTable', () => {
         onOpenDocument={onOpenDocument}
       />,
     );
-    const open = screen.getByRole('button', { name: 'Detalji računa Izlazni · R-100' });
-    fireEvent.click(open);
-    expect(onOpenDocument).toHaveBeenCalledWith({ direction: 'outgoing', id: 4 });
+    const outgoing = screen.getByRole('link', { name: 'Detalji računa Izlazni · R-100' });
+    expect(outgoing).toHaveAttribute('href', '/t/finestar/dokumenti/izlazni/4');
+    expect(outgoing).toHaveAttribute('target', '_blank');
+    expect(outgoing).toHaveAttribute('rel', 'noopener noreferrer');
 
     const incoming = screen.getByRole('link', { name: 'Detalji računa Ulazni · T-30' });
     expect(incoming).toHaveAttribute('href', '/t/finestar/dokumenti/ulazni/30');
+    expect(incoming).toHaveAttribute('target', '_blank');
+    expect(onOpenDocument).not.toHaveBeenCalled();
+  });
+
+  it('labels official VAT lifecycle as not applicable', () => {
+    render(
+      <DocumentTable
+        slug="finestar"
+        rows={[
+          sampleDocument({
+            id: 1,
+            direction: 'official',
+            internal_number: 'UP/I-410-22/26-09/49557',
+            vat: {
+              lifecycle: { value: 'not_tax_active', reason: null, source: 'official_document' },
+              period: { value: null, reason: 'not_applicable', source: null },
+              disclaimer: null,
+            },
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByText('Nije primjenjivo')).toBeInTheDocument();
+    expect(screen.queryByText('PDV se ne primjenjuje')).toBeNull();
+  });
+
+  it('uses button overlay only for deposit when onOpenDocument is set', () => {
+    const onOpenDocument = vi.fn();
+    render(
+      <DocumentTable
+        slug="finestar"
+        rows={[sampleDocument({ id: 9, direction: 'deposit', internal_number: 'K-9' })]}
+        onOpenDocument={onOpenDocument}
+      />,
+    );
+    const open = screen.getByRole('button', { name: 'Detalji računa Kaucija · K-9' });
+    fireEvent.click(open);
+    expect(onOpenDocument).toHaveBeenCalledWith({ direction: 'deposit', id: 9 });
   });
 
   it('does not paint success from raw paid when operational status is empty', () => {
@@ -68,5 +108,58 @@ describe('DocumentTable', () => {
     expect(unknown.className).not.toContain('badge-success');
     expect(screen.getByText('Status dokumenta: Plaćen')).toBeInTheDocument();
     expect(container.querySelector('.badge-success')).toBeNull();
+  });
+
+  it('turns a received draft status into a close button and leaves a paid row as text', () => {
+    const onCloseDraft = vi.fn();
+    render(
+      <DocumentTable
+        canCloseDraft
+        onCloseDraft={onCloseDraft}
+        rows={[
+          sampleDocument({
+            id: 9,
+            direction: 'incoming',
+            document_status: { value: 'draft', reason: null, source: 'test' },
+            operational_status: { value: 'received', reason: null, source: 'test' },
+          }),
+          sampleDocument({
+            id: 10,
+            direction: 'incoming',
+            document_status: { value: 'paid', reason: null, source: 'test' },
+            operational_status: { value: 'paid', reason: null, source: 'test' },
+          }),
+        ]}
+      />,
+    );
+    const button = screen.getByRole('button', { name: /Zaprimljen/ });
+    expect(button).toHaveTextContent('Status dokumenta: Nacrt');
+    fireEvent.click(button);
+    expect(onCloseDraft).toHaveBeenCalledWith(expect.objectContaining({ id: 9 }));
+    expect(screen.getByText('Status dokumenta: Plaćen')).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+
+  it('shows the document currency and the EUR book amount', () => {
+    const base = sampleDocument();
+    render(
+      <DocumentTable
+        rows={[
+          sampleDocument({
+            direction: 'incoming',
+            amounts: {
+              ...base.amounts,
+              currency: 'DKK',
+              gross: '731.11',
+              book_gross: '99.79',
+            },
+            subledger: { state: base.subledger.state, open_amount: { value: '0.00', reason: null, source: 'test' } },
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByText('731,11 DKK')).toBeInTheDocument();
+    expect(screen.getByText('99,79 EUR')).toBeInTheDocument();
+    expect(screen.getByText('Otvoreno: 0,00 EUR')).toBeInTheDocument();
   });
 });

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { ApiError } from '@/lib/api';
 import { fetchDocuments, type DocumentSummary } from '@/lib/documents';
+import { formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 
 type Props = {
   origin: string;
@@ -64,10 +65,8 @@ export function PartnerDocumentsPanel({ origin, token, partnerId }: Props) {
                 <tr key={`${row.direction}-${row.id}`}>
                   <td>{row.direction === 'outgoing' ? 'Izlazni' : 'Ulazni'}</td>
                   <td>{row.internal_number || row.source_number || row.id}</td>
-                  <td>{row.document_date || '—'}</td>
-                  <td>
-                    {row.amounts.gross || '—'} {row.amounts.currency}
-                  </td>
+                  <td>{formatHrInputDate(row.document_date)}</td>
+                  <td>{formatHrMoney(row.amounts.gross, row.amounts.currency)}</td>
                   <td>{row.document_status.value || '—'}</td>
                 </tr>
               ))

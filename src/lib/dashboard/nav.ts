@@ -3,10 +3,11 @@ export const MOCK_TOAST_MESSAGE = 'Mock funkcija — backend još nije povezan.'
 export type AppNavId =
   | 'pregled'
   | 'dokumenti'
-  | 'saldakonti'
   | 'glavna-knjiga'
   | 'partneri'
   | 'bankarstvo'
+  | 'imovina'
+  | 'place'
   | 'porezi'
   | 'izvjestaji'
   | 'postavke';
@@ -20,10 +21,11 @@ export type AppNavItem = {
 export const APP_NAV: AppNavItem[] = [
   { id: 'pregled', label: 'Pregled', href: () => '/dashboard' },
   { id: 'dokumenti', label: 'Dokumenti', href: (slug) => `/t/${slug}/dokumenti` },
-  { id: 'saldakonti', label: 'Saldakonti', href: (slug) => `/t/${slug}/saldakonti` },
   { id: 'glavna-knjiga', label: 'Glavna knjiga', href: (slug) => `/t/${slug}/glavna-knjiga` },
   { id: 'partneri', label: 'Partneri', href: (slug) => `/t/${slug}/partneri` },
   { id: 'bankarstvo', label: 'Bankarstvo', href: (slug) => `/t/${slug}/bankarstvo` },
+  { id: 'imovina', label: 'Imovina', href: (slug) => `/t/${slug}/imovina` },
+  { id: 'place', label: 'Plaće', href: (slug) => `/t/${slug}/place` },
   { id: 'porezi', label: 'Porezi i obrasci', href: (slug) => `/t/${slug}/porezi` },
   { id: 'izvjestaji', label: 'Izvještaji', href: (slug) => `/t/${slug}/izvjestaji` },
   { id: 'postavke', label: 'Postavke tvrtke', href: (slug) => `/t/${slug}/postavke` },
@@ -36,17 +38,12 @@ export function isNavActive(pathname: string, item: AppNavItem, slug: string): b
 }
 
 export const MODULE_PLACEHOLDERS: Record<
-  Exclude<AppNavId, 'pregled' | 'saldakonti' | 'bankarstvo'>,
+  Exclude<
+    AppNavId,
+    'pregled' | 'bankarstvo' | 'glavna-knjiga' | 'dokumenti' | 'postavke' | 'imovina' | 'place'
+  >,
   { title: string; description: string }
 > = {
-  dokumenti: {
-    title: 'Dokumenti',
-    description: 'Ulazni i izlazni dokumenti bit će spojeni na read-model u sljedećoj fazi.',
-  },
-  'glavna-knjiga': {
-    title: 'Glavna knjiga',
-    description: 'Pregled temeljnica i konta još nije izložen u ovom sučelju.',
-  },
   partneri: {
     title: 'Partneri',
     description: 'Kartice kupaca i dobavljača (MDM) s kontaktima, IBAN-ima, dokumentima i saldakontom.',
@@ -58,9 +55,5 @@ export const MODULE_PLACEHOLDERS: Record<
   izvjestaji: {
     title: 'Izvještaji',
     description: 'Financijski izvještaji nisu izloženi u ovom sučelju.',
-  },
-  postavke: {
-    title: 'Postavke tvrtke',
-    description: 'Postavke tenanta ostaju u postojećem backend konfiguracijskom sloju.',
   },
 };

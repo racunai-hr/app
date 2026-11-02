@@ -310,6 +310,163 @@
   font-size: 0.9rem;
 }
 
+.tax-hub {
+  display: grid;
+  gap: 1.35rem;
+  margin: 1.15rem 0 0;
+}
+
+.tax-hub-group h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.tax-hub-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.45rem 0 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.tax-hub-list a {
+  font-weight: 600;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.tax-hub-note {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.tax-hub-empty {
+  margin: 0.35rem 0 0;
+}
+
+.tax-period-context {
+  margin: 0.15rem 0 0.35rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tax-workflow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pd-lines tbody tr {
+  height: auto;
+}
+
+.tax-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+}
+
+.tax-status-grid dt {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.tax-status-grid dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
+.tax-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tz2-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.tz2-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.tz2-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.tz2-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.tz2-grid input,
+.tz2-grid select,
+.tz2-triples input {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: inherit;
+}
+
+.tz2-triples {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(8rem, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.tz2-triples label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.tax-evidence-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 28rem;
+}
+
+.tax-evidence-form h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.tax-evidence-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.tax-evidence-form input,
+.tax-evidence-form select {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: inherit;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -849,6 +1006,17 @@
   flex-wrap: wrap;
 }
 
+.documents-subnav-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.documents-operative-subnav .tab {
+  font-size: 0.9rem;
+}
+
 .banking-role-note {
   margin: 0;
   color: var(--text-muted);
@@ -879,6 +1047,24 @@
 
 .banking-stale {
   margin-left: 0.15rem;
+}
+
+.banking-stale-action {
+  cursor: pointer;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.banking-stale-action:hover {
+  filter: brightness(0.96);
+}
+
+.banking-stale-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .banking-filter-bar {
@@ -977,31 +1163,94 @@
   opacity: 0.45;
 }
 
+.banking-je-link {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent, #2f6fed);
+  text-decoration: none;
+}
+
+.banking-je-link:hover {
+  text-decoration: underline;
+}
+
 .banking-row-active td {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
-.banking-reconcile-panel {
-  margin-top: 1.25rem;
-  padding: 1rem 1.1rem;
+.banking-picker-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.banking-picker-panel {
+  width: min(64rem, 100%);
+  max-height: 85vh;
+  overflow: auto;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+  border-radius: 8px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
 }
 
-.banking-reconcile-panel-head {
+.banking-picker-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.banking-reconcile-panel-head h2 {
+.banking-picker-head h2 {
   margin: 0 0 0.2rem;
-  font-size: 1rem;
+  font-size: 1.1rem;
+}
+
+.banking-picker-search {
+  max-width: 24rem;
+}
+
+.banking-picker-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.banking-picker-reason {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 80%, var(--bg));
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.banking-reconcile-success {
+  margin: 0.75rem 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--success) 8%, var(--surface));
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.banking-reconcile-success p {
+  margin: 0;
 }
 
 .banking-import {
@@ -1041,6 +1290,53 @@
   color: var(--text-muted);
 }
 
+.banking-import-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.banking-import-panel {
+  width: min(34rem, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+}
+
+.banking-import-panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.banking-import-panel p {
+  margin: 0 0 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.banking-import-panel p.banking-import-account {
+  color: var(--text);
+}
+
+.banking-import-panel .banking-import {
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.banking-import-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .app-shell .text-muted {
   color: var(--text-muted);
 }
@@ -1065,6 +1361,11 @@
 .ocr-panel h2 {
   margin: 0 0 0.35rem;
   font-size: 1rem;
+}
+
+.ocr-lines h3 {
+  margin: 0.4rem 0 0.35rem;
+  font-size: 0.95rem;
 }
 
 .ocr-field {
@@ -1106,7 +1407,8 @@
   font-size: 0.85rem;
 }
 
-.ocr-partner-form input {
+.ocr-partner-form input,
+.expense-posting-fields select {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
@@ -1138,6 +1440,13 @@
   align-items: center;
   gap: 0.45rem;
   margin-top: 0.5rem;
+}
+
+.ocr-party-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.92rem;
 }
 
 .ocr-success {

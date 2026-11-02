@@ -1,6 +1,7 @@
 import { ApiError, parseError as parseApiError } from './api';
 import { tenantApiOrigin } from './documents';
 import type { components } from './openapi/generated';
+import { tenantFetch } from './tenantRequest';
 
 export { tenantApiOrigin };
 
@@ -38,6 +39,7 @@ export type TransactionListQuery = {
   transaction_type?: string;
   date_from?: string;
   date_to?: string;
+  search?: string;
   page?: number;
   page_size?: number;
 };
@@ -61,7 +63,7 @@ async function authorized(
   token: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  return fetch(`${origin}${path}`, {
+  return tenantFetch(`${origin}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
@@ -141,6 +143,7 @@ export async function fetchTransactions(
     transaction_type: query.transaction_type,
     date_from: query.date_from,
     date_to: query.date_to,
+    search: query.search,
     page: query.page || 1,
     page_size: query.page_size || 20,
   });
@@ -175,7 +178,7 @@ export async function createStatementImport(
 ): Promise<ImportRunCreateResponse> {
   const body = new FormData();
   body.append('file', file);
-  const response = await fetch(`${origin}/api/banking/statement-imports/`, {
+  const response = await tenantFetch(`${origin}/api/banking/statement-imports/`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -203,7 +206,7 @@ export async function fetchStatementImport(
 }
 
 export type OpenItemCandidate = {
-  item_id: number;
+  item_id: number | null;
   partner_id: number | null;
   partner_name: string;
   direction: string;
@@ -213,6 +216,9 @@ export type OpenItemCandidate = {
   open_amount: string;
   due_date: string | null;
   action_label: string;
+  match_score: number;
+  match_reasons: string[];
+  recommended: boolean;
 };
 
 export type OpenItemCandidateList = {

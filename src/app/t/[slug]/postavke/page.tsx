@@ -1,5 +1,7 @@
-import { PlaceholderPage } from '@/components/app-shell/PlaceholderPage';
+'use client';
+
+import { SettingsOverviewRoute } from '@/components/settings/routes';
 
 export default function PostavkePage() {
-  return <PlaceholderPage id="postavke" />;
+  return <SettingsOverviewRoute />;
 }

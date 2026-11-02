@@ -100,7 +100,7 @@ function renderImport(role = 'accountant', onImported = vi.fn()) {
 }
 
 async function chooseFile(file: File) {
-  const input = screen.getByLabelText('CAMT XML izvod') as HTMLInputElement;
+  const input = screen.getByLabelText('CAMT XML ili OTP IZV PDF') as HTMLInputElement;
   fireEvent.change(input, { target: { files: [file] } });
   return input;
 }
@@ -113,22 +113,22 @@ describe('StatementImport', () => {
 
   it('hides upload controls for viewer', () => {
     renderImport('viewer');
-    expect(screen.queryByLabelText('CAMT XML izvod')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Uvezi CAMT izvod' })).toBeNull();
+    expect(screen.queryByLabelText('CAMT XML ili OTP IZV PDF')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Uvezi izvod' })).toBeNull();
   });
 
   it('shows upload for owner and accountant', () => {
     const { rerender } = renderImport('owner');
-    expect(screen.getByRole('button', { name: 'Uvezi CAMT izvod' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Uvezi izvod' })).toBeInTheDocument();
     rerender(
       <StatementImport origin="https://x" token="t" role="accountant" onImported={vi.fn()} />,
     );
-    expect(screen.getByRole('button', { name: 'Uvezi CAMT izvod' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Uvezi izvod' })).toBeInTheDocument();
   });
 
   it('keeps import disabled until an xml file is chosen and then shows name and size', async () => {
     renderImport('accountant');
-    const button = screen.getByRole('button', { name: 'Uvezi CAMT izvod' });
+    const button = screen.getByRole('button', { name: 'Uvezi izvod' });
     expect(button).toBeDisabled();
     expect(screen.getByText('Nije odabrana datoteka')).toBeInTheDocument();
     await chooseFile(new File(['<Document/>'], 'BCS.sample.xml', { type: 'application/xml' }));
@@ -146,7 +146,7 @@ describe('StatementImport', () => {
       );
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Obrada je završena');
     });
@@ -158,7 +158,7 @@ describe('StatementImport', () => {
     fetchStatementImport.mockResolvedValue(detail({ status: 'failed', errors: ['Parser error'] }));
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Parser error');
     });
@@ -170,7 +170,7 @@ describe('StatementImport', () => {
     fetchStatementImport.mockResolvedValue(detail({ status: 'running' }));
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Obrada još traje');
     });
@@ -195,7 +195,7 @@ describe('StatementImport', () => {
     );
     const { unmount } = renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => expect(createStatementImport).toHaveBeenCalled());
     unmount();
     expect(signal?.aborted).toBe(true);
@@ -214,8 +214,8 @@ describe('StatementImport', () => {
     );
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     expect(createStatementImport).toHaveBeenCalledTimes(1);
     resolvePost(created());
     await waitFor(() => {
@@ -227,9 +227,9 @@ describe('StatementImport', () => {
     createStatementImport.mockRejectedValue(new ApiError('Datoteka nije zaprimljena.', 502));
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('nije zaprimljena'));
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => expect(createStatementImport).toHaveBeenCalledTimes(2));
     expect(createStatementImport.mock.calls[0][3]).toBe(createStatementImport.mock.calls[1][3]);
   });
@@ -238,10 +238,10 @@ describe('StatementImport', () => {
     createStatementImport.mockRejectedValue(new ApiError('x', 502));
     renderImport();
     await chooseFile(xmlFile('one.xml'));
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => expect(createStatementImport).toHaveBeenCalledTimes(1));
     await chooseFile(xmlFile('two.xml'));
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => expect(createStatementImport).toHaveBeenCalledTimes(2));
     expect(createStatementImport.mock.calls[0][3]).not.toBe(createStatementImport.mock.calls[1][3]);
   });
@@ -253,11 +253,11 @@ describe('StatementImport', () => {
     );
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Obrada je završena');
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => expect(createStatementImport).toHaveBeenCalledTimes(2));
     expect(createStatementImport.mock.calls[0][3]).not.toBe(createStatementImport.mock.calls[1][3]);
   });
@@ -266,7 +266,7 @@ describe('StatementImport', () => {
     createStatementImport.mockRejectedValue(new ApiError('hash mismatch', 409));
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Odaberite datoteku ponovno');
     });
@@ -278,7 +278,7 @@ describe('StatementImport', () => {
     createStatementImport.mockRejectedValue(new ApiError('{"detail":"nope"}', 422));
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Format nije podržan');
     });
@@ -292,7 +292,7 @@ describe('StatementImport', () => {
     );
     const { onImported } = renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Datoteka je već bila uvezena');
     });
@@ -303,7 +303,7 @@ describe('StatementImport', () => {
     createStatementImport.mockRejectedValue(new ApiError('<!doctype html>Not Found</html>', 404));
     renderImport();
     await chooseFile(xmlFile());
-    fireEvent.click(screen.getByRole('button', { name: 'Uvezi CAMT izvod' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Uvezi izvod' }));
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Datoteka nije zaprimljena');
     });

@@ -1,44 +1,75 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { ApiError, fetchMe } from '@/lib/api';
 import { clearTokens, getAccessToken } from '@/lib/auth';
 import {
+  downloadDocumentAttachment,
   downloadDocumentPdf,
   downloadDocumentUbl,
   fetchDocument,
+  fetchDocumentAttachmentBlob,
+  fetchDocumentPdfBlob,
+  newIdempotencyKey,
+  rejectIncomingEracun,
   tenantApiOrigin,
+  isEurCurrency,
   type DocumentDetail,
 } from '@/lib/documents';
-import { formatHrMoney } from '@/lib/formatHr';
+import { DOCUMENTS_OPERATIVE_HREFS } from '@/lib/documentListQuery';
+import {
+  documentBankCloseHref,
+  shouldShowBankCloseCta,
+} from '@/lib/bankingReconcile';
+import { canWriteFinance, createPrivateFundsClaim, postPrivateFundsClaim } from '@/lib/finance';
+import {
+  approveExpense,
+  fetchChartOfAccounts,
+  fetchExpenseCategories,
+  fetchExpensePostingPreview,
+  isNotDraftConflict,
+  NOT_DRAFT_USER_MESSAGE,
+  patchDraftExpense,
+  type AccountRef,
+  type ExpenseCategory,
+  type ExpensePostingPreview,
+} from '@/lib/expensePosting';
+import { formatHrDateTime, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
+import { type ProvenanceTone } from '@/lib/provenance';
+import { fetchCostCenters, type CostCenterRef } from '@/lib/costCenters';
+import { fetchPartners, type PartnerListItem } from '@/lib/partners';
+import { ExpensePostingInputs } from '@/components/finance/ExpensePostingInputs';
+import { AccountPicker } from '@/components/finance/AccountPicker';
+import { PostingPreviewLines } from '@/components/finance/PostingPreviewLines';
+import { DocumentPdfPreview } from '@/components/documents/DocumentPdfPreview';
+import { DocumentPdfPreviewDialog } from '@/components/documents/DocumentPdfPreviewDialog';
 
 type Props = {
   slug: string;
   expenseId: number;
 };
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return '—';
-  const datePart = value.slice(0, 10);
-  const [year, month, day] = datePart.split('-');
-  if (!year || !month || !day) return value;
-  return `${day}.${month}.${year}.`;
+type PdfPreviewTarget =
+  | { kind: 'invoice-pdf' }
+  | { kind: 'attachment'; id: number; filename: string };
+
+function isPdfFilename(name: string): boolean {
+  return /\.pdf$/i.test(name.trim());
 }
 
-function formatDateTime(value: string | null | undefined): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return formatDate(value);
-  return new Intl.DateTimeFormat('hr-HR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
+function isImageFilename(name: string): boolean {
+  return /\.(jpe?g|png)$/i.test(name.trim());
+}
+
+function isPreviewableFilename(name: string): boolean {
+  return isPdfFilename(name) || isImageFilename(name);
+}
+
+function previewKindFromFilename(name: string): 'pdf' | 'image' {
+  return isImageFilename(name) ? 'image' : 'pdf';
 }
 
 function money(value: string | null | undefined, currency = 'EUR'): string {
@@ -50,6 +81,7 @@ const DOCUMENT_STATUS_LABEL: Record<string, string> = {
   received: 'Zaprimljen',
   cancelled: 'Storniran',
   rejected: 'Odbijen',
+  reversed: 'Stornirano',
 };
 
 const WORKFLOW_STATUS_LABEL: Record<string, string> = {
@@ -57,6 +89,7 @@ const WORKFLOW_STATUS_LABEL: Record<string, string> = {
   approved: 'Odobren',
   cancelled: 'Storniran',
   rejected: 'Odbijen',
+  rejection_pending: 'Odbijanje u tijeku',
 };
 
 const INTEGRATION_STATUS_LABEL: Record<string, string> = {
@@ -85,6 +118,66 @@ const PAYMENT_STATUS_LABEL: Record<string, string> = {
   matched: 'Usklađeno',
   unmatched: 'Neusklađeno',
   suggested: 'Prijedlog',
+  private_cash: 'Gotovina',
+  private_account: 'Privatni račun',
+};
+
+const DOCUMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
+  received: 'neutral',
+  cancelled: 'danger',
+  rejected: 'danger',
+  reversed: 'neutral',
+};
+
+const WORKFLOW_STATUS_TONE: Record<string, ProvenanceTone> = {
+  approved: 'success',
+  pending: 'warning',
+  rejection_pending: 'warning',
+  cancelled: 'danger',
+  rejected: 'danger',
+};
+
+const INTEGRATION_STATUS_TONE: Record<string, ProvenanceTone> = {
+  received: 'neutral',
+};
+
+const POSTING_STATUS_TONE: Record<string, ProvenanceTone> = {
+  posted: 'success',
+  unposted: 'warning',
+  draft: 'warning',
+};
+
+const VAT_STATUS_TONE: Record<string, ProvenanceTone> = {
+  recorded: 'success',
+  absent: 'neutral',
+};
+
+const SETTLEMENT_FROM_SUBLEDGER: Record<string, string> = {
+  closed: 'paid',
+  partial: 'partial',
+  open: 'unpaid',
+};
+
+const SETTLEMENT_STATUS_LABEL: Record<string, string> = {
+  paid: 'Plaćeno',
+  reversed: 'Stornirano',
+  partial: 'Djelomično',
+  unpaid: 'Neplaćeno',
+};
+
+const SETTLEMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
+  paid: 'success',
+  reversed: 'success',
+  partial: 'warning',
+  unpaid: 'neutral',
+};
+
+const PAYMENT_STATUS_TONE: Record<string, ProvenanceTone> = {
+  matched: 'success',
+  unmatched: 'warning',
+  suggested: 'neutral',
+  private_cash: 'success',
+  private_account: 'success',
 };
 
 const REFERENCE_TYPE_LABEL: Record<string, string> = {
@@ -105,6 +198,51 @@ function statusLabel(map: Record<string, string>, value: string | null | undefin
   return map[value] || value;
 }
 
+function StatusBadge({
+  map,
+  tones,
+  value,
+}: {
+  map: Record<string, string>;
+  tones: Record<string, ProvenanceTone>;
+  value: string | null | undefined;
+}) {
+  const tone: ProvenanceTone = value ? (tones[value] ?? 'neutral') : 'unknown';
+  return (
+    <span className={`badge badge-${tone}`} data-tone={tone}>
+      {statusLabel(map, value)}
+    </span>
+  );
+}
+
+function isExpensePosted(detail: DocumentDetail): boolean {
+  return (
+    detail.status?.posting === 'posted' ||
+    detail.accounting?.status === 'posted' ||
+    detail.status?.workflow === 'approved'
+  );
+}
+
+const ANTE_OIB = '11528564544';
+
+function machineDate(value: string | null | undefined): string {
+  if (!value) return '';
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : '';
+}
+
+function preferredPrivateFundsPartnerId(rows: PartnerListItem[]): number | '' {
+  const ante = rows.find(
+    (row) =>
+      row.tax_number === ANTE_OIB || row.name.trim().toLowerCase() === 'ante vrcan',
+  );
+  return ante?.id ?? '';
+}
+
+function normalizeClaimAmount(raw: string): string {
+  return raw.trim().replace(/\s/g, '').replace(',', '.');
+}
+
 export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const router = useRouter();
   const [detail, setDetail] = useState<DocumentDetail | null>(null);
@@ -115,6 +253,46 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [downloading, setDownloading] = useState<'pdf' | 'ubl' | null>(null);
   const [technicalOpen, setTechnicalOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReasonText, setRejectReasonText] = useState('');
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectError, setRejectError] = useState('');
+  const [idempotencyKey, setIdempotencyKey] = useState(() => newIdempotencyKey());
+  const [privateFundsOpen, setPrivateFundsOpen] = useState(false);
+  const [privateFundsPartners, setPrivateFundsPartners] = useState<PartnerListItem[]>([]);
+  const [privateFundsPartnerId, setPrivateFundsPartnerId] = useState<number | ''>('');
+  const [privateFundsAmount, setPrivateFundsAmount] = useState('');
+  const [privateFundsDate, setPrivateFundsDate] = useState('');
+  const [privateFundsBusy, setPrivateFundsBusy] = useState(false);
+  const [privateFundsError, setPrivateFundsError] = useState('');
+  const [role, setRole] = useState('');
+  const [preview, setPreview] = useState<ExpensePostingPreview | null>(null);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [expenseAccount, setExpenseAccount] = useState<AccountRef | null>(null);
+  const [costCenters, setCostCenters] = useState<CostCenterRef[]>([]);
+  const [costCenterId, setCostCenterId] = useState<number | null>(null);
+  const [postingLocked, setPostingLocked] = useState(false);
+  const [lockedNotice, setLockedNotice] = useState<string | null>(null);
+  const [postingError, setPostingError] = useState('');
+  const [postingBusy, setPostingBusy] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [downloadingAttachment, setDownloadingAttachment] = useState<number | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<PdfPreviewTarget | null>(null);
+
+  const loadPdf = useCallback(() => {
+    return fetchDocumentPdfBlob(origin, token, 'incoming', expenseId);
+  }, [origin, token, expenseId]);
+
+  const loadPreviewPdf = useCallback(() => {
+    if (!origin || !token || !pdfPreview) {
+      return Promise.reject(new Error('PDF nije dostupan.'));
+    }
+    if (pdfPreview.kind === 'invoice-pdf') {
+      return fetchDocumentPdfBlob(origin, token, 'incoming', expenseId);
+    }
+    return fetchDocumentAttachmentBlob(origin, token, expenseId, pdfPreview.id);
+  }, [origin, token, expenseId, pdfPreview]);
 
   useEffect(() => {
     const access = getAccessToken();
@@ -136,6 +314,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
         if (cancelled) return null;
         setOrigin(apiOrigin);
         setToken(access);
+        setRole(found.role);
         return fetchDocument(apiOrigin, access, 'incoming', expenseId);
       })
       .then((body) => {
@@ -166,7 +345,145 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [slug, expenseId, router]);
+  }, [slug, expenseId]);
+
+  useEffect(() => {
+    if (!origin || !token || !detail) return;
+    let cancelled = false;
+    const abort = new AbortController();
+    fetchExpensePostingPreview(origin, token, expenseId, abort.signal)
+      .then((next) => {
+        if (cancelled) return;
+        setPreview(next);
+        setCategoryId(next.category?.id ?? null);
+        setExpenseAccount(
+          next.account_source === 'manual_override' ? next.expense_account ?? null : null,
+        );
+      })
+      .catch((err) => {
+        if (cancelled || abort.signal.aborted) return;
+        setPostingError(err instanceof ApiError ? err.message : 'Prijedlog knjiženja nije učitan.');
+      });
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
+  }, [origin, token, expenseId, detail?.id]);
+
+  useEffect(() => {
+    if (!origin || !token || !detail || !canWriteFinance(role) || isExpensePosted(detail) || postingLocked) {
+      return;
+    }
+    let cancelled = false;
+    const abort = new AbortController();
+    fetchExpenseCategories(origin, token, abort.signal)
+      .then((catList) => {
+        if (cancelled) return;
+        setCategories(catList.results);
+      })
+      .catch((err) => {
+        if (cancelled || abort.signal.aborted) return;
+        setPostingError(err instanceof ApiError ? err.message : 'Vrste troška nisu učitane.');
+      });
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
+  }, [origin, token, detail, role, postingLocked]);
+
+  // Cost centers are an optional dimension; a missing codebook must not block posting inputs.
+  useEffect(() => {
+    if (!origin || !token || !canWriteFinance(role)) return;
+    let cancelled = false;
+    const abort = new AbortController();
+    fetchCostCenters(origin, token, abort.signal)
+      .then((centers) => {
+        if (!cancelled) setCostCenters(centers.results);
+      })
+      .catch(() => {
+        if (!cancelled) setCostCenters([]);
+      });
+    return () => {
+      cancelled = true;
+      abort.abort();
+    };
+  }, [origin, token, role]);
+
+  async function persistPosting(patch: {
+    category_id?: number;
+    expense_account_id?: number | null;
+    cost_center_id?: number | null;
+    line_accounts?: Array<{ position: number; posting_account_id: number | null }>;
+  }) {
+    if (!origin || !token) return;
+    setPostingBusy(true);
+    setPostingError('');
+    try {
+      await patchDraftExpense(origin, token, expenseId, patch);
+      await refreshExpenseAndPreview();
+      setLockedNotice(null);
+    } catch (err) {
+      if (isNotDraftConflict(err)) {
+        setPostingLocked(true);
+        setLockedNotice(NOT_DRAFT_USER_MESSAGE);
+        return;
+      }
+      setPostingError(err instanceof ApiError ? err.message : 'Spremanje vrste troška nije uspjelo.');
+    } finally {
+      setPostingBusy(false);
+    }
+  }
+
+  async function refreshExpenseAndPreview() {
+    const [refreshed, nextPreview] = await Promise.all([
+      fetchDocument(origin, token, 'incoming', expenseId),
+      fetchExpensePostingPreview(origin, token, expenseId),
+    ]);
+    setDetail(refreshed);
+    setPreview(nextPreview);
+    setCategoryId(nextPreview.category?.id ?? null);
+    setExpenseAccount(
+      nextPreview.account_source === 'manual_override' ? nextPreview.expense_account ?? null : null,
+    );
+    return refreshed;
+  }
+
+  async function handleApprove() {
+    if (!origin || !token || !preview?.can_approve) return;
+    setApproving(true);
+    setPostingError('');
+    try {
+      try {
+        await approveExpense(origin, token, expenseId);
+      } catch (err) {
+        if (isNotDraftConflict(err)) {
+          setPostingLocked(true);
+          setLockedNotice(NOT_DRAFT_USER_MESSAGE);
+        } else {
+          setPostingError(err instanceof ApiError ? err.message : 'Odobravanje nije uspjelo.');
+        }
+        try {
+          await refreshExpenseAndPreview();
+        } catch {
+          /* keep approve error / lock notice */
+        }
+        return;
+      }
+      try {
+        await refreshExpenseAndPreview();
+        setLockedNotice(null);
+        setPostingLocked(false);
+      } catch (err) {
+        setPostingError(
+          err instanceof ApiError
+            ? err.message
+            : 'Nalog je odobren, ali se stanje nije osvježilo. Osvježite stranicu.',
+        );
+      }
+    } finally {
+      setApproving(false);
+    }
+  }
 
   async function handleDownload(kind: 'pdf' | 'ubl') {
     if (!detail || !origin || !token) return;
@@ -185,18 +502,194 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     }
   }
 
+  async function handleAttachmentDownload(attachmentId: number) {
+    if (!origin || !token) return;
+    setDownloadingAttachment(attachmentId);
+    setError('');
+    try {
+      await downloadDocumentAttachment(origin, token, expenseId, attachmentId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Preuzimanje privitka nije uspjelo.');
+    } finally {
+      setDownloadingAttachment(null);
+    }
+  }
+
+  async function handlePreviewDownload() {
+    if (!pdfPreview) return;
+    if (pdfPreview.kind === 'invoice-pdf') {
+      await handleDownload('pdf');
+      return;
+    }
+    await handleAttachmentDownload(pdfPreview.id);
+  }
+
+  async function handleReject() {
+    if (!detail || !origin || !token) return;
+    setRejecting(true);
+    setRejectError('');
+    const key = idempotencyKey || newIdempotencyKey();
+    try {
+      await rejectIncomingEracun(
+        origin,
+        token,
+        detail.id,
+        {
+          reason_code: 'REJECTED_BY_RECIPIENT',
+          reason_text: rejectReasonText.trim() || undefined,
+        },
+        key,
+      );
+      const refreshed = await fetchDocument(origin, token, 'incoming', detail.id);
+      setDetail(refreshed);
+      setRejectOpen(false);
+      setRejectReasonText('');
+      setIdempotencyKey(newIdempotencyKey());
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Odbijanje nije uspjelo.';
+      setRejectError(message);
+      if (!(err instanceof ApiError && err.status === 409)) {
+        setIdempotencyKey(newIdempotencyKey());
+      }
+    } finally {
+      setRejecting(false);
+    }
+  }
+
+  async function openPrivateFundsDialog() {
+    if (!detail || !origin || !token) return;
+    setPrivateFundsError('');
+    setPrivateFundsAmount(detail.subledger_context?.open_amount || '');
+    setPrivateFundsDate(machineDate(detail.document?.issue_date));
+    setPrivateFundsPartnerId('');
+    setPrivateFundsOpen(true);
+    try {
+      const data = await fetchPartners(origin, token, { filter: 'all', page_size: 100 });
+      setPrivateFundsPartners(data.results);
+      setPrivateFundsPartnerId(preferredPrivateFundsPartnerId(data.results));
+    } catch (err) {
+      setPrivateFundsPartners([]);
+      setPrivateFundsError(err instanceof ApiError ? err.message : 'Lista partnera se nije učitala.');
+    }
+  }
+
+  async function handlePrivateFundsPost() {
+    if (!detail || !origin || !token) return;
+    const partnerId = typeof privateFundsPartnerId === 'number' ? privateFundsPartnerId : Number(privateFundsPartnerId);
+    if (!Number.isInteger(partnerId) || partnerId <= 0) {
+      setPrivateFundsError('Odaberite partnera koji je platio.');
+      return;
+    }
+    const amount = normalizeClaimAmount(privateFundsAmount);
+    if (!amount || Number(amount) <= 0) {
+      setPrivateFundsError('Iznos mora biti veći od nule.');
+      return;
+    }
+    const openRaw = detail.subledger_context?.open_amount;
+    if (openRaw && Number(amount) > Number(openRaw) + 0.005) {
+      setPrivateFundsError('Iznos premašuje otvorenu obvezu.');
+      return;
+    }
+    const claimDate = machineDate(privateFundsDate);
+    if (!claimDate) {
+      setPrivateFundsError('Datum je obavezan.');
+      return;
+    }
+    setPrivateFundsBusy(true);
+    setPrivateFundsError('');
+    try {
+      const created = await createPrivateFundsClaim(
+        origin,
+        token,
+        {
+          partner_id: partnerId,
+          claim_type: 'supplier_payment',
+          amount,
+          claim_date: claimDate,
+          related_type: 'expense',
+          related_id: detail.id,
+        },
+        newIdempotencyKey(),
+      );
+      await postPrivateFundsClaim(origin, token, created.id, newIdempotencyKey());
+      const refreshed = await fetchDocument(origin, token, 'incoming', detail.id);
+      setDetail(refreshed);
+      setPrivateFundsOpen(false);
+    } catch (err) {
+      setPrivateFundsError(err instanceof ApiError ? err.message : 'Knjiženje privatnih sredstava nije uspjelo.');
+    } finally {
+      setPrivateFundsBusy(false);
+    }
+  }
+
   const title =
     detail?.number ||
     detail?.source_number ||
     detail?.internal_number ||
     `Ulazni #${expenseId}`;
   const currency = detail?.totals?.currency || detail?.amounts?.currency || 'EUR';
+  const bookCurrency = 'EUR';
+  const sameMoney = (left?: string | null, right?: string | null) =>
+    left != null && right != null && Number(left) === Number(right);
+  const documentFaceForBook = (book?: string | null) => {
+    if (!book || isEurCurrency(currency) || !detail?.amounts) return null;
+    if (sameMoney(book, detail.amounts.book_gross)) return detail.amounts.gross;
+    if (sameMoney(book, detail.amounts.book_net)) return detail.amounts.net;
+    if (sameMoney(book, detail.amounts.book_vat)) return detail.amounts.vat;
+    return null;
+  };
+  const dualBook = (book?: string | null) => {
+    const face = documentFaceForBook(book);
+    if (!face) return money(book, bookCurrency);
+    return (
+      <span className="cell-stack">
+        <span>{money(book, bookCurrency)}</span>
+        <span className="muted-inline">{money(face, currency)}</span>
+      </span>
+    );
+  };
+  const faceAndBook = (face?: string | null, book?: string | null) => (
+    <span className="cell-stack">
+      <span>{money(face, currency)}</span>
+      {book && !isEurCurrency(currency) ? (
+        <span className="muted-inline">{money(book, bookCurrency)}</span>
+      ) : null}
+    </span>
+  );
   const supplier = detail?.supplier;
   const meta = detail?.document;
   const lifecycle = detail?.status;
+  const closings = detail?.settlement_trail?.closings ?? [];
+  const privateCashClosings = closings.filter((row) => row.kind === 'private_funds');
+  const stornoClosings = closings.filter((row) => row.kind === 'storno');
+  const privateFundsOnly =
+    privateCashClosings.length > 0 &&
+    closings.every((row) => row.kind === 'private_funds') &&
+    !detail?.payment?.bank_transaction_id;
+  const privateAccountOnly =
+    privateFundsOnly && privateCashClosings.every((row) => row.label === 'Privatni račun');
+  const privateCashOnly = privateFundsOnly && !privateAccountOnly;
+  const stornoOnly =
+    stornoClosings.length > 0 &&
+    closings.every((row) => row.kind === 'storno') &&
+    !detail?.payment?.bank_transaction_id;
+  const stornoMarked = Boolean(
+    detail?.reversal_of || stornoOnly || detail?.operational_status?.value === 'reversed',
+  );
+  const stornoLinks = detail?.reversal_of
+    ? [{ id: detail.reversal_of.id, number: detail.reversal_of.number }]
+    : stornoClosings
+        .filter((row) => row.storno_expense_id != null)
+        .map((row) => ({
+          id: row.storno_expense_id as number,
+          number: row.storno_expense_number || 'Storno',
+        }));
   const integration = detail?.integration;
   const externalUrl = integration?.external_view_url || null;
   const lines = detail?.lines || [];
+  const hasExpenseLines = lines.some((line) => line.id != null);
+  const splitLinePosting =
+    hasExpenseLines && lines.every((line) => Boolean(line.posting_account?.id));
   const charges = detail?.charges || [];
   const taxSummary = detail?.tax_summary || [];
   const references = detail?.references || [];
@@ -205,11 +698,23 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
     supplier?.id != null ? `/t/${slug}/partneri/${supplier.id}` : null;
   const partnerSaldakontoHref =
     supplier?.id != null ? `/t/${slug}/partneri/${supplier.id}/saldakonto` : null;
+  const canReject = detail?.actions?.reject?.available === true;
+  const posted = detail ? isExpensePosted(detail) : false;
+  const canEditPosting = canWriteFinance(role) && !posted && !postingLocked && !approving;
+  const searchAccounts = useCallback(
+    (term: string, signal: AbortSignal) => {
+      if (!origin || !token) return Promise.resolve({ count: 0, results: [] });
+      return fetchChartOfAccounts(origin, token, term, signal);
+    },
+    [origin, token],
+  );
+  const canApprove =
+    canWriteFinance(role) && !posted && !postingLocked && preview?.can_approve === true;
 
   return (
     <div className="docs-shell incoming-detail">
       <nav className="incoming-detail-crumb" aria-label="Navigacija">
-        <Link href={`/t/${slug}/saldakonti?direction=incoming`}>Ulazni računi</Link>
+        <Link href={DOCUMENTS_OPERATIVE_HREFS.incoming(slug)}>Ulazni računi</Link>
         <span aria-hidden="true"> / </span>
         <span>{title}</span>
       </nav>
@@ -219,6 +724,19 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
           <p className="docs-detail-kicker">Detalji ulaznog računa</p>
           <h1 className="docs-heading">{title}</h1>
           {supplier?.name ? <p className="incoming-detail-subtitle">{supplier.name}</p> : null}
+          {stornoMarked ? (
+            <p className="incoming-detail-subtitle">
+              <span className="badge badge-neutral" data-tone="neutral">
+                Stornirano
+              </span>
+              {stornoLinks.map((link) => (
+                <Link key={link.id} href={`/t/${slug}/dokumenti/ulazni/${link.id}`}>
+                  {' '}
+                  {link.number}
+                </Link>
+              ))}
+            </p>
+          ) : null}
         </div>
         <div className="incoming-detail-actions">
           {detail?.pdf_available ? (
@@ -251,11 +769,190 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               {integration?.source === 'super' ? 'Otvori u SUPER-u ↗' : 'Otvori izvorni dokument ↗'}
             </a>
           ) : null}
-          <Link className="btn btn-secondary" href={`/t/${slug}/saldakonti?direction=incoming`}>
+          {canApprove ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={approving || postingBusy}
+              onClick={() => void handleApprove()}
+            >
+              {approving ? 'Odobravam…' : 'Odobri'}
+            </button>
+          ) : null}
+          {canReject ? (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={rejecting}
+              onClick={() => {
+                setRejectError('');
+                setRejectOpen(true);
+              }}
+            >
+              Odbij
+            </button>
+          ) : null}
+          {detail && shouldShowBankCloseCta(detail) ? (
+            <Link className="btn btn-primary" href={documentBankCloseHref(slug, detail)}>
+              Zatvori bankom
+            </Link>
+          ) : null}
+          {detail && canWriteFinance(role) && shouldShowBankCloseCta(detail) ? (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={privateFundsBusy}
+              onClick={() => void openPrivateFundsDialog()}
+            >
+              Platio partner
+            </button>
+          ) : null}
+          <Link className="btn btn-secondary" href={DOCUMENTS_OPERATIVE_HREFS.incoming(slug)}>
             Natrag
           </Link>
         </div>
       </header>
+
+      {pdfPreview && origin && token ? (
+        <DocumentPdfPreviewDialog
+          title={pdfPreview.kind === 'invoice-pdf' ? 'račun.pdf' : pdfPreview.filename}
+          kind={
+            pdfPreview.kind === 'invoice-pdf'
+              ? 'pdf'
+              : previewKindFromFilename(pdfPreview.filename)
+          }
+          load={loadPreviewPdf}
+          downloading={
+            pdfPreview.kind === 'invoice-pdf'
+              ? downloading === 'pdf'
+              : downloadingAttachment === pdfPreview.id
+          }
+          onDownload={() => void handlePreviewDownload()}
+          onClose={() => setPdfPreview(null)}
+        />
+      ) : null}
+
+      {rejectOpen ? (
+        <div className="incoming-reject-dialog" role="dialog" aria-modal="true" aria-labelledby="incoming-reject-title">
+          <div className="incoming-reject-panel">
+            <h2 id="incoming-reject-title">Odbij ulazni eRačun</h2>
+            <p>Zahtjev za zakonsko odbijanje šalje se u obradu. Status dokumenta ostaje nepromijenjen dok gateway ne potvrdi rezultat.</p>
+            <label className="incoming-reject-label" htmlFor="incoming-reject-reason">
+              Razlog (opcionalno)
+            </label>
+            <textarea
+              id="incoming-reject-reason"
+              className="incoming-reject-textarea"
+              rows={3}
+              value={rejectReasonText}
+              onChange={(e) => setRejectReasonText(e.target.value)}
+              disabled={rejecting}
+            />
+            {rejectError ? (
+              <p className="error" role="alert">
+                {rejectError}
+              </p>
+            ) : null}
+            <div className="incoming-reject-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={rejecting}
+                onClick={() => {
+                  setRejectOpen(false);
+                  setRejectError('');
+                }}
+              >
+                Odustani
+              </button>
+              <button type="button" className="btn btn-primary" disabled={rejecting} onClick={() => void handleReject()}>
+                {rejecting ? 'Šaljem…' : 'Potvrdi odbijanje'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {privateFundsOpen ? (
+        <div
+          className="incoming-reject-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="incoming-private-funds-title"
+        >
+          <div className="incoming-reject-panel">
+            <h2 id="incoming-private-funds-title">Platio partner</h2>
+            <p>Zatvara obvezu prema dobavljaču i prebacuje je na odabranog partnera (privatna gotovina).</p>
+            <label className="incoming-reject-label" htmlFor="incoming-private-funds-partner">
+              Partner
+            </label>
+            <select
+              id="incoming-private-funds-partner"
+              className="incoming-reject-field"
+              value={privateFundsPartnerId === '' ? '' : String(privateFundsPartnerId)}
+              onChange={(e) =>
+                setPrivateFundsPartnerId(e.target.value ? Number(e.target.value) : '')
+              }
+              disabled={privateFundsBusy}
+            >
+              <option value="">Odaberi partnera</option>
+              {privateFundsPartners.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.name}
+                </option>
+              ))}
+            </select>
+            <label className="incoming-reject-label" htmlFor="incoming-private-funds-amount">
+              Iznos
+            </label>
+            <input
+              id="incoming-private-funds-amount"
+              className="incoming-reject-field"
+              inputMode="decimal"
+              value={privateFundsAmount}
+              onChange={(e) => setPrivateFundsAmount(e.target.value)}
+              disabled={privateFundsBusy}
+            />
+            <label className="incoming-reject-label" htmlFor="incoming-private-funds-date">
+              Datum
+            </label>
+            <input
+              id="incoming-private-funds-date"
+              className="incoming-reject-field"
+              type="date"
+              value={privateFundsDate}
+              onChange={(e) => setPrivateFundsDate(e.target.value)}
+              disabled={privateFundsBusy}
+            />
+            {privateFundsError ? (
+              <p className="error" role="alert">
+                {privateFundsError}
+              </p>
+            ) : null}
+            <div className="incoming-reject-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={privateFundsBusy}
+                onClick={() => {
+                  setPrivateFundsOpen(false);
+                  setPrivateFundsError('');
+                }}
+              >
+                Odustani
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={privateFundsBusy}
+                onClick={() => void handlePrivateFundsPost()}
+              >
+                {privateFundsBusy ? 'Knjižim…' : 'Proknjiži'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {loading && (
         <div className="incoming-detail-skeleton" aria-busy="true" aria-label="Učitavanje detalja">
@@ -277,7 +974,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               Pokušaj ponovno
             </button>
           ) : (
-            <Link className="btn btn-secondary" href={`/t/${slug}/saldakonti?direction=incoming`}>
+            <Link className="btn btn-secondary" href={DOCUMENTS_OPERATIVE_HREFS.incoming(slug)}>
               Natrag na listu
             </Link>
           )}
@@ -333,24 +1030,30 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </div>
                 <div>
                   <dt>Datum izdavanja</dt>
-                  <dd>{formatDate(meta?.issue_date || detail.document_date)}</dd>
+                  <dd>{formatHrInputDate(meta?.issue_date || detail.document_date)}</dd>
                 </div>
                 <div>
                   <dt>Datum isporuke</dt>
-                  <dd>{formatDate(meta?.delivery_date)}</dd>
+                  <dd>{formatHrInputDate(meta?.delivery_date)}</dd>
                 </div>
                 <div>
                   <dt>Datum dospijeća</dt>
-                  <dd>{formatDate(meta?.due_date || detail.due_date)}</dd>
+                  <dd>{formatHrInputDate(meta?.due_date || detail.due_date)}</dd>
                 </div>
                 <div>
                   <dt>Datum zaprimanja</dt>
-                  <dd>{formatDateTime(meta?.received_at)}</dd>
+                  <dd>{formatHrDateTime(meta?.received_at)}</dd>
                 </div>
                 <div>
                   <dt>Valuta</dt>
                   <dd>{meta?.currency || currency}</dd>
                 </div>
+                {!isEurCurrency(currency) && detail.amounts?.book_gross ? (
+                  <div>
+                    <dt>U eurima</dt>
+                    <dd>{money(detail.amounts.book_gross, 'EUR')}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt>Poslovni proces</dt>
                   <dd>{meta?.business_process || '—'}</dd>
@@ -375,35 +1078,228 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               <dl className="incoming-dl incoming-status-dl">
                 <div>
                   <dt>Dokument</dt>
-                  <dd>{statusLabel(DOCUMENT_STATUS_LABEL, lifecycle?.document)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={DOCUMENT_STATUS_LABEL}
+                      tones={DOCUMENT_STATUS_TONE}
+                      value={stornoMarked ? 'reversed' : lifecycle?.document}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>Obrada</dt>
-                  <dd>{statusLabel(WORKFLOW_STATUS_LABEL, lifecycle?.workflow)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={WORKFLOW_STATUS_LABEL}
+                      tones={WORKFLOW_STATUS_TONE}
+                      value={lifecycle?.workflow}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>eRačun</dt>
-                  <dd>{statusLabel(INTEGRATION_STATUS_LABEL, lifecycle?.integration)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={INTEGRATION_STATUS_LABEL}
+                      tones={INTEGRATION_STATUS_TONE}
+                      value={lifecycle?.integration}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>Knjiženje</dt>
-                  <dd>{statusLabel(POSTING_STATUS_LABEL, lifecycle?.posting)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={POSTING_STATUS_LABEL}
+                      tones={POSTING_STATUS_TONE}
+                      value={lifecycle?.posting}
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>PDV</dt>
-                  <dd>{statusLabel(VAT_STATUS_LABEL, lifecycle?.vat)}</dd>
+                  <dd>
+                    <StatusBadge map={VAT_STATUS_LABEL} tones={VAT_STATUS_TONE} value={lifecycle?.vat} />
+                  </dd>
                 </div>
                 <div>
-                  <dt>Saldakonto</dt>
-                  <dd>{statusLabel(SUBLEDGER_STATUS_LABEL, lifecycle?.subledger)}</dd>
+                  <dt>Podmirenje</dt>
+                  <dd>
+                    <StatusBadge
+                      map={SETTLEMENT_STATUS_LABEL}
+                      tones={SETTLEMENT_STATUS_TONE}
+                      value={
+                        stornoMarked
+                          ? 'reversed'
+                          : lifecycle?.subledger
+                            ? (SETTLEMENT_FROM_SUBLEDGER[lifecycle.subledger] ?? null)
+                            : null
+                      }
+                    />
+                  </dd>
                 </div>
                 <div>
                   <dt>Plaćanje</dt>
-                  <dd>{statusLabel(PAYMENT_STATUS_LABEL, lifecycle?.payment)}</dd>
+                  <dd>
+                    <StatusBadge
+                      map={PAYMENT_STATUS_LABEL}
+                      tones={PAYMENT_STATUS_TONE}
+                      value={
+                        privateAccountOnly
+                          ? 'private_account'
+                          : privateCashOnly
+                            ? 'private_cash'
+                            : lifecycle?.payment
+                      }
+                    />
+                  </dd>
                 </div>
               </dl>
             </section>
           </div>
+
+          {detail.settlement_trail ? (
+            <section className="incoming-card" aria-labelledby="settlement-trail-heading">
+              <h2 id="settlement-trail-heading">Tijek zatvaranja</h2>
+              {detail.settlement_trail.warnings.length > 0 ? (
+                <div className="error" role="alert">
+                  {detail.settlement_trail.warnings.map((warning) => (
+                    <p key={warning.code}>{warning.message}</p>
+                  ))}
+                </div>
+              ) : null}
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Obveza</dt>
+                  <dd>
+                    {dualBook(detail.settlement_trail.totals.obligation)}
+                    {detail.settlement_trail.obligation?.journal_entry_id != null ? (
+                      <>
+                        {' · '}
+                        <Link
+                          href={`/t/${slug}/glavna-knjiga/${detail.settlement_trail.obligation.journal_entry_id}`}
+                        >
+                          {detail.settlement_trail.obligation.entry_number ||
+                            `#${detail.settlement_trail.obligation.journal_entry_id}`}
+                        </Link>
+                      </>
+                    ) : null}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Alocirano</dt>
+                  <dd>{dualBook(detail.settlement_trail.totals.allocated)}</dd>
+                </div>
+                <div>
+                  <dt>Otvoreno</dt>
+                  <dd>{dualBook(detail.settlement_trail.totals.open)}</dd>
+                </div>
+              </dl>
+              {detail.settlement_trail.closings.length > 0 ? (
+                <div className="table-wrap incoming-table-wrap">
+                  <table className="docs-table">
+                    <thead>
+                      <tr>
+                        <th>Vrsta</th>
+                        <th>Iznos</th>
+                        <th>Temeljnica</th>
+                        <th>Dokaz</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.settlement_trail.closings.map((row) => (
+                        <tr key={row.allocation_id}>
+                          <td>
+                            {row.kind === 'storno'
+                              ? 'Storno'
+                              : row.kind === 'private_funds'
+                                ? row.label === 'Privatni račun'
+                                  ? 'Privatni račun'
+                                  : 'Gotovina'
+                                : row.label}
+                          </td>
+                          <td className="cell-amount">{dualBook(row.amount)}</td>
+                          <td>
+                            {row.journal_entry_id != null ? (
+                              <Link href={`/t/${slug}/glavna-knjiga/${row.journal_entry_id}`}>
+                                {row.entry_number || `#${row.journal_entry_id}`}
+                              </Link>
+                            ) : (
+                              row.entry_number || '—'
+                            )}
+                          </td>
+                          <td>
+                            {row.kind === 'bank' && row.bank_transaction_id != null ? (
+                              <span className="cell-stack">
+                                <Link
+                                  href={
+                                    row.bank_statement_id != null
+                                      ? `/t/${slug}/bankarstvo/transakcije?statement=${row.bank_statement_id}&tx=${row.bank_transaction_id}`
+                                      : `/t/${slug}/bankarstvo/transakcije?tx=${row.bank_transaction_id}`
+                                  }
+                                >
+                                  Transakcija #{row.bank_transaction_id}
+                                </Link>
+                                {row.bank_statement_id != null ? (
+                                  <span>Izvod #{row.bank_statement_id}</span>
+                                ) : null}
+                              </span>
+                            ) : null}
+                            {row.kind === 'storno' && row.storno_expense_id != null ? (
+                              <Link href={`/t/${slug}/dokumenti/ulazni/${row.storno_expense_id}`}>
+                                {row.storno_expense_number || 'Storno'}
+                              </Link>
+                            ) : null}
+                            {row.kind === 'private_funds' ? (
+                              <span className="cell-stack">
+                                {row.claim_number ? <span>{row.claim_number}</span> : null}
+                                {row.partner_id && row.partner_name ? (
+                                  <Link href={`/t/${slug}/partneri/${row.partner_id}`}>
+                                    {row.partner_name}
+                                  </Link>
+                                ) : (
+                                  row.partner_name || null
+                                )}
+                                <span className="muted-inline">
+                                  {row.label === 'Privatni račun'
+                                    ? 'Sa privatnog računa'
+                                    : 'Svojom gotovinom'}
+                                </span>
+                              </span>
+                            ) : null}
+                            {row.kind === 'other' ? <span>—</span> : null}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="muted-inline">Nema alokacija zatvaranja.</p>
+              )}
+              {detail.settlement_trail.system_entries.length > 0 ? (
+                <div className="incoming-trail-system">
+                  <h3>Sistemska knjiženja</h3>
+                  <ul className="incoming-trail-system-list">
+                    {detail.settlement_trail.system_entries.map((entry) => (
+                      <li key={entry.journal_entry_id}>
+                        {entry.journal_entry_id != null ? (
+                          <Link href={`/t/${slug}/glavna-knjiga/${entry.journal_entry_id}`}>
+                            {entry.entry_number || `#${entry.journal_entry_id}`}
+                          </Link>
+                        ) : (
+                          entry.entry_number || '—'
+                        )}
+                        {' · '}
+                        {dualBook(entry.amount)}
+                        <span className="muted-inline"> — {entry.note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           {integration ? (
             <section className="incoming-card">
@@ -419,7 +1315,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </div>
                 <div>
                   <dt>Zaprimljeno</dt>
-                  <dd>{formatDateTime(integration.received_at)}</dd>
+                  <dd>{formatHrDateTime(integration.received_at)}</dd>
                 </div>
               </dl>
               {externalUrl ? (
@@ -432,16 +1328,115 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
             </section>
           ) : null}
 
+          {posted && splitLinePosting ? null : (
+          <section className="incoming-card">
+            <h2>{splitLinePosting ? 'Mjesto troška' : 'Vrsta troška'}</h2>
+            {postingError ? (
+              <p className="error" role="alert">
+                {postingError}
+              </p>
+            ) : null}
+            {canEditPosting ? (
+              <ExpensePostingInputs
+                categories={categories}
+                categoryId={categoryId}
+                expenseAccount={expenseAccount}
+                searchAccounts={searchAccounts}
+                costCenters={costCenters}
+                costCenterId={costCenterId}
+                disabled={postingBusy || approving}
+                accountSource={splitLinePosting ? null : preview?.account_source}
+                hideCategory={splitLinePosting}
+                hideAccount={splitLinePosting}
+                lockedMessage={lockedNotice}
+                onCategoryChange={(next) => {
+                  setCategoryId(next);
+                  if (next != null) void persistPosting({ category_id: next });
+                }}
+                onAccountChange={(next) => {
+                  setExpenseAccount(next);
+                  void persistPosting({ expense_account_id: next?.id ?? null });
+                }}
+                onCostCenterChange={(next) => {
+                  setCostCenterId(next);
+                  void persistPosting({ cost_center_id: next });
+                }}
+              />
+            ) : (
+              <>
+                {lockedNotice ? (
+                  <p className="posting-locked-note" role="status">
+                    {lockedNotice}
+                  </p>
+                ) : null}
+                {splitLinePosting ? (
+                  <p className="muted-inline">
+                    Konto se bira na stavkama. Mjesto troška vrijedi za klasu 4; klasa 1 knjiži se
+                    bez mjesta troška.
+                  </p>
+                ) : (
+                  <dl className="incoming-dl incoming-dl-inline">
+                    <div>
+                      <dt>Vrsta</dt>
+                      <dd>{preview?.category?.name || '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Konto</dt>
+                      <dd>
+                        {preview?.expense_account
+                          ? `${preview.expense_account.code} · ${preview.expense_account.name}`
+                          : '—'}
+                      </dd>
+                    </div>
+                  </dl>
+                )}
+              </>
+            )}
+            {!posted ? (
+              <div className="posting-preview-block">
+                <h3>Prijedlog knjiženja</h3>
+                <p className="muted-inline">Linije dolaze s poslužitelja; sučelje ih ne računa.</p>
+                <PostingPreviewLines
+                  preview={preview}
+                  currency={bookCurrency}
+                  documentCurrency={isEurCurrency(currency) ? undefined : currency}
+                />
+                {canApprove ? (
+                  <div className="posting-approve-row">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={approving || postingBusy}
+                      onClick={() => void handleApprove()}
+                    >
+                      {approving ? 'Odobravam…' : 'Odobri'}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+          )}
+
           <section className="incoming-card">
             <h2>Knjiženje</h2>
             <dl className="incoming-dl incoming-dl-inline">
               <div>
                 <dt>Temeljnica</dt>
-                <dd>{detail.accounting?.entry_number || '—'}</dd>
+                <dd>
+                  {detail.accounting?.journal_entry_id != null ? (
+                    <Link href={`/t/${slug}/glavna-knjiga/${detail.accounting.journal_entry_id}`}>
+                      {detail.accounting.entry_number ||
+                        `#${detail.accounting.journal_entry_id}`}
+                    </Link>
+                  ) : (
+                    detail.accounting?.entry_number || '—'
+                  )}
+                </dd>
               </div>
               <div>
                 <dt>Datum</dt>
-                <dd>{formatDate(detail.accounting?.entry_date)}</dd>
+                <dd>{formatHrInputDate(detail.accounting?.entry_date)}</dd>
               </div>
               <div>
                 <dt>Status</dt>
@@ -449,11 +1444,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Duguje</dt>
-                <dd>{money(detail.accounting?.debit_total, currency)}</dd>
+                <dd>{dualBook(detail.accounting?.debit_total)}</dd>
               </div>
               <div>
                 <dt>Potražuje</dt>
-                <dd>{money(detail.accounting?.credit_total, currency)}</dd>
+                <dd>{dualBook(detail.accounting?.credit_total)}</dd>
               </div>
             </dl>
             {(detail.accounting?.lines?.length ?? 0) > 0 ? (
@@ -474,15 +1469,17 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                         <td>{line.account_code || '—'}</td>
                         <td>{line.account_name || '—'}</td>
                         <td>{line.description || '—'}</td>
-                        <td className="cell-amount">{money(line.debit, currency)}</td>
-                        <td className="cell-amount">{money(line.credit, currency)}</td>
+                        <td className="cell-amount">{dualBook(line.debit)}</td>
+                        <td className="cell-amount">{dualBook(line.credit)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : posted ? (
               <p className="muted-inline">Nema stavki temeljnice.</p>
+            ) : (
+              <p className="muted-inline">Nalog još nije proknjižen. Prijedlog je iznad.</p>
             )}
           </section>
 
@@ -515,11 +1512,11 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Osnovica</dt>
-                <dd>{money(detail.vat_context?.total_base, currency)}</dd>
+                <dd>{dualBook(detail.vat_context?.total_base)}</dd>
               </div>
               <div>
                 <dt>PDV</dt>
-                <dd>{money(detail.vat_context?.total_vat, currency)}</dd>
+                <dd>{dualBook(detail.vat_context?.total_vat)}</dd>
               </div>
             </dl>
             {(detail.vat_context?.rates?.length ?? 0) > 0 ? (
@@ -536,8 +1533,8 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                     {(detail.vat_context?.rates || []).map((row) => (
                       <tr key={`vat-ctx-${row.rate}`}>
                         <td>{row.rate != null ? `${row.rate}%` : '—'}</td>
-                        <td className="cell-amount">{money(row.base, currency)}</td>
-                        <td className="cell-amount">{money(row.vat, currency)}</td>
+                        <td className="cell-amount">{dualBook(row.base)}</td>
+                        <td className="cell-amount">{dualBook(row.vat)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -557,19 +1554,19 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
               </div>
               <div>
                 <dt>Izvorni iznos</dt>
-                <dd>{money(detail.subledger_context?.original_amount, currency)}</dd>
+                <dd>{dualBook(detail.subledger_context?.original_amount)}</dd>
               </div>
               <div>
                 <dt>Alocirano</dt>
-                <dd>{money(detail.subledger_context?.allocated_amount, currency)}</dd>
+                <dd>{dualBook(detail.subledger_context?.allocated_amount)}</dd>
               </div>
               <div>
                 <dt>Otvoreno</dt>
-                <dd>{money(detail.subledger_context?.open_amount, currency)}</dd>
+                <dd>{dualBook(detail.subledger_context?.open_amount)}</dd>
               </div>
               <div>
                 <dt>Dospijeće</dt>
-                <dd>{formatDate(detail.subledger_context?.due_date)}</dd>
+                <dd>{formatHrInputDate(detail.subledger_context?.due_date)}</dd>
               </div>
               <div>
                 <dt>Partner</dt>
@@ -597,9 +1594,9 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                     {(detail.subledger_context?.allocations || []).map((alloc) => (
                       <tr key={alloc.id}>
                         <td>{alloc.id}</td>
-                        <td className="cell-amount">{money(alloc.amount, currency)}</td>
+                        <td className="cell-amount">{dualBook(alloc.amount)}</td>
                         <td>{alloc.journal_entry_id ?? '—'}</td>
-                        <td>{formatDateTime(alloc.created_at)}</td>
+                        <td>{formatHrDateTime(alloc.created_at)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -612,34 +1609,140 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
 
           <section className="incoming-card">
             <h2>Plaćanje</h2>
-            <dl className="incoming-dl incoming-dl-inline">
-              <div>
-                <dt>Usklađeno</dt>
-                <dd>
-                  {detail.payment == null ? '—' : detail.payment.matched ? 'Da' : 'Ne'}
-                </dd>
-              </div>
-              <div>
-                <dt>Status</dt>
-                <dd>{statusLabel(PAYMENT_STATUS_LABEL, detail.payment?.reconcile_status)}</dd>
-              </div>
-              <div>
-                <dt>Datum</dt>
-                <dd>{formatDate(detail.payment?.date)}</dd>
-              </div>
-              <div>
-                <dt>Iznos</dt>
-                <dd>{money(detail.payment?.amount, currency)}</dd>
-              </div>
-              <div>
-                <dt>Račun</dt>
-                <dd>{detail.payment?.account_mask || '—'}</dd>
-              </div>
-              <div>
-                <dt>Referenca</dt>
-                <dd>{detail.payment?.reference || '—'}</dd>
-              </div>
-            </dl>
+            {detail.reversal_of ? (
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Storno</dt>
+                  <dd>
+                    <Link href={`/t/${slug}/dokumenti/ulazni/${detail.reversal_of.id}`}>
+                      {detail.reversal_of.number}
+                    </Link>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>{faceAndBook(detail.amounts?.gross, detail.amounts?.book_gross)}</dd>
+                </div>
+              </dl>
+            ) : stornoOnly ? (
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Način</dt>
+                  <dd>Storno</dd>
+                </div>
+                <div>
+                  <dt>Dokument</dt>
+                  <dd>
+                    <span className="cell-stack">
+                      {stornoClosings.map((row) =>
+                        row.storno_expense_id != null ? (
+                          <Link
+                            key={row.allocation_id}
+                            href={`/t/${slug}/dokumenti/ulazni/${row.storno_expense_id}`}
+                          >
+                            {row.storno_expense_number || 'Storno'}
+                          </Link>
+                        ) : (
+                          <span key={row.allocation_id}>{row.storno_expense_number || 'Storno'}</span>
+                        ),
+                      )}
+                    </span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>
+                    {stornoClosings.length === 1
+                      ? dualBook(stornoClosings[0].amount)
+                      : stornoClosings.map((row) => (
+                          <span key={row.allocation_id}>{dualBook(row.amount)}</span>
+                        ))}
+                  </dd>
+                </div>
+              </dl>
+            ) : privateCashOnly || privateAccountOnly ? (
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Način</dt>
+                  <dd>{privateAccountOnly ? 'Privatni račun' : 'Gotovina'}</dd>
+                </div>
+                <div>
+                  <dt>Platitelj</dt>
+                  <dd>
+                    <span className="cell-stack">
+                      {privateCashClosings.map((row) =>
+                        row.partner_id && row.partner_name ? (
+                          <Link key={row.allocation_id} href={`/t/${slug}/partneri/${row.partner_id}`}>
+                            {row.partner_name}
+                          </Link>
+                        ) : (
+                          <span key={row.allocation_id}>{row.partner_name || '—'}</span>
+                        ),
+                      )}
+                      <span className="muted-inline">
+                        {privateAccountOnly ? 'Sa privatnog računa' : 'Svojom gotovinom'}
+                      </span>
+                    </span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Datum</dt>
+                  <dd>{formatHrInputDate(meta?.issue_date)}</dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>
+                    {privateCashClosings.length === 1
+                      ? dualBook(privateCashClosings[0].amount)
+                      : privateCashClosings.map((row) => (
+                          <span key={row.allocation_id}>{dualBook(row.amount)}</span>
+                        ))}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <dl className="incoming-dl incoming-dl-inline">
+                <div>
+                  <dt>Usklađeno</dt>
+                  <dd>
+                    {detail.payment == null ? '—' : detail.payment.matched ? 'Da' : 'Ne'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Status</dt>
+                  <dd>{statusLabel(PAYMENT_STATUS_LABEL, detail.payment?.reconcile_status)}</dd>
+                </div>
+                <div>
+                  <dt>Datum</dt>
+                  <dd>{formatHrInputDate(detail.payment?.date)}</dd>
+                </div>
+                <div>
+                  <dt>Iznos</dt>
+                  <dd>
+                    {detail.payment?.book_amount &&
+                    detail.payment.currency &&
+                    !isEurCurrency(detail.payment.currency) ? (
+                      <span className="cell-stack">
+                        <span>{money(detail.payment.book_amount, bookCurrency)}</span>
+                        <span className="muted-inline">
+                          {money(detail.payment.amount, detail.payment.currency)}
+                        </span>
+                      </span>
+                    ) : (
+                      dualBook(detail.payment?.amount)
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Račun</dt>
+                  <dd>{detail.payment?.account_mask || '—'}</dd>
+                </div>
+                <div>
+                  <dt>Referenca</dt>
+                  <dd>{detail.payment?.reference || '—'}</dd>
+                </div>
+              </dl>
+            )}
           </section>
 
           <section className="incoming-card">
@@ -659,11 +1762,12 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                       <th>Cijena</th>
                       <th>PDV</th>
                       <th>Iznos</th>
+                      {hasExpenseLines ? <th>Konto</th> : null}
                     </tr>
                   </thead>
                   <tbody>
                     {lines.map((line) => (
-                      <tr key={`${line.position}-${line.name || ''}`}>
+                      <tr key={`${line.id ?? line.position}-${line.name || ''}`}>
                         <td>{line.position}</td>
                         <td>
                           {line.classification?.code
@@ -682,15 +1786,53 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                         <td className="cell-amount">{line.quantity ?? '—'}</td>
                         <td className="cell-amount">{money(line.unit_price, currency)}</td>
                         <td className="cell-amount">
-                          {line.vat_rate != null ? `${line.vat_rate}%` : '—'}
+                          {line.vat_amount
+                            ? faceAndBook(line.vat_amount, line.book_vat_amount)
+                            : line.vat_rate != null
+                              ? `${line.vat_rate}%`
+                              : '—'}
                         </td>
-                        <td className="cell-amount">{money(line.net_amount, currency)}</td>
+                        <td className="cell-amount">{faceAndBook(line.net_amount, line.book_net_amount)}</td>
+                        {hasExpenseLines ? (
+                          <td>
+                            {line.id != null && canEditPosting ? (
+                              <AccountPicker
+                                label={`Konto stavke ${line.position}`}
+                                value={line.posting_account ?? null}
+                                onChange={(next) => {
+                                  void persistPosting({
+                                    line_accounts: [
+                                      {
+                                        position: line.position,
+                                        posting_account_id: next?.id ?? null,
+                                      },
+                                    ],
+                                  });
+                                }}
+                                search={searchAccounts}
+                                placeholder="Header konto"
+                                disabled={postingBusy || approving}
+                              />
+                            ) : line.posting_account ? (
+                              `${line.posting_account.code} · ${line.posting_account.name}`
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                        ) : null}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
+            {hasExpenseLines && canEditPosting ? (
+              <p className="muted-inline">
+                {splitLinePosting
+                  ? 'Osnovica i PDV knjiže se po stavkama. Header konto se ne koristi.'
+                  : 'Ako svaka stavka ima konto, osnovica se raspodjeljuje po stavkama. Inače se knjiži header konto.'}
+              </p>
+            ) : null}
           </section>
 
           <div className="incoming-mid-grid">
@@ -736,19 +1878,29 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 {taxSummary.map((row) => (
                   <div key={`tax-${row.rate}`}>
                     <dt>PDV {row.rate != null ? `${row.rate}%` : ''}</dt>
-                    <dd>{money(row.vat, currency)}</dd>
+                    <dd>
+                      {sameMoney(row.vat, detail.amounts?.vat)
+                        ? faceAndBook(row.vat, detail.amounts?.book_vat)
+                        : money(row.vat, currency)}
+                    </dd>
                   </div>
                 ))}
                 {taxSummary.length === 0 ? (
                   <div>
                     <dt>PDV</dt>
-                    <dd>{money(detail.totals?.vat_total, currency)}</dd>
+                    <dd>{faceAndBook(detail.totals?.vat_total, detail.amounts?.book_vat)}</dd>
                   </div>
                 ) : null}
                 <div className="incoming-total-strong">
                   <dt>Sveukupno</dt>
                   <dd>{money(detail.totals?.grand_total, currency)}</dd>
                 </div>
+                {!isEurCurrency(currency) && detail.amounts?.book_gross ? (
+                  <div>
+                    <dt>U eurima</dt>
+                    <dd>{money(detail.amounts.book_gross, 'EUR')}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt>Plaćeno unaprijed</dt>
                   <dd>{money(detail.totals?.prepaid, currency)}</dd>
@@ -822,10 +1974,9 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          disabled={downloading === 'pdf'}
-                          onClick={() => handleDownload('pdf')}
+                          onClick={() => setPdfPreview({ kind: 'invoice-pdf' })}
                         >
-                          Preuzmi
+                          Pregled
                         </button>
                       </td>
                     </tr>
@@ -836,7 +1987,30 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                       <td>{att.kind || 'Prilog'}</td>
                       <td>
                         {att.download_available.value ? (
-                          <span className="muted-inline">Dostupan</span>
+                          isPreviewableFilename(att.original_filename) ? (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() =>
+                                setPdfPreview({
+                                  kind: 'attachment',
+                                  id: att.id,
+                                  filename: att.original_filename,
+                                })
+                              }
+                            >
+                              Pregled
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              disabled={downloadingAttachment === att.id}
+                              onClick={() => void handleAttachmentDownload(att.id)}
+                            >
+                              {downloadingAttachment === att.id ? 'Preuzimam…' : 'Preuzmi'}
+                            </button>
+                          )
                         ) : (
                           <span className="muted-inline">Nedostupan</span>
                         )}
@@ -851,6 +2025,9 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </tbody>
               </table>
             </div>
+            {detail.pdf_available && origin && token ? (
+              <DocumentPdfPreview load={loadPdf} title={detail.source_number || 'PDF'} />
+            ) : null}
           </section>
 
           {detail.technical ? (
@@ -875,7 +2052,7 @@ export function IncomingExpenseDetail({ slug, expenseId }: Props) {
                 </div>
                 <div>
                   <dt>Imported at</dt>
-                  <dd>{formatDateTime(detail.technical.imported_at)}</dd>
+                  <dd>{formatHrDateTime(detail.technical.imported_at)}</dd>
                 </div>
               </dl>
             </details>

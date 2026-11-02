@@ -1,20 +1,70 @@
 import { API_URL, ApiError, parseError as parseApiError } from './api';
 import type { components } from './openapi/generated';
 import type { Provenance } from './provenance';
+import { tenantFetch } from './tenantRequest';
 
-export type DocumentDirection = 'incoming' | 'outgoing' | 'deposit';
-export type DocumentKind = 'invoice' | 'expense' | 'deposit';
+export type DocumentDirection = 'incoming' | 'outgoing' | 'deposit' | 'official';
+export type DocumentKind = 'invoice' | 'expense' | 'deposit' | 'official';
+export const INCOMING_GROUP_DIRECTION = 'incoming,official';
+export type DocumentDirectionFilter = DocumentDirection | typeof INCOMING_GROUP_DIRECTION | '';
 
 /** Incoming/outgoing detail payload — OpenAPI SSOT (PR A fields included). */
-export type DocumentDetail = components['schemas']['DocumentDetail'];
+export type DocumentDetail = components['schemas']['DocumentDetail'] & {
+  amounts?: components['schemas']['AmountsBlock'] & { book_gross?: string | null };
+  related_fixed_asset_id?: number | null;
+  official_kind?: string;
+  posting_profile_id?: number | null;
+  posting_profile_code?: string | null;
+  posting_profile_name?: string | null;
+  notes?: string | null;
+  actions?: {
+    reject?: {
+      available: boolean;
+      reason_codes?: string[];
+      unavailable_code?: string | null;
+    };
+  };
+  status?: components['schemas']['DocumentDetail']['status'] & {
+    workflow?: string | null;
+  };
+  lines?: Array<
+    components['schemas']['IncomingLine'] & {
+      id?: number | null;
+      book_net_amount?: string | null;
+      book_vat_amount?: string | null;
+      book_gross_amount?: string | null;
+      posting_account?: {
+        id: number;
+        code: string;
+        name: string;
+        active: boolean;
+      } | null;
+    }
+  >;
+};
+
+export type EracunRejectionResponse = {
+  id: number;
+  status: string;
+  e_reporting: { status: string; attempt_id: string | null };
+  lifecycle: { document: string | null; workflow: string | null };
+};
 
 export type DocumentAmounts = {
   currency: string;
   net: string | null;
   vat: string | null;
   gross: string | null;
+  book_gross?: string | null;
+  book_net?: string | null;
+  book_vat?: string | null;
   fx_rate: Provenance;
 };
+
+export function isEurCurrency(code: string | null | undefined): boolean {
+  const text = (code || 'EUR').trim().toUpperCase();
+  return text === 'EUR' || text === '€' || text === 'EURO';
+}
 
 export type DocumentSummary = {
   id: number;
@@ -65,7 +115,7 @@ export type DocumentListResponse = {
 };
 
 export type DocumentListQuery = {
-  direction?: DocumentDirection | '';
+  direction?: DocumentDirectionFilter;
   view?: string;
   search?: string;
   year?: string;
@@ -74,6 +124,8 @@ export type DocumentListQuery = {
   date_from?: string;
   date_to?: string;
   partner?: number | string;
+  cost_center?: number | string;
+  fixed_asset?: number | string;
   page?: number;
   page_size?: number;
 };
@@ -98,8 +150,12 @@ export function tenantApiOrigin(adminUrl: string): string {
 export function buildDocumentQuery(query: DocumentListQuery, options?: { includePage?: boolean }): URLSearchParams {
   const params = new URLSearchParams();
   const includePage = options?.includePage !== false;
-  if (query.direction === 'incoming' || query.direction === 'outgoing' || query.direction === 'deposit') {
-    params.set('direction', query.direction);
+  if (query.direction) {
+    const tokens = query.direction.split(',').map((part) => part.trim()).filter(Boolean);
+    const allowed = new Set(['incoming', 'outgoing', 'deposit', 'official']);
+    if (tokens.length > 0 && tokens.every((token) => allowed.has(token))) {
+      params.set('direction', tokens.join(','));
+    }
   }
   if (query.view) params.set('view', query.view);
   if (query.search) params.set('search', query.search);
@@ -111,6 +167,12 @@ export function buildDocumentQuery(query: DocumentListQuery, options?: { include
   if (query.partner !== undefined && query.partner !== '') {
     params.set('partner', String(query.partner));
   }
+  if (query.cost_center !== undefined && query.cost_center !== '') {
+    params.set('cost_center', String(query.cost_center));
+  }
+  if (query.fixed_asset !== undefined && query.fixed_asset !== '') {
+    params.set('fixed_asset', String(query.fixed_asset));
+  }
   if (includePage) {
     params.set('page', String(query.page || 1));
     params.set('page_size', String(query.page_size || 20));
@@ -119,7 +181,7 @@ export function buildDocumentQuery(query: DocumentListQuery, options?: { include
 }
 
 async function authorized(origin: string, path: string, token: string, init?: RequestInit): Promise<Response> {
-  const response = await fetch(`${origin}${path}`, {
+  const response = await tenantFetch(`${origin}${path}`, {
     ...init,
     headers: {
       Accept: (init?.headers as Record<string, string> | undefined)?.Accept || 'application/json',
@@ -193,6 +255,56 @@ export async function fetchDocument(
   return response.json();
 }
 
+export async function fetchDocumentPdfBlob(
+  origin: string,
+  token: string,
+  direction: DocumentDirection,
+  id: number,
+): Promise<Blob> {
+  const response = await authorized(origin, `/api/documents/${direction}/${id}/pdf/`, token, {
+    headers: { Accept: 'application/pdf' },
+  });
+  if (!response.ok) {
+    throw new ApiError(await parseApiError(response), response.status);
+  }
+  return response.blob();
+}
+
+export async function fetchDocumentAttachmentBlob(
+  origin: string,
+  token: string,
+  documentId: number,
+  attachmentId: number,
+): Promise<Blob> {
+  const response = await authorized(
+    origin,
+    `/api/documents/incoming/${documentId}/attachments/${attachmentId}/`,
+    token,
+    { headers: { Accept: '*/*' } },
+  );
+  if (!response.ok) {
+    throw new ApiError(await parseApiError(response), response.status);
+  }
+  return response.blob();
+}
+
+export async function downloadDocumentAttachment(
+  origin: string,
+  token: string,
+  documentId: number,
+  attachmentId: number,
+): Promise<void> {
+  await downloadAuthorizedBlob(
+    origin,
+    `/api/documents/incoming/${documentId}/attachments/${attachmentId}/`,
+    token,
+    {
+      accept: '*/*',
+      fallbackFilename: `attachment-${attachmentId}`,
+    },
+  );
+}
+
 export async function downloadDocumentPdf(
   origin: string,
   token: string,
@@ -215,6 +327,36 @@ export async function downloadDocumentUbl(
     accept: 'application/xml',
     fallbackFilename: `document-${id}.xml`,
   });
+}
+
+export function newIdempotencyKey(): string {
+  return crypto.randomUUID();
+}
+
+export async function rejectIncomingEracun(
+  origin: string,
+  token: string,
+  expenseId: number,
+  body: { reason_code: string; reason_text?: string },
+  idempotencyKey: string,
+): Promise<EracunRejectionResponse> {
+  const response = await authorized(
+    origin,
+    `/api/purchasing/expenses/${expenseId}/eracun-rejection/`,
+    token,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!response.ok) {
+    throw new ApiError(await parseApiError(response), response.status);
+  }
+  return response.json();
 }
 
 export async function exportDocuments(

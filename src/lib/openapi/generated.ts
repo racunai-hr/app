@@ -4,6 +4,70 @@
  */
 
 export interface paths {
+    "/api/assets/fixed-assets/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets_fixed_assets_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/fixed-assets/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets_fixed_assets_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/fixed-assets/{id}/depreciation-schedule/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets_fixed_assets_depreciation_schedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/fixed-assets/{id}/journal-entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets_fixed_assets_journal_entries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me/": {
         parameters: {
             query?: never;
@@ -102,6 +166,38 @@ export interface paths {
         get: operations["banking_connections_sync_status_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/expenses/{id}/close-candidates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["banking_expenses_close_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/expenses/{id}/close-from-bank/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["banking_expenses_close_from_bank"];
         delete?: never;
         options?: never;
         head?: never;
@@ -268,6 +364,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/banking/transactions/{id}/supplier-prepayment/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["banking_transaction_supplier_prepayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/banking/transactions/{id}/unmatch/": {
         parameters: {
             query?: never;
@@ -404,6 +516,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/chart-of-accounts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_chart_of_accounts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/cost-centers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_cost_centers_list"];
+        put?: never;
+        post: operations["finance_cost_centers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/cost-centers/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_cost_centers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["finance_cost_centers_partial_update"];
+        trace?: never;
+    };
     "/api/finance/deposits/": {
         parameters: {
             query?: never;
@@ -500,6 +660,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/expenses/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["finance_expenses_draft_patch"];
+        trace?: never;
+    };
+    "/api/finance/expenses/{id}/accounting-review/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_expense_accounting_review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/expenses/{id}/approve/": {
         parameters: {
             query?: never;
@@ -510,6 +702,182 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["finance_expenses_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/expenses/{id}/posting-preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_expenses_posting_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/journal-entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_journal_entries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/journal-entries/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_journal_entries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-document-posting-profiles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_official_document_posting_profiles_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_official_documents_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_official_documents_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_official_documents_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/{id}/link-journal/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_official_documents_link_journal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_official_documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/{id}/posting-profile/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_official_documents_set_posting_profile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/official-documents/{id}/register/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_official_documents_register"];
         delete?: never;
         options?: never;
         head?: never;
@@ -532,6 +900,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/partners/{id}/statement/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_partner_statement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/partners/{id}/subledger/": {
         parameters: {
             query?: never;
@@ -540,6 +924,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["finance_partner_subledger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/payables/{source_type}/{id}/apply-prepayments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_payable_apply_prepayments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/payables/{source_type}/{id}/prepayment-candidates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_payable_prepayment_candidates"];
         put?: never;
         post?: never;
         delete?: never;
@@ -590,6 +1006,338 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["finance_private_funds_claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/reports/cost-centers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_cost_centers_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/vehicles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_vehicles_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/employees/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["hr_employees_list"];
+        put?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        post: operations["hr_employees_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/employees/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["hr_employees_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        patch: operations["hr_employees_partial_update"];
+        trace?: never;
+    };
+    "/api/hr/employees/{id}/contracts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["hr_employee_contracts_list"];
+        put?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        post: operations["hr_employee_contracts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/employees/{id}/contracts/{contract_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["hr_employee_contracts_partial_update"];
+        trace?: never;
+    };
+    "/api/hr/payroll-periods/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["hr_payroll_periods_list"];
+        put?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        post: operations["hr_payroll_periods_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payroll-periods/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["hr_payroll_periods_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payroll-periods/{id}/calculate/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_payroll_periods_calculate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payroll-periods/{id}/calculation-recap-pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_payroll_periods_calculation_recap_pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payroll-periods/{id}/generate/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_payroll_periods_generate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payroll-periods/{id}/journal-pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_payroll_periods_journal_pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payroll-periods/{id}/payment-recap-pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_payroll_periods_payment_recap_pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payroll-periods/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_payroll_periods_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payslips/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["hr_payslips_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payslips/{id}/adjustments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_payslip_adjustments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payslips/{id}/earnings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_payslip_earnings_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/payslips/{id}/pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_payslips_pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/worktime/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET uses read role; mutating methods use write role. */
+        get: operations["hr_worktime_list"];
+        put?: never;
+        /** @description GET uses read role; mutating methods use write role. */
+        post: operations["hr_worktime_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/worktime/lock/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_worktime_lock"];
         delete?: never;
         options?: never;
         head?: never;
@@ -700,6 +1448,88 @@ export interface paths {
         patch: operations["partners_contacts_partial_update"];
         trace?: never;
     };
+    "/api/purchasing/eracun/inbound-import/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Import gateway inbox documents into draft expenses. No provider round-trip. */
+        post: operations["purchasing_eracun_inbound_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/eracun/inbox-refresh/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Ask the gateway to reconcile against the provider. Imports nothing. */
+        post: operations["purchasing_eracun_inbox_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/expense-categories/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["purchasing_expense_categories_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/expense-categories/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["purchasing_expense_categories_partial_update"];
+        trace?: never;
+    };
+    "/api/purchasing/expenses/{id}/eracun-rejection/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_expenses_eracun_rejection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/invoices/import/": {
         parameters: {
             query?: never;
@@ -732,6 +1562,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/invoices/import/{id}/accounting-review/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_invoice_import_accounting_review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/invoices/import/{id}/apply-partner-updates/": {
         parameters: {
             query?: never;
@@ -742,6 +1588,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["purchasing_invoice_imports_apply_partner_updates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/invoices/import/{id}/apply-supplier/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["purchasing_invoice_imports_apply_supplier"];
         delete?: never;
         options?: never;
         head?: never;
@@ -812,10 +1674,416 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tax/joppd/periods/{period}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_joppd_period_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/joppd/periods/{period}/draft/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_joppd_period_draft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/joppd/periods/{period}/submit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_joppd_period_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/joppd/periods/{period}/xml/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_joppd_period_xml"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pd/years/{year}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_pd_year_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv-ispravak/xml/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_pdv_ispravak_xml"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv-s/periods/{period}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_pdv_s_period_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv-s/periods/{period}/submit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_pdv_s_period_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv-s/periods/{period}/xml/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_pdv_s_period_xml"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_pdv_periods_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_pdv_period_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/boxes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_pdv_period_boxes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/correction/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_pdv_period_correction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/draft/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_pdv_period_draft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/ledger/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_pdv_period_ledger"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/processed/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_pdv_period_processed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/submit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_pdv_period_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/pdv/periods/{period}/xml/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_pdv_period_xml"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/submissions/{event_uuid}/confirmation/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_submission_confirmation_download"];
+        put?: never;
+        post: operations["tax_submission_confirmation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/tz2/years/{year}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_tz2_year_retrieve"];
+        put: operations["tax_tz2_year_save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/tz2/years/{year}/submit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_tz2_year_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/tz2/years/{year}/xml/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_tz2_year_xml"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/zp/periods/{period}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_zp_period_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/zp/periods/{period}/submit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["tax_zp_period_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tax/zp/periods/{period}/xml/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tax_zp_period_xml"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountRef: {
+            id: number;
+            code: string;
+            name: string;
+            active: boolean;
+        };
         AccountingBlock: {
             journal_entry_id: number | null;
             entry_number: string | null;
@@ -833,6 +2101,75 @@ export interface components {
             credit: string | null;
             description: string;
         };
+        AccountingReview: {
+            status: string;
+            purchase_nature: string | null;
+            posting_profile: string | null;
+            profile_label: string;
+            vehicle: components["schemas"]["AccountingReviewVehicle"] | null;
+            decision_source: string;
+            reason: string;
+            explanation: string;
+            questions: components["schemas"]["AccountingReviewQuestion"][];
+            preview: components["schemas"]["AccountingReviewLine"][] | null;
+            line_accounts: components["schemas"]["AccountingReviewAccount"][];
+            document_date: string;
+            foreign_vat?: components["schemas"]["AccountingReviewForeignVat"] | null;
+        };
+        AccountingReviewAccount: {
+            position: number;
+            account_id: number;
+            account_code: string;
+            account_name: string;
+            source: string;
+        };
+        AccountingReviewForeignVat: {
+            country: string;
+            amount: string;
+            net_amount: string;
+            gross_amount: string;
+            currency: string;
+            treatment: string;
+            fx_rate: string;
+            fx_rate_source: string;
+            fx_rate_date: string;
+        };
+        AccountingReviewLine: {
+            account_code: string;
+            account_name: string;
+            debit: string;
+            credit: string;
+        };
+        AccountingReviewOption: {
+            value: string;
+            label: string;
+        };
+        AccountingReviewQuestion: {
+            key: string;
+            type: string;
+            label: string;
+            required: boolean;
+            options: components["schemas"]["AccountingReviewOption"][];
+        };
+        AccountingReviewRequestRequest: {
+            answers?: {
+                [key: string]: unknown;
+            };
+        };
+        AccountingReviewVehicle: {
+            id: number;
+            name: string;
+            vin: string;
+            registration_plate: string;
+            accounting_role: string;
+        };
+        AllocatedOcrLine: {
+            position: number;
+            description: string;
+            net_amount: string;
+            vat_amount: string;
+            gross_amount: string;
+        };
         Allocation: {
             id: number;
             /** @description Decimal as string, e.g. "1100.00" */
@@ -844,7 +2181,66 @@ export interface components {
             net: string | null;
             vat: string | null;
             gross: string | null;
+            book_gross?: string | null;
+            book_net?: string | null;
+            book_vat?: string | null;
             fx_rate: components["schemas"]["Provenanced"];
+        };
+        AppliedPrepayment: {
+            id: number;
+            prepayment_id: number;
+            amount: string;
+            journal_entry_id: number | null;
+        };
+        ApplyPrepaymentLineRequest: {
+            prepayment_id: number;
+            amount: string;
+        };
+        ApplyPrepaymentsRequest: {
+            applications: components["schemas"]["ApplyPrepaymentLineRequest"][];
+            remember?: boolean;
+            lines?: {
+                [key: string]: unknown;
+            }[];
+            answers?: {
+                [key: string]: unknown;
+            };
+        };
+        ApplyPrepaymentsResult: {
+            source_type: string;
+            source_id: number;
+            status: string;
+            subledger_status: string;
+            applications: components["schemas"]["AppliedPrepayment"][];
+        };
+        ApplySupplierRequest: {
+            source: components["schemas"]["SourceEnum"];
+            supplier?: {
+                [key: string]: unknown;
+            };
+        };
+        AssetCostCenterRef: {
+            id: number;
+            code: string;
+            name: string;
+        };
+        AssetJournalEntry: {
+            journal_entry_id: number;
+            entry_number: string;
+            /** Format: date */
+            entry_date: string | null;
+            description: string;
+            status: string;
+            audit_kind: string;
+            role: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            capitalized_amount: string | null;
+        };
+        AssetJournalEntryList: {
+            results: components["schemas"]["AssetJournalEntry"][];
+            reconciliation: components["schemas"]["CapitalizationReconciliation"];
         };
         Attachment: {
             id: number;
@@ -908,6 +2304,23 @@ export interface components {
             suggested_transaction_count: number;
             statement_count: number;
         };
+        CapitalizationReconciliation: {
+            /** @description Decimal as string, e.g. "1100.00" */
+            capitalized_net: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            acquisition_cost: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            difference: string;
+            balanced: boolean;
+        };
+        ChartOfAccountsList: {
+            count: number;
+            results: components["schemas"]["AccountRef"][];
+        };
+        Choice: {
+            value: string;
+            label: string;
+        };
         /**
          * @description * `supplier_payment` - supplier_payment
          *     * `deposit_funding` - deposit_funding
@@ -932,6 +2345,30 @@ export interface components {
             description?: string;
             iban?: string;
             duplicate_override?: boolean;
+            category_id?: number | null;
+            expense_account_id?: number | null;
+            cost_center_id?: number | null;
+            remember_category_for_partner?: boolean;
+            direction_override?: boolean;
+            line_accounts?: components["schemas"]["ConfirmLineAccountRequest"][];
+            posting_profile?: string;
+            vehicle_id?: number | null;
+            answers?: {
+                [key: string]: unknown;
+            };
+        };
+        ConfirmLineAccountRequest: {
+            position: number;
+            posting_account_id: number | null;
+        };
+        ConfirmationResult: {
+            /** Format: uuid */
+            event_uuid: string;
+            has_confirmation: boolean;
+        };
+        ConfirmationUploadRequest: {
+            /** Format: binary */
+            confirmation: string;
         };
         ConnectionSummary: {
             id: number;
@@ -975,6 +2412,136 @@ export interface components {
             is_primary?: boolean;
             is_active?: boolean;
         };
+        Contract: {
+            id: number;
+            start_date: string;
+            end_date: string | null;
+            contract_type: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            work_time_percentage: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            base_gross_salary: string;
+            recipient_code: string;
+            income_type_code: string;
+            is_active: boolean;
+            signed_at?: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            weekly_hours?: string | null;
+            job_title?: string;
+            probation_months?: number | null;
+            notice_rule?: string;
+            annual_leave_rule?: string;
+            collective_agreement_ref?: string;
+            termination_reason?: string;
+        };
+        ContractList: {
+            results: components["schemas"]["Contract"][];
+        };
+        ContractRequest: {
+            id: number;
+            start_date: string;
+            end_date: string | null;
+            contract_type: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            work_time_percentage: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            base_gross_salary: string;
+            recipient_code: string;
+            income_type_code: string;
+            is_active: boolean;
+            signed_at?: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            weekly_hours?: string | null;
+            job_title?: string;
+            probation_months?: number | null;
+            notice_rule?: string;
+            annual_leave_rule?: string;
+            collective_agreement_ref?: string;
+            termination_reason?: string;
+        };
+        CostCenter: {
+            id: number;
+            code: string;
+            name: string;
+            kind: components["schemas"]["CostCenterKindEnum"];
+            is_active: boolean;
+            is_bookable: boolean;
+            notes: string;
+            parent_id: number | null;
+            parent: components["schemas"]["CostCenterRef"] | null;
+            vehicle: components["schemas"]["CostCenterLinkedVehicle"] | null;
+            fixed_assets: components["schemas"]["CostCenterLinkedAsset"][];
+        };
+        /**
+         * @description * `location` - location
+         *     * `object` - object
+         *     * `overhead` - overhead
+         *     * `group` - group
+         * @enum {string}
+         */
+        CostCenterKindEnum: "location" | "object" | "overhead" | "group";
+        CostCenterLinkedAsset: {
+            id: number;
+            name: string;
+        };
+        CostCenterLinkedVehicle: {
+            id: number;
+            name: string;
+            vin: string;
+            fixed_asset_id: number | null;
+        };
+        CostCenterList: {
+            count: number;
+            results: components["schemas"]["CostCenter"][];
+        };
+        CostCenterRef: {
+            id: number;
+            code: string;
+            name: string;
+            kind?: string;
+            is_active?: boolean;
+            is_bookable?: boolean;
+            parent_id?: number | null;
+        };
+        CostCenterReport: {
+            year: number;
+            month: number;
+            cumulative: boolean;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            assigned_total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            unassigned_total: string;
+            groups: components["schemas"]["CostCenterReportRow"][];
+            results: components["schemas"]["CostCenterReportRow"][];
+        };
+        CostCenterReportAccount: {
+            account_code: string;
+            account_name: string;
+            account_class: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount: string;
+        };
+        CostCenterReportRow: {
+            cost_center_id: number | null;
+            code: string;
+            name: string;
+            kind: string;
+            parent_id: number | null;
+            parent_code?: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total: string;
+            accounts?: components["schemas"]["CostCenterReportAccount"][];
+        };
+        CostCenterWriteRequest: {
+            code: string;
+            name: string;
+            kind: components["schemas"]["CostCenterKindEnum"];
+            parent_id?: number | null;
+            notes?: string;
+            is_active?: boolean;
+        };
         CreateDepositRequest: {
             partner_id: number;
             /** @description Decimal as string, e.g. "1100.00" */
@@ -985,6 +2552,27 @@ export interface components {
             deposit_date: string;
             reference?: string;
             notes?: string;
+        };
+        CreateOfficialDocumentRequest: {
+            official_kind?: components["schemas"]["OfficialKindEnum"];
+            issuer_id: number;
+            document_number: string;
+            reference?: string;
+            /** Format: date */
+            issue_date: string;
+            /** Format: date */
+            due_date?: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount: string;
+            /** @default EUR */
+            currency: string;
+            related_fixed_asset_id?: number | null;
+            posting_profile_id?: number | null;
+            cost_center_id?: number | null;
+            notes?: string;
+            register?: boolean;
+            /** Format: binary */
+            file?: string;
         };
         CreatePartnerFromImportRequest: {
             name: string;
@@ -1049,13 +2637,40 @@ export interface components {
             count: number;
             results: components["schemas"]["Deposit"][];
         };
+        DepreciationScheduleItem: {
+            id: number;
+            year: number;
+            month: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            depreciation_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            accumulated_depreciation: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            book_value_after: string;
+            posted: boolean;
+            journal_entry_id: number | null;
+        };
+        DepreciationScheduleList: {
+            results: components["schemas"]["DepreciationScheduleItem"][];
+        };
+        Direction: {
+            code: string;
+            supplier_source: string;
+            override_required: boolean;
+            unresolved: boolean;
+            party_candidates: components["schemas"]["PartyCandidate"][];
+        };
         /**
          * @description * `incoming` - incoming
          *     * `outgoing` - outgoing
          *     * `deposit` - deposit
+         *     * `official` - official
          * @enum {string}
          */
-        DirectionEnum: "incoming" | "outgoing" | "deposit";
+        DirectionEnum: "incoming" | "outgoing" | "deposit" | "official";
+        DocumentActions: {
+            reject: components["schemas"]["DocumentRejectAction"];
+        };
         DocumentDetail: {
             id: number;
             kind: components["schemas"]["KindEnum"];
@@ -1106,10 +2721,18 @@ export interface components {
             references?: components["schemas"]["DocumentReference"][];
             integration?: components["schemas"]["IntegrationBlock"];
             technical?: components["schemas"]["TechnicalBlock"];
+            actions?: components["schemas"]["DocumentActions"];
             accounting?: components["schemas"]["AccountingBlock"];
             vat_context?: components["schemas"]["VatContext"];
             subledger_context?: components["schemas"]["SubledgerContext"];
             payment?: components["schemas"]["PaymentBlock"];
+            settlement_trail?: components["schemas"]["SettlementTrail"];
+            reversal_of?: components["schemas"]["ReversalOf"] | null;
+            official_kind?: string | null;
+            related_fixed_asset_id?: number | null;
+            posting_profile_id?: number | null;
+            posting_profile_code?: string | null;
+            posting_profile_name?: string | null;
         };
         DocumentItem: {
             item_name: string;
@@ -1136,6 +2759,11 @@ export interface components {
         DocumentReference: {
             type: string;
             value: string;
+        };
+        DocumentRejectAction: {
+            available: boolean;
+            reason_codes?: string[];
+            unavailable_code?: string | null;
         };
         DocumentSummary: {
             id: number;
@@ -1169,10 +2797,130 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * @description * `capitalize` - capitalize
+         *     * `expense` - expense
+         * @enum {string}
+         */
+        EconomicEffectEnum: "capitalize" | "expense";
+        Employee: {
+            id: number;
+            code: string;
+            first_name: string;
+            last_name: string;
+            full_name: string;
+            oib: string;
+            date_of_birth: string | null;
+            street: string;
+            city: string;
+            municipality_code: string;
+            work_location: string;
+            iban: string;
+            bank_name: string;
+            mio_pillar: string;
+            personal_allowance_coefficient: string;
+            is_active: boolean;
+            notes: string;
+            sex?: string;
+            citizenship?: string;
+            residence_street?: string;
+            residence_city?: string;
+            residence_municipality_code?: string;
+            occupation?: string;
+            qualification?: string;
+            licence_note?: string;
+            employment_status?: string;
+            work_permit_number?: string;
+            work_permit_valid_to?: string | null;
+            hzzo_registered_at?: string | null;
+            hzmo_registered_at?: string | null;
+            insurance_changed_at?: string | null;
+            deregistered_at?: string | null;
+            legal_evidence_gaps?: string[];
+            active_contract: components["schemas"]["Contract"] | null;
+            contracts?: components["schemas"]["Contract"][];
+        };
+        EmployeeList: {
+            results: components["schemas"]["Employee"][];
+        };
+        EmployeeRequest: {
+            id: number;
+            code: string;
+            first_name: string;
+            last_name: string;
+            full_name: string;
+            oib: string;
+            date_of_birth: string | null;
+            street: string;
+            city: string;
+            municipality_code: string;
+            work_location: string;
+            iban: string;
+            bank_name: string;
+            mio_pillar: string;
+            personal_allowance_coefficient: string;
+            is_active: boolean;
+            notes: string;
+            sex?: string;
+            citizenship?: string;
+            residence_street?: string;
+            residence_city?: string;
+            residence_municipality_code?: string;
+            occupation?: string;
+            qualification?: string;
+            licence_note?: string;
+            employment_status?: string;
+            work_permit_number?: string;
+            work_permit_valid_to?: string | null;
+            hzzo_registered_at?: string | null;
+            hzmo_registered_at?: string | null;
+            insurance_changed_at?: string | null;
+            deregistered_at?: string | null;
+            legal_evidence_gaps?: string[];
+            active_contract: components["schemas"]["ContractRequest"] | null;
+            contracts?: components["schemas"]["ContractRequest"][];
+        };
         EracunBlock: {
             as4_status: components["schemas"]["Provenanced"];
             message_id: components["schemas"]["Provenanced"];
             source: components["schemas"]["Provenanced"];
+        };
+        EracunImportError: {
+            invoice_guid?: string;
+            document_id?: string;
+            detail: string;
+        };
+        EracunInboundImportResponse: {
+            scanned: number;
+            imported: number;
+            merged: number;
+            skipped: number;
+            failed: number;
+            remaining_importable: number;
+            errors: components["schemas"]["EracunImportError"][];
+        };
+        EracunInboxRefreshResponse: {
+            reconciliation_id: string;
+            status: string;
+            detail: string;
+        };
+        EracunRejectionEReporting: {
+            status: string;
+            attempt_id: string | null;
+        };
+        EracunRejectionLifecycle: {
+            document: string | null;
+            workflow: string | null;
+        };
+        EracunRejectionRequestRequest: {
+            reason_code: components["schemas"]["ReasonCodeEnum"];
+            reason_text?: string;
+        };
+        EracunRejectionResponse: {
+            id: number;
+            status: string;
+            e_reporting: components["schemas"]["EracunRejectionEReporting"];
+            lifecycle: components["schemas"]["EracunRejectionLifecycle"];
         };
         /** @description DRF-style error body: ``{"detail": ...}`` where detail may be str or object. */
         ErrorDetail: {
@@ -1187,8 +2935,94 @@ export interface components {
             expense_date: string | null;
             due_date: string | null;
             supplier_id: number | null;
+            category_id: number | null;
+            expense_account_id: number | null;
+            expense_account_source: string;
             settlement_method: string;
             approved_by_id: number | null;
+            cost_center_id: number | null;
+        };
+        ExpenseCategory: {
+            id: number;
+            name: string;
+            code: string | null;
+            is_active: boolean;
+            default_account: components["schemas"]["ExpenseCategoryAccountRef"] | null;
+            default_cost_center: {
+                [key: string]: unknown;
+            } | null;
+        };
+        ExpenseCategoryAccountRef: {
+            id: number;
+            code: string;
+            name: string;
+            active: boolean;
+        };
+        ExpenseCategoryList: {
+            count: number;
+            results: components["schemas"]["ExpenseCategory"][];
+        };
+        ExpenseCategoryRef: {
+            id: number;
+            name: string;
+        };
+        ExpenseCloseLine: {
+            position: number;
+            description: string;
+            account_id: number | null;
+            account_code: string;
+            account_name: string;
+            source: string;
+        };
+        ExpenseCloseLineInputRequest: {
+            position: number;
+            account_id: number;
+        };
+        ExpenseClosePayment: {
+            id: number;
+            /** Format: date */
+            transaction_date: string;
+            amount: string;
+            currency: string;
+            counterparty_name: string;
+            description: string;
+            reference: string;
+            match_score: number;
+            match_reasons: string[];
+            recommended: boolean;
+        };
+        ExpenseClosePreview: {
+            remembered: boolean;
+            lines: components["schemas"]["ExpenseCloseLine"][];
+            payments: components["schemas"]["ExpenseClosePayment"][];
+        };
+        ExpenseCloseRequestRequest: {
+            bank_transaction_id: number;
+            /** @default false */
+            remember: boolean;
+            lines?: components["schemas"]["ExpenseCloseLineInputRequest"][];
+            answers?: {
+                [key: string]: unknown;
+            };
+        };
+        ExpenseCloseResult: {
+            expense_id: number;
+            status: string;
+            bank_transaction_id: number;
+            match_status: string;
+            subledger_status: string;
+        };
+        ExpenseLineAccountPatchRequest: {
+            position: number;
+            posting_account_id: number | null;
+        };
+        ExpensePostingPreview: {
+            category: components["schemas"]["ExpenseCategoryRef"] | null;
+            expense_account: components["schemas"]["AccountRef"] | null;
+            account_source: string | null;
+            warnings: string[];
+            can_approve: boolean;
+            lines: components["schemas"]["PostingPlanLine"][];
         };
         ExportLimitError: {
             detail: string;
@@ -1197,6 +3031,8 @@ export interface components {
         };
         ExtractedInvoice: {
             supplier: components["schemas"]["SupplierExtracted"];
+            issuer: components["schemas"]["SupplierExtracted"];
+            buyer: components["schemas"]["SupplierExtracted"];
             invoice_number: string;
             issue_date: string;
             due_date?: string | null;
@@ -1211,10 +3047,50 @@ export interface components {
             line_items?: {
                 [key: string]: unknown;
             }[];
+            allocated_lines?: components["schemas"]["AllocatedOcrLine"][];
         };
         FiscalBlock: {
             jir: components["schemas"]["Provenanced"];
             zki: components["schemas"]["Provenanced"];
+        };
+        FixedAssetDetail: {
+            id: number;
+            inventory_number: string;
+            name: string;
+            status: string;
+            origin: string;
+            /** Format: date */
+            purchase_date: string | null;
+            /** Format: date */
+            activation_date: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            acquisition_cost: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            accumulated_depreciation: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            current_book_value: string;
+            vin: string;
+            useful_life_months: number | null;
+            depreciation_method: string;
+            activation_journal_entry_id: number | null;
+            cost_center: components["schemas"]["AssetCostCenterRef"] | null;
+        };
+        FixedAssetListItem: {
+            id: number;
+            inventory_number: string;
+            name: string;
+            status: string;
+            origin: string;
+            /** Format: date */
+            purchase_date: string | null;
+            /** Format: date */
+            activation_date: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            acquisition_cost: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            accumulated_depreciation: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            current_book_value: string;
         };
         ImportRunCreateResponse: {
             id: number;
@@ -1288,6 +3164,7 @@ export interface components {
             ocr_schema_version: string;
             ocr_extracted_at: string | null;
             extracted: components["schemas"]["ExtractedInvoice"];
+            direction: components["schemas"]["Direction"];
             warnings: string[];
             partner: components["schemas"]["PartnerMatch"];
             duplicate: components["schemas"]["Duplicate"];
@@ -1319,6 +3196,17 @@ export interface components {
             net_amount: string | null;
             vat_amount: string | null;
             gross_amount: string | null;
+            book_net_amount?: string | null;
+            book_vat_amount?: string | null;
+            book_gross_amount?: string | null;
+            id?: number | null;
+            posting_account?: components["schemas"]["IncomingLineAccount"] | null;
+        };
+        IncomingLineAccount: {
+            id: number;
+            code: string;
+            name: string;
+            active: boolean;
         };
         IncomingTotals: {
             line_net: string | null;
@@ -1338,6 +3226,112 @@ export interface components {
             /** Format: uri */
             external_view_url: string | null;
         };
+        JoppdDraft: {
+            period: string;
+            return_version: number;
+        };
+        JoppdDraftRequest: {
+            period: string;
+            return_version: number;
+        };
+        JoppdPeriod: {
+            period: string;
+            schema_version: string;
+            payment_date: string;
+            row_count: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_gross: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_mio1: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_mio2: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_income_tax: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_zo: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_net: string;
+            return_version: number | null;
+            rows: components["schemas"]["JoppdRow"][];
+            /** Format: uuid */
+            event_uuid: string | null;
+            current_submission: components["schemas"]["PdvSSubmission"] | null;
+            submissions: components["schemas"]["PdvSSubmission"][];
+        };
+        JoppdRow: {
+            recipient_oib: string;
+            first_name: string;
+            last_name: string;
+            recipient_code: string;
+            income_type_code: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            gross_salary: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            mio1_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            mio2_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            income_tax_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            zo_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            net_salary: string;
+        };
+        JoppdSubmitRequestRequest: {
+            /** Format: uuid */
+            eporezna_identifier: string;
+            /** Format: date-time */
+            submitted_at: string;
+        };
+        JournalEntryDetail: {
+            id: number;
+            entry_number: string;
+            /** Format: date */
+            entry_date: string | null;
+            description: string;
+            status: components["schemas"]["StatusEnum"];
+            is_auto: boolean;
+            source_type: components["schemas"]["SourceTypeEnum"];
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_credit: string;
+            as_of: string;
+            reference: string;
+            source_id: number | null;
+            source_document: components["schemas"]["JournalEntrySourceDocument"] | null;
+            lines: components["schemas"]["JournalEntryLine"][];
+        };
+        JournalEntryLine: {
+            id: number;
+            account_code: string;
+            account_name: string;
+            description: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            credit: string;
+            cost_center: components["schemas"]["CostCenterRef"] | null;
+        };
+        JournalEntryListItem: {
+            id: number;
+            entry_number: string;
+            /** Format: date */
+            entry_date: string | null;
+            description: string;
+            status: components["schemas"]["StatusEnum"];
+            is_auto: boolean;
+            source_type: components["schemas"]["SourceTypeEnum"];
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_credit: string;
+        };
+        JournalEntrySourceDocument: {
+            direction: components["schemas"]["DirectionEnum"];
+            id: number;
+            label: string;
+        };
         JournalLine: {
             account_code: string;
             account_name: string;
@@ -1351,9 +3345,10 @@ export interface components {
          * @description * `invoice` - invoice
          *     * `expense` - expense
          *     * `deposit` - deposit
+         *     * `official` - official
          * @enum {string}
          */
-        KindEnum: "invoice" | "expense" | "deposit";
+        KindEnum: "invoice" | "expense" | "deposit" | "official";
         LedgerEntry: {
             ledger_type: string;
             vat_box: string | null;
@@ -1370,14 +3365,59 @@ export interface components {
             scheme: string | null;
             code: string | null;
         };
+        LinkOfficialDocumentJournalRequest: {
+            journal_entry_id: number;
+        };
         MatchRequestRequest: {
             target_type: components["schemas"]["TargetTypeEnum"];
             target_id: number;
         };
         /** @enum {unknown} */
         NullEnum: null;
+        OfficialDocument: {
+            id: number;
+            official_kind: components["schemas"]["OfficialKindEnum"];
+            issuer_id: number;
+            issuer_name: string;
+            document_number: string;
+            reference: string;
+            issue_date: string | null;
+            due_date: string | null;
+            amount: string;
+            currency: string;
+            workflow_status: components["schemas"]["WorkflowStatusEnum"];
+            original_filename: string;
+            content_type: string;
+            file_sha256: string;
+            file_size: number;
+            has_file: boolean;
+            related_fixed_asset_id: number | null;
+            posting_profile_id: number | null;
+            cost_center: {
+                [key: string]: unknown;
+            } | null;
+            posting_profile_code: string | null;
+            posting_profile_name: string | null;
+            notes: string;
+            created_at: string | null;
+        };
+        OfficialDocumentPostingProfile: {
+            id: number;
+            code: string;
+            name: string;
+            economic_effect: components["schemas"]["EconomicEffectEnum"];
+            allowed_kinds: string[];
+            requires_fixed_asset: boolean;
+            is_active: boolean;
+        };
+        /**
+         * @description * `tax_decision` - tax_decision
+         *     * `other` - other
+         * @enum {string}
+         */
+        OfficialKindEnum: "tax_decision" | "other";
         OpenItemCandidate: {
-            item_id: number;
+            item_id: number | null;
             partner_id: number | null;
             partner_name: string;
             direction: string;
@@ -1388,6 +3428,9 @@ export interface components {
             open_amount: string;
             due_date: string | null;
             action_label: string;
+            match_score: number;
+            match_reasons: string[];
+            recommended: boolean;
         };
         OpenItemCandidateList: {
             count: number;
@@ -1407,6 +3450,19 @@ export interface components {
             page_size: number;
             results: components["schemas"]["DocumentSummary"][];
             summary: components["schemas"]["DocumentListSummary"];
+        };
+        PaginatedFixedAssets: {
+            count: number;
+            page: number;
+            page_size: number;
+            results: components["schemas"]["FixedAssetListItem"][];
+        };
+        PaginatedJournalEntries: {
+            as_of: string;
+            count: number;
+            page: number;
+            page_size: number;
+            results: components["schemas"]["JournalEntryListItem"][];
         };
         PaginatedPartners: {
             as_of: string;
@@ -1538,6 +3594,45 @@ export interface components {
             tax_number: string;
             diff: components["schemas"]["PartnerDiff"][];
         };
+        PartnerStatement: {
+            partner_id: number;
+            year: number;
+            available_years: number[];
+            currency: string;
+            direction: string;
+            opening_balance: components["schemas"]["PartnerStatementAmounts"];
+            rows: components["schemas"]["PartnerStatementRow"][];
+            closing_balance: components["schemas"]["PartnerStatementAmounts"];
+        };
+        PartnerStatementAmounts: {
+            /** @description Decimal as string, e.g. "1100.00" */
+            debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            credit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            balance: string;
+        };
+        PartnerStatementRow: {
+            kind: string;
+            date: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            debit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            credit: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            balance: string;
+            label?: string;
+            direction?: string;
+            source_type?: string;
+            source_id?: number;
+            source_label?: string;
+            document_type_label?: string;
+            closing_kind?: string;
+            subledger_item_id?: number;
+            allocation_id?: number;
+            journal_entry_id?: number;
+            entry_number?: string;
+        };
         PartnerSubledgerItem: {
             item_id: number;
             partner_id: number;
@@ -1561,6 +3656,8 @@ export interface components {
             partner_id: number;
             count: number;
             results: components["schemas"]["PartnerSubledgerItem"][];
+            closed_count: number;
+            closed_results: components["schemas"]["PartnerSubledgerItem"][];
         };
         PartnerWriteRequest: {
             name?: string;
@@ -1586,6 +3683,21 @@ export interface components {
             notes?: string;
             internal_notes?: string;
         };
+        PartyCandidate: {
+            name: string;
+            oib: string;
+            vat_number: string;
+            address: string;
+            city: string;
+            postal_code: string;
+            country: string;
+            country_code: string;
+            iban: string;
+            role: string;
+            is_own_company: boolean;
+            suspected_own_company: boolean;
+            blank: boolean;
+        };
         PatchedContactWriteRequest: {
             contact_type?: string;
             first_name?: string;
@@ -1599,6 +3711,61 @@ export interface components {
             notes?: string;
             is_primary?: boolean;
             is_active?: boolean;
+        };
+        PatchedCostCenterPatchRequest: {
+            code?: string;
+            name?: string;
+            kind?: components["schemas"]["CostCenterKindEnum"];
+            parent_id?: number | null;
+            notes?: string;
+            is_active?: boolean;
+        };
+        PatchedEmployeeRequest: {
+            id?: number;
+            code?: string;
+            first_name?: string;
+            last_name?: string;
+            full_name?: string;
+            oib?: string;
+            date_of_birth?: string | null;
+            street?: string;
+            city?: string;
+            municipality_code?: string;
+            work_location?: string;
+            iban?: string;
+            bank_name?: string;
+            mio_pillar?: string;
+            personal_allowance_coefficient?: string;
+            is_active?: boolean;
+            notes?: string;
+            sex?: string;
+            citizenship?: string;
+            residence_street?: string;
+            residence_city?: string;
+            residence_municipality_code?: string;
+            occupation?: string;
+            qualification?: string;
+            licence_note?: string;
+            employment_status?: string;
+            work_permit_number?: string;
+            work_permit_valid_to?: string | null;
+            hzzo_registered_at?: string | null;
+            hzmo_registered_at?: string | null;
+            insurance_changed_at?: string | null;
+            deregistered_at?: string | null;
+            legal_evidence_gaps?: string[];
+            active_contract?: components["schemas"]["ContractRequest"] | null;
+            contracts?: components["schemas"]["ContractRequest"][];
+        };
+        PatchedExpenseCategoryPatchRequest: {
+            default_account_id?: number | null;
+            default_cost_center_id?: number | null;
+        };
+        PatchedExpenseDraftPatchRequest: {
+            category_id?: number;
+            expense_account_id?: number | null;
+            cost_center_id?: number | null;
+            line_accounts?: components["schemas"]["ExpenseLineAccountPatchRequest"][];
         };
         PatchedPartnerBankAccountWriteRequest: {
             bank_name?: string;
@@ -1636,6 +3803,8 @@ export interface components {
             matched: boolean;
             date: string | null;
             amount: string | null;
+            currency?: string | null;
+            book_amount?: string | null;
             account_mask: string | null;
             reference: string | null;
             reconcile_status: string | null;
@@ -1660,6 +3829,280 @@ export interface components {
             status: components["schemas"]["Provenanced"];
             creditor_iban: components["schemas"]["Provenanced"];
         };
+        PayrollPeriod: {
+            id: number;
+            year: number;
+            month: number;
+            calculation_date: string;
+            payment_date: string;
+            status: string;
+            posted_at: string | null;
+            employee_count: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            gross_total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            net_total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            income_tax_total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            zo_total: string;
+            payslips?: components["schemas"]["PayslipSummary"][];
+        };
+        PayrollPeriodList: {
+            results: components["schemas"]["PayrollPeriod"][];
+        };
+        PayslipDetail: {
+            id: number;
+            employee_id: number;
+            employee_name: string;
+            status: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            gross_salary: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            net_salary: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount_to_pay?: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            non_taxable_total?: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            deductions_total?: string;
+            compliance_flags?: unknown[];
+            /** @description Decimal as string, e.g. "1100.00" */
+            income_tax_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            zo_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_labor_cost: string;
+            period: {
+                [key: string]: unknown;
+            };
+            date_from: string;
+            date_to: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            mio1_base: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            mio1_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            mio2_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            income_base: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            personal_allowance_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            tax_base: string;
+            income_tax_rate_used: string;
+            earning_lines: components["schemas"]["PayslipEarningLine"][];
+        };
+        PayslipEarningLine: {
+            name: string;
+            hours: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            gross_amount: string;
+        };
+        PayslipSummary: {
+            id: number;
+            employee_id: number;
+            employee_name: string;
+            status: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            gross_salary: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            net_salary: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount_to_pay?: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            non_taxable_total?: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            deductions_total?: string;
+            compliance_flags?: unknown[];
+            /** @description Decimal as string, e.g. "1100.00" */
+            income_tax_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            zo_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_labor_cost: string;
+        };
+        PdFoundingItem: {
+            /** Format: date */
+            entry_date: string;
+            entry_number: string;
+            account_code: string;
+            account_name: string;
+            amount: string;
+            description: string;
+        };
+        PdMissingHrk: {
+            /** Format: date */
+            entry_date: string;
+            entry_number: string;
+            account_code: string;
+            account_name: string;
+            reason: string;
+        };
+        PdRow: {
+            code: string;
+            label: string;
+            amount: string;
+            filed: string | null;
+        };
+        PdYear: {
+            tax_year: number;
+            currency: string;
+            period_from: string;
+            period_to: string;
+            tax_rate: string;
+            founding_year: number | null;
+            header: {
+                [key: string]: unknown;
+            };
+            rows: components["schemas"]["PdRow"][];
+            founding_items: components["schemas"]["PdFoundingItem"][];
+            missing_hrk: components["schemas"]["PdMissingHrk"][];
+            matches_filed: boolean | null;
+        };
+        PdvBoxes: {
+            period: string;
+            schema_version: string;
+            mapping_version: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            vat_due: string;
+            fields: {
+                [key: string]: unknown;
+            };
+        };
+        PdvDraft: {
+            period: string;
+            return_version: number;
+            return_status: string;
+            xml_integrity: string;
+        };
+        PdvDraftRequest: {
+            period: string;
+            return_version: number;
+            return_status: string;
+            xml_integrity: string;
+        };
+        PdvFormRow: {
+            form: string;
+            version: number;
+            status: string;
+            received_at: string | null;
+            period_from: string;
+            period_to: string;
+            external_identifier: string | null;
+        };
+        PdvLedgerRebuild: {
+            created: number;
+            total: number;
+        };
+        PdvPeriod: {
+            /** @description Canonical period YYYY-MM */
+            period: string;
+            /** @description Prvi dan prijave, YYYY-MM-DD */
+            period_from: string;
+            /** @description Zadnji dan prijave, YYYY-MM-DD */
+            period_to: string;
+            period_status: string;
+            has_ledger: boolean;
+            return_version: number | null;
+            return_status: string | null;
+            return_source: string | null;
+            latest_return_version: number | null;
+            latest_return_status: string | null;
+            correction_in_progress: boolean;
+            /** @description Decimal as string, e.g. "1100.00" */
+            vat_due: string;
+            submitted_at: string | null;
+        };
+        PdvPeriodList: {
+            count: number;
+            results: components["schemas"]["PdvPeriod"][];
+        };
+        PdvPeriodWorkspace: {
+            /** @description Canonical period YYYY-MM */
+            period: string;
+            /** @description Prvi dan prijave, YYYY-MM-DD */
+            period_from: string;
+            /** @description Zadnji dan prijave, YYYY-MM-DD */
+            period_to: string;
+            period_status: string;
+            has_ledger: boolean;
+            return_version: number | null;
+            return_status: string | null;
+            return_source: string | null;
+            latest_return_version: number | null;
+            latest_return_status: string | null;
+            correction_in_progress: boolean;
+            /** @description Decimal as string, e.g. "1100.00" */
+            vat_due: string;
+            submitted_at: string | null;
+            xml_integrity: string | null;
+            /** Format: uuid */
+            event_uuid: string | null;
+            external_identifier: string | null;
+            has_confirmation: boolean;
+            document_currency: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
+            document_vat_due: string | null;
+            forms: components["schemas"]["PdvFormRow"][];
+        };
+        PdvSPeriod: {
+            period: string;
+            schema_version: string;
+            row_count: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_goods: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_services: string;
+            rows: components["schemas"]["PdvSRow"][];
+            /** Format: uuid */
+            event_uuid: string | null;
+            current_submission: components["schemas"]["PdvSSubmission"] | null;
+            submissions: components["schemas"]["PdvSSubmission"][];
+        };
+        PdvSRow: {
+            country_code: string;
+            pdv_id: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            goods_value: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            services_value: string;
+        };
+        PdvSSubmission: {
+            /** Format: uuid */
+            event_uuid: string;
+            submission_no: number;
+            submission_type: string;
+            /** Format: uuid */
+            external_identifier: string;
+            submitted_at: string | null;
+            has_confirmation: boolean;
+            payload_hash: string;
+        };
+        PdvSSubmitRequestRequest: {
+            /** Format: uuid */
+            eporezna_identifier: string;
+            /** Format: date-time */
+            submitted_at: string;
+        };
+        PdvSubmitRequestRequest: {
+            /**
+             * Format: uuid
+             * @description Opcionalno. Portalni identifikator zaprimanja. Nikad XML Metapodaci/Identifikator.
+             */
+            eporezna_identifier?: string;
+            /**
+             * Format: date-time
+             * @description Opcionalno. Vrijeme zaprimanja s portala. Uvoz XML-a koristi vrijeme importa.
+             */
+            submitted_at?: string;
+            return_version: number;
+            /**
+             * Format: binary
+             * @description Predani (potpisani) Obrazac PDV XML. Arhiva obrasca, nije potvrda zaprimanja.
+             */
+            submitted_xml?: string;
+        };
         PeriodReturn: {
             id: number;
             version: number;
@@ -1675,6 +4118,37 @@ export interface components {
             entry_date: components["schemas"]["Provenanced"];
             fiscal_period: components["schemas"]["Provenanced"];
             fiscal_locked: components["schemas"]["Provenanced"];
+        };
+        PostingPlanLine: {
+            amount_field: string;
+            description: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            document_amount?: string | null;
+            debit: components["schemas"]["AccountRef"];
+            credit: components["schemas"]["AccountRef"];
+            debit_cost_center: components["schemas"]["CostCenterRef"] | null;
+            credit_cost_center: components["schemas"]["CostCenterRef"] | null;
+        };
+        PrepaymentCandidate: {
+            id: number;
+            posting_date: string;
+            original_amount: string;
+            available_amount: string;
+            currency: string;
+            purchase_nature: string;
+            vat_treatment: string;
+            account_code: string;
+        };
+        PrepaymentCandidateList: {
+            supplier_id: number | null;
+            currency: string;
+            ubl_prepaid_amount: string | null;
+            ubl_payable_amount: string | null;
+            purchase_natures: components["schemas"]["Choice"][];
+            vat_treatments: components["schemas"]["Choice"][];
+            prepayments: components["schemas"]["PrepaymentCandidate"][];
         };
         PrivateFundsClaim: {
             id: number;
@@ -1705,6 +4179,14 @@ export interface components {
             detail: string;
         };
         /**
+         * @description * `REJECTED_BY_RECIPIENT` - REJECTED_BY_RECIPIENT
+         *     * `TAX_NEUTRAL_MISMATCH` - TAX_NEUTRAL_MISMATCH
+         *     * `TAX_AFFECTING_MISMATCH` - TAX_AFFECTING_MISMATCH
+         *     * `OTHER` - OTHER
+         * @enum {string}
+         */
+        ReasonCodeEnum: "REJECTED_BY_RECIPIENT" | "TAX_NEUTRAL_MISMATCH" | "TAX_AFFECTING_MISMATCH" | "OTHER";
+        /**
          * @description * `not_recorded` - not_recorded
          *     * `not_provable` - not_provable
          *     * `not_applicable` - not_applicable
@@ -1727,6 +4209,75 @@ export interface components {
             /** @description Decimal as string, e.g. "1100.00" */
             amount?: string;
         };
+        ReversalOf: {
+            id: number;
+            number: string;
+        };
+        SetOfficialDocumentPostingProfileRequest: {
+            posting_profile_id: number;
+        };
+        SettlementTrail: {
+            obligation: components["schemas"]["SettlementTrailObligation"] | null;
+            closings: components["schemas"]["SettlementTrailClosing"][];
+            system_entries: components["schemas"]["SettlementTrailSystemEntry"][];
+            warnings: components["schemas"]["SettlementTrailWarning"][];
+            totals: components["schemas"]["SettlementTrailTotals"];
+        };
+        SettlementTrailClosing: {
+            kind: string;
+            amount: string | null;
+            journal_entry_id: number | null;
+            entry_number: string | null;
+            allocation_id: number;
+            bank_transaction_id: number | null;
+            bank_statement_id: number | null;
+            counterparty_name: string | null;
+            private_funds_claim_id: number | null;
+            claim_number: string | null;
+            partner_id: number | null;
+            partner_name: string | null;
+            storno_expense_id?: number | null;
+            storno_expense_number?: string | null;
+            label: string;
+        };
+        SettlementTrailObligation: {
+            amount: string | null;
+            journal_entry_id: number | null;
+            entry_number: string | null;
+            entry_date: string | null;
+        };
+        SettlementTrailSystemEntry: {
+            kind: string;
+            amount: string | null;
+            journal_entry_id: number;
+            entry_number: string | null;
+            note: string;
+        };
+        SettlementTrailTotals: {
+            obligation: string | null;
+            allocated: string | null;
+            open: string | null;
+        };
+        SettlementTrailWarning: {
+            code: string;
+            message: string;
+        };
+        /**
+         * @description * `issuer` - issuer
+         *     * `buyer` - buyer
+         *     * `manual` - manual
+         * @enum {string}
+         */
+        SourceEnum: "issuer" | "buyer" | "manual";
+        /**
+         * @description * `invoice` - invoice
+         *     * `expense` - expense
+         *     * `manual` - manual
+         *     * `asset` - asset
+         *     * `other` - other
+         * @enum {string}
+         */
+        SourceTypeEnum: "invoice" | "expense" | "manual" | "asset" | "other";
         StatementDetail: {
             id: number;
             statement_number: string;
@@ -1736,7 +4287,11 @@ export interface components {
             /** @description Decimal as string, e.g. "1100.00" */
             opening_balance: string;
             /** @description Decimal as string, e.g. "1100.00" */
+            opening_balance_eur: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
             closing_balance: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            closing_balance_eur: string | null;
             status: string;
             currency: string;
             imported_at: string | null;
@@ -1756,13 +4311,24 @@ export interface components {
             /** @description Decimal as string, e.g. "1100.00" */
             opening_balance: string;
             /** @description Decimal as string, e.g. "1100.00" */
+            opening_balance_eur: string | null;
+            /** @description Decimal as string, e.g. "1100.00" */
             closing_balance: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            closing_balance_eur: string | null;
             status: string;
             currency: string;
             imported_at: string | null;
             reconciled_at: string | null;
             transaction_count: number;
         };
+        /**
+         * @description * `draft` - draft
+         *     * `posted` - posted
+         *     * `reversed` - reversed
+         * @enum {string}
+         */
+        StatusEnum: "draft" | "posted" | "reversed";
         SubledgerAllocationContext: {
             id: number;
             amount: string | null;
@@ -1785,6 +4351,14 @@ export interface components {
             open_amount: string | null;
             due_date: string | null;
             allocations: components["schemas"]["SubledgerAllocationContext"][];
+        };
+        SubmissionResult: {
+            /** Format: uuid */
+            event_uuid: string;
+            /** Format: uuid */
+            external_identifier: string;
+            submitted_at: string;
+            has_confirmation: boolean;
         };
         Supplier: {
             id: number | null;
@@ -1811,6 +4385,20 @@ export interface components {
             country: string;
             country_code: string;
             iban: string;
+        };
+        SupplierPrepaymentCreateRequest: {
+            partner_id: number;
+            purchase_nature: string;
+            vat_treatment?: string;
+        };
+        SupplierPrepaymentResult: {
+            id: number;
+            bank_transaction_id: number;
+            account_code: string;
+            original_amount: string;
+            currency: string;
+            status: string;
+            match_status: string;
         };
         SyncEnqueueResponse: {
             id: number;
@@ -1885,6 +4473,8 @@ export interface components {
             value_date: string | null;
             /** @description Decimal as string, e.g. "1100.00" */
             amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount_eur: string | null;
             currency: string;
             transaction_type: string;
             description: string;
@@ -1895,6 +4485,60 @@ export interface components {
             match_status: string;
             matched_payment_id: number | null;
             matched_journal_entry_id: number | null;
+        };
+        Tz2SaveRequestRequest: {
+            first_name: string;
+            last_name: string;
+            oib: string;
+            municipality_code: string;
+            city: string;
+            street: string;
+            house_number: string;
+            room_beds: number;
+            aux_beds: number;
+            payment_installments: boolean;
+            ep_receipts: string;
+            room_bed_rate?: string;
+            aux_bed_rate?: string;
+        };
+        Tz2Year: {
+            tax_year: number;
+            version: number | null;
+            persisted: boolean;
+            schema_version: string;
+            mapping_version: number;
+            period_from: string;
+            period_to: string;
+            rates: {
+                [key: string]: unknown;
+            };
+            taxpayer: {
+                [key: string]: unknown;
+            };
+            room_beds: number;
+            aux_beds: number;
+            /** @description Decimal as string, e.g. "1100.00" */
+            room_bed_rate: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            aux_bed_rate: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            room_bed_total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            aux_bed_total: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            total_assessed: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            amount_after_discount: string;
+            payment_installments: boolean;
+            installment_flag: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            installment_amount: string;
+            /** @description Decimal as string, e.g. "1100.00" */
+            ep_receipts: string;
+            /** Format: uuid */
+            event_uuid: string | null;
+            current_submission: components["schemas"]["PdvSSubmission"] | null;
+            submissions: components["schemas"]["PdvSSubmission"][];
         };
         VatBlock: {
             lifecycle: components["schemas"]["Provenanced"];
@@ -1918,6 +4562,13 @@ export interface components {
             base: string | null;
             vat: string | null;
         };
+        /**
+         * @description * `draft` - draft
+         *     * `registered` - registered
+         *     * `cancelled` - cancelled
+         * @enum {string}
+         */
+        WorkflowStatusEnum: "draft" | "registered" | "cancelled";
     };
     responses: never;
     parameters: never;
@@ -1927,6 +4578,176 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    assets_fixed_assets_list: {
+        parameters: {
+            query?: {
+                origin?: "opening_balance" | "purchase";
+                /** @description Page number (min 1, default 1) */
+                page?: number;
+                /** @description Filter by name, VIN, or inventory number */
+                search?: string;
+                status?: "active" | "disposed" | "in_preparation";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedFixedAssets"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    assets_fixed_assets_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FixedAssetDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    assets_fixed_assets_depreciation_schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepreciationScheduleList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    assets_fixed_assets_journal_entries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetJournalEntryList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     auth_me_retrieve: {
         parameters: {
             query?: never;
@@ -2143,6 +4964,119 @@ export interface operations {
             };
             /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    banking_expenses_close_candidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseClosePreview"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Neprocesibilan zahtjev (validacija write operacije) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    banking_expenses_close_from_bank: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseCloseRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpenseCloseRequestRequest"];
+                "multipart/form-data": components["schemas"]["ExpenseCloseRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseCloseResult"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Neprocesibilan zahtjev (validacija write operacije) */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2451,6 +5385,7 @@ export interface operations {
                 page?: number;
                 /** @description Page size (default 20, max 100) */
                 page_size?: number;
+                search?: string;
                 statement?: number;
                 transaction_type?: "credit" | "debit";
             };
@@ -2666,6 +5601,71 @@ export interface operations {
             };
         };
     };
+    banking_transaction_supplier_prepayment: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupplierPrepaymentCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SupplierPrepaymentCreateRequest"];
+                "multipart/form-data": components["schemas"]["SupplierPrepaymentCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPrepaymentResult"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Neprocesibilan zahtjev (validacija write operacije) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     banking_transactions_unmatch: {
         parameters: {
             query?: never;
@@ -2719,12 +5719,17 @@ export interface operations {
             query?: {
                 amount_max?: number;
                 amount_min?: number;
+                /** @description Documents whose posted journal has a line on this cost center */
+                cost_center?: number;
                 currency?: string;
                 date_from?: string;
                 date_to?: string;
-                direction?: "deposit" | "incoming" | "outgoing";
+                /** @description Jedan identitet ili skup odvojen zarezom, npr. incoming,official. */
+                direction?: "deposit" | "incoming" | "official" | "outgoing";
                 due_from?: string;
                 due_to?: string;
+                /** @description Official documents on this asset, or expenses on its vehicle */
+                fixed_asset?: number;
                 month?: number;
                 oib?: string;
                 page?: number;
@@ -2925,12 +5930,17 @@ export interface operations {
             query?: {
                 amount_max?: number;
                 amount_min?: number;
+                /** @description Documents whose posted journal has a line on this cost center */
+                cost_center?: number;
                 currency?: string;
                 date_from?: string;
                 date_to?: string;
-                direction?: "deposit" | "incoming" | "outgoing";
+                /** @description Jedan identitet ili skup odvojen zarezom, npr. incoming,official. */
+                direction?: "deposit" | "incoming" | "official" | "outgoing";
                 due_from?: string;
                 due_to?: string;
+                /** @description Official documents on this asset, or expenses on its vehicle */
+                fixed_asset?: number;
                 /** @description Export file type (default csv) */
                 format?: "csv" | "xlsx";
                 month?: number;
@@ -3035,6 +6045,230 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CodeDetail"];
+                };
+            };
+        };
+    };
+    finance_chart_of_accounts_list: {
+        parameters: {
+            query?: {
+                /** @description v1 vraća samo knjiživa konta; 1 je zadano. */
+                postable?: number;
+                /** @description Filter po šifri ili nazivu konta. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartOfAccountsList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_cost_centers_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenterList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_cost_centers_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CostCenterWriteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CostCenterWriteRequest"];
+                "multipart/form-data": components["schemas"]["CostCenterWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenter"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_cost_centers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenter"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_cost_centers_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCostCenterPatchRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCostCenterPatchRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCostCenterPatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenter"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
         };
@@ -3396,6 +6630,113 @@ export interface operations {
             };
         };
     };
+    finance_expenses_draft_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedExpenseDraftPatchRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedExpenseDraftPatchRequest"];
+                "multipart/form-data": components["schemas"]["PatchedExpenseDraftPatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseApproveResponse"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositConflict"];
+                };
+            };
+        };
+    };
+    finance_expense_accounting_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AccountingReviewRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AccountingReviewRequestRequest"];
+                "multipart/form-data": components["schemas"]["AccountingReviewRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountingReview"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     finance_expenses_approve: {
         parameters: {
             query?: never;
@@ -3452,6 +6793,573 @@ export interface operations {
             };
         };
     };
+    finance_expenses_posting_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpensePostingPreview"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_journal_entries_list: {
+        parameters: {
+            query?: {
+                /** @description Journal entries with a line on this cost center */
+                cost_center?: number;
+                date_from?: string;
+                date_to?: string;
+                /** @description Page number (min 1, default 1) */
+                page?: number;
+                /** @description Page size (default 20, max 100) */
+                page_size?: number;
+                /** @description Filter by entry_number, description, or reference */
+                search?: string;
+                status?: "draft" | "posted" | "reversed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedJournalEntries"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_journal_entries_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntryDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_document_posting_profiles_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocumentPostingProfile"][];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOfficialDocumentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateOfficialDocumentRequest"];
+                "multipart/form-data": components["schemas"]["CreateOfficialDocumentRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_link_journal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkOfficialDocumentJournalRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LinkOfficialDocumentJournalRequest"];
+                "multipart/form-data": components["schemas"]["LinkOfficialDocumentJournalRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_set_posting_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetOfficialDocumentPostingProfileRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SetOfficialDocumentPostingProfileRequest"];
+                "multipart/form-data": components["schemas"]["SetOfficialDocumentPostingProfileRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_official_documents_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOfficialDocumentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateOfficialDocumentRequest"];
+                "multipart/form-data": components["schemas"]["CreateOfficialDocumentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficialDocument"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     finance_partner_financial_summary: {
         parameters: {
             query?: never;
@@ -3491,9 +7399,56 @@ export interface operations {
             };
         };
     };
+    finance_partner_statement: {
+        parameters: {
+            query?: {
+                /** @description Filter rows by AR/AP direction (default all). */
+                direction?: "all" | "payable" | "receivable";
+                /** @description Calendar year. Defaults to current year if available, else latest. */
+                year?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerStatement"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     finance_partner_subledger: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description When true, populate closed_results with closed SubledgerItem rows. closed_count is always returned. */
+                include_closed?: boolean;
+            };
             header?: never;
             path: {
                 id: number;
@@ -3508,6 +7463,112 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PartnerSubledgerList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_payable_apply_prepayments: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+                source_type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyPrepaymentsRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ApplyPrepaymentsRequest"];
+                "multipart/form-data": components["schemas"]["ApplyPrepaymentsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyPrepaymentsResult"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_payable_prepayment_candidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                source_type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrepaymentCandidateList"];
                 };
             };
             /** @description Nedostaje ili je nevaljan Bearer token */
@@ -3681,6 +7742,1067 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DepositConflict"];
+                };
+            };
+        };
+    };
+    finance_cost_centers_report: {
+        parameters: {
+            query: {
+                cumulative?: boolean;
+                month: number;
+                year: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostCenterReport"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    finance_vehicles_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountingReviewVehicle"][];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_employees_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_employees_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_employees_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_employees_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedEmployeeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedEmployeeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_employee_contracts_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_employee_contracts_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contract"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_employee_contracts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedEmployeeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedEmployeeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contract"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollPeriodList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollPeriod"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollPeriod"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_calculate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollPeriod"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_calculation_recap_pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_generate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollPeriod"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_journal_pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_payment_recap_pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    hr_payroll_periods_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollPeriod"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payslips_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayslipDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payslip_adjustments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayslipDetail"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payslip_earnings_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayslipDetail"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_payslips_pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    hr_worktime_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_worktime_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    hr_worktime_lock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployeeRequest"];
+                "multipart/form-data": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
         };
@@ -4297,6 +9419,302 @@ export interface operations {
             };
         };
     };
+    purchasing_eracun_inbound_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EracunInboundImportResponse"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    purchasing_eracun_inbox_refresh: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EracunInboxRefreshResponse"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    purchasing_expense_categories_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseCategoryList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    purchasing_expense_categories_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedExpenseCategoryPatchRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedExpenseCategoryPatchRequest"];
+                "multipart/form-data": components["schemas"]["PatchedExpenseCategoryPatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseCategory"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    purchasing_expenses_eracun_rejection: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EracunRejectionRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EracunRejectionRequestRequest"];
+                "multipart/form-data": components["schemas"]["EracunRejectionRequestRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EracunRejectionResponse"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
     purchasing_invoice_imports_create: {
         parameters: {
             query?: never;
@@ -4399,6 +9817,51 @@ export interface operations {
             };
         };
     };
+    purchasing_invoice_import_accounting_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AccountingReviewRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AccountingReviewRequestRequest"];
+                "multipart/form-data": components["schemas"]["AccountingReviewRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountingReview"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
     purchasing_invoice_imports_apply_partner_updates: {
         parameters: {
             query?: never;
@@ -4416,6 +9879,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    purchasing_invoice_imports_apply_supplier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplySupplierRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ApplySupplierRequest"];
+                "multipart/form-data": components["schemas"]["ApplySupplierRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoiceImport"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
             /** @description Nedostaje ili je nevaljan Bearer token */
@@ -4669,6 +10194,1400 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchasingConflict"];
+                };
+            };
+        };
+    };
+    tax_joppd_period_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoppdPeriod"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_joppd_period_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoppdDraftRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["JoppdDraftRequest"];
+                "multipart/form-data": components["schemas"]["JoppdDraftRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoppdDraft"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_joppd_period_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoppdSubmitRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["JoppdSubmitRequestRequest"];
+                "multipart/form-data": components["schemas"]["JoppdSubmitRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionResult"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_joppd_period_xml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unsigned draft Obrazac JOPPD XML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pd_year_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                year: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdYear"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_ispravak_xml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PdvDraftRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PdvDraftRequest"];
+                "multipart/form-data": components["schemas"]["PdvDraftRequest"];
+            };
+        };
+        responses: {
+            /** @description Unsigned Obrazac PDV-ispravak XML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_s_period_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvSPeriod"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_s_period_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PdvSSubmitRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PdvSSubmitRequestRequest"];
+                "multipart/form-data": components["schemas"]["PdvSSubmitRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionResult"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_s_period_xml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unsigned Obrazac PDV-S XML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_periods_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvPeriodList"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_period_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvPeriodWorkspace"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_period_boxes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvBoxes"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_period_correction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvDraft"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_period_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvDraft"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_period_ledger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvLedgerRebuild"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_period_processed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["PdvSubmitRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PdvSubmitRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionResult"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_period_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["PdvSubmitRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PdvSubmitRequestRequest"];
+                "application/json": components["schemas"]["PdvSubmitRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionResult"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_pdv_period_xml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unsigned Obrazac PDV XML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_submission_confirmation_download: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Potvrda zaprimanja */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_submission_confirmation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["ConfirmationUploadRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ConfirmationUploadRequest"];
+                "application/json": components["schemas"]["ConfirmationUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfirmationResult"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_tz2_year_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                year: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tz2Year"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_tz2_year_save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                year: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Tz2SaveRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["Tz2SaveRequestRequest"];
+                "multipart/form-data": components["schemas"]["Tz2SaveRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tz2Year"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_tz2_year_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                year: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PdvSSubmitRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PdvSSubmitRequestRequest"];
+                "multipart/form-data": components["schemas"]["PdvSSubmitRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionResult"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_tz2_year_xml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                year: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unsigned Obrazac TZ 2 XML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_zp_period_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdvSPeriod"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_zp_period_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PdvSSubmitRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PdvSSubmitRequestRequest"];
+                "multipart/form-data": components["schemas"]["PdvSSubmitRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionResult"];
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Konflikt (idempotency / match target taken) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+        };
+    };
+    tax_zp_period_xml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unsigned Obrazac ZP XML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Nevaljani upit / ValidationError */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nedostaje ili je nevaljan Bearer token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
+                };
+            };
+            /** @description Nije pronađeno: missing resource, cross-tenant ID, ili autenticiran korisnik bez prava (namjerno 404, ne 403) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorDetail"];
                 };
             };
         };

@@ -4,6 +4,7 @@ export const DIRECTION_LABELS = {
   outgoing: 'Izlazni',
   incoming: 'Ulazni',
   deposit: 'Kaucija',
+  official: 'Službeni',
 } as const;
 
 export const SYSTEM_VIEWS = [
@@ -28,6 +29,7 @@ export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
   overdue: 'Dospio',
   cancelled: 'Otkazan',
   approved: 'Odobren',
+  registered: 'Registriran',
   rejected: 'Odbijen',
   open: 'Otvoreno',
   returned: 'Vraćeno',
@@ -49,6 +51,9 @@ export const OPERATIONAL_STATUS_LABELS: Record<string, string> = {
   rejected: 'Odbijen',
   ready_to_pay: 'Spreman za plaćanje',
   approved: 'Odobren',
+  registered: 'Registriran',
+  posted: 'Knjižen',
+  unpaid: 'Nije plaćeno',
   pending_approval: 'Čeka odobrenje',
   received: 'Zaprimljen',
   open: 'Otvoreno',
@@ -63,8 +68,31 @@ export const SUBLEDGER_LABELS: Record<string, string> = {
   cancelled: 'Otkazan',
 };
 
+/** Aging buckets from Finance partner subledger (matches API aging_bucket keys). */
+export const AGING_BUCKET_LABELS: Record<string, string> = {
+  current: 'Nedospjelo',
+  '1_30': '1–30 dana',
+  '31_60': '31–60 dana',
+  '61_90': '61–90 dana',
+  '90_plus': '90+ dana',
+};
+
+/** Partner statement closing kinds (Finance statement API). */
+export const CLOSING_KIND_LABELS: Record<string, string> = {
+  bank: 'Bankovno plaćanje',
+  private_funds: 'Privatna sredstva',
+  prepaid: 'Predujam (prepaid)',
+  other: 'Ostalo zatvaranje',
+};
+
+export const STATEMENT_DIRECTION_TABS = [
+  { value: 'all', label: 'Sve' },
+  { value: 'receivable', label: 'Potraživanja' },
+  { value: 'payable', label: 'Obveze' },
+] as const;
+
 export const VAT_LIFECYCLE_LABELS: Record<string, string> = {
-  not_tax_active: 'Nije porezno aktivan',
+  not_tax_active: 'Nije primjenjivo',
   awaiting_ledger: 'Čeka evidenciju',
   in_ledger: 'U knjizi',
   mismatch: 'Neusklađenost',
