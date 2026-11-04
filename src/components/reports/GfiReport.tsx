@@ -1,10 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 
+import { DocumentPdfPreview } from '@/components/documents/DocumentPdfPreview';
 import { formatHrAmount, formatHrInputDate, formatHrMoney } from '@/lib/formatHr';
 import { gfiForTenantYear, gfiYears } from '@/lib/reports/gfi2014';
+
+function ReportPdf({ href, title }: { href: string; title: string }) {
+  const load = useCallback(async () => {
+    const response = await fetch(href);
+    if (!response.ok) throw new Error('PDF nije učitan.');
+    return response.blob();
+  }, [href]);
+  return (
+    <section>
+      <h3>{title}</h3>
+      <DocumentPdfPreview load={load} title={title} />
+    </section>
+  );
+}
 
 type Props = { slug: string };
 
@@ -65,6 +80,7 @@ export function GfiReport({ slug }: Props) {
                 Identifikator {filing.receiptId}. Predano {formatHrInputDate(filing.filedOn)}{' '}
                 Kontrolni broj {formatHrAmount(filing.controlNumber)}. {filing.purpose}.
               </p>
+              {filing.receiptPdf ? <ReportPdf href={filing.receiptPdf} title={filing.receiptId} /> : null}
               <ul>
                 {filing.documents.map((document) => (
                   <li key={document.label}>
@@ -76,6 +92,9 @@ export function GfiReport({ slug }: Props) {
                   </li>
                 ))}
               </ul>
+              {filing.documents.map((document) =>
+                document.pdf ? <ReportPdf key={document.pdf} href={document.pdf} title={document.label} /> : null,
+              )}
               {filing.payment ? (
                 <p>
                   Nalog za uplatu {formatHrInputDate(filing.payment.paidOn)} Iznos{' '}

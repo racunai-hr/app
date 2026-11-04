@@ -17,6 +17,7 @@ export const FINESTAR_GFI_INACTIVE_YEAR = 2013;
 export type GfiDocument = {
   label: string;
   note?: 'odluka' | 'biljeske';
+  pdf?: string;
 };
 
 export type GfiPayment = {
@@ -38,6 +39,7 @@ export type GfiFiling = {
   controlNumber: string;
   documents: GfiDocument[];
   payment?: GfiPayment;
+  receiptPdf?: string;
 };
 
 type GfiCover = {
@@ -132,6 +134,21 @@ const FINESTAR_GFI_2021_DOCUMENTS: GfiDocument[] = FINESTAR_GFI_DOCUMENTS.map((d
   return document;
 });
 
+const FINESTAR_GFI_2022_PDF = '/izvjestaji/finestar/gfi/2022';
+
+const FINESTAR_GFI_2022_DOCUMENTS: GfiDocument[] = FINESTAR_GFI_2021_DOCUMENTS.map((document) => {
+  if (document.label === 'Bilanca za poduzetnike') {
+    return { ...document, pdf: `${FINESTAR_GFI_2022_PDF}/rgfi-javna-objava-2022.pdf` };
+  }
+  if (document.label.startsWith('Račun dobiti')) {
+    return { ...document, pdf: `${FINESTAR_GFI_2022_PDF}/rgfi-javna-objava-rdg-2022.pdf` };
+  }
+  if (document.label.startsWith('Bilješke')) {
+    return { ...document, pdf: `${FINESTAR_GFI_2022_PDF}/biljeske-2022.pdf` };
+  }
+  return document;
+});
+
 const FINESTAR_GFI_2022_FILINGS: GfiFiling[] = [
   {
     id: 'statistika-i-javna-objava',
@@ -141,7 +158,8 @@ const FINESTAR_GFI_2022_FILINGS: GfiFiling[] = [
     receiptId: '7428243',
     filedOn: '2023-04-26',
     controlNumber: '387847189.32',
-    documents: FINESTAR_GFI_2021_DOCUMENTS,
+    receiptPdf: `${FINESTAR_GFI_2022_PDF}/fina-gfi-2022.pdf`,
+    documents: FINESTAR_GFI_2022_DOCUMENTS,
   },
 ];
 

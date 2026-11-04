@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/link', () => ({
   default: ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -10,7 +10,21 @@ vi.mock('next/link', () => ({
 import { GfiReport } from './GfiReport';
 
 describe('GfiReport', () => {
-  it('offers only years that already have a filed report', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        blob: async () => new Blob(['%PDF-'], { type: 'application/pdf' }),
+      })),
+    );
+    vi.stubGlobal('URL', {
+      createObjectURL: () => 'blob:gfi-preview',
+      revokeObjectURL: () => undefined,
+    });
+  });
+
+  it('offers only years that already have a filed report', async () => {
     render(<GfiReport slug="finestar" />);
 
     const year = screen.getByLabelText('Godina');
@@ -33,6 +47,8 @@ describe('GfiReport', () => {
     expect(screen.getByText(/Toni Šupe/)).toBeInTheDocument();
     expect(screen.getByText(/Privatno od osnivanja/)).toBeInTheDocument();
     expect(screen.getByText(/Identifikator 7428243/)).toBeInTheDocument();
+    expect(await screen.findByLabelText('7428243')).toBeInTheDocument();
+    expect(await screen.findByLabelText('Bilanca za poduzetnike')).toBeInTheDocument();
     expect(screen.getByText(/Predano 26\.04\.2023\./)).toBeInTheDocument();
     expect(screen.getByText(/387\.847\.189,32/)).toBeInTheDocument();
     expect(screen.getByText(/datoteke 4\.0\.2/)).toBeInTheDocument();
@@ -40,6 +56,8 @@ describe('GfiReport', () => {
 
     fireEvent.change(screen.getByLabelText('Godina'), { target: { value: '2021' } });
 
+    expect(screen.queryByLabelText('7428243')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Bilanca za poduzetnike')).not.toBeInTheDocument();
     expect(screen.getByText(/Identifikator 7122844/)).toBeInTheDocument();
     expect(screen.getByText(/Predano 28\.03\.2022\./)).toBeInTheDocument();
     expect(screen.getByText(/377\.619\.595,69/)).toBeInTheDocument();
